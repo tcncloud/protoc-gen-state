@@ -1,0 +1,52 @@
+syntax = "proto2";
+
+package state;
+
+option go_package = "github.com/tcncloud/protoc-gen-state/state;state";
+
+import "google/protobuf/descriptor.proto";
+
+message StringFieldOptions {
+  optional string create = 1;
+  optional string get    = 2;
+  optional string list   = 3;
+  optional string update = 4;
+  optional string delete = 5;
+  optional string custom = 6;
+}
+
+message IntFieldOptions {
+  optional int64 create = 1;
+  optional int64 get    = 2;
+  optional int64 list   = 3;
+  optional int64 update = 4;
+  optional int64 delete = 5;
+  optional int64 custom = 6;
+}
+
+extend google.protobuf.FieldOptions {
+  optional int64 timeout                  = 550001;
+  optional int64 retries                  = 550002;
+  optional StringFieldOptions method      = 550003;
+  optional IntFieldOptions method_timeout = 550004;
+  optional IntFieldOptions method_retries = 550005;
+}
+
+extend google.protobuf.FileOptions {
+  optional int64 default_timeout            = 550006;
+  optional int64 default_retries            = 550007;
+  // turn on debug logging
+  optional bool debug                       = 550008;
+  // port to be used for api calls in epics
+  optional int64 port                       = 550010;
+  // debounce time for api calls in epics
+  optional int64 debounce                   = 550011;
+  // sets custom import path for proto typescript files
+  optional string protoc_ts_path            = 550012;
+  // static hostname string for api calls
+  optional string hostname                  = 550013;
+  // hostname for api calls location in redux
+  optional string hostname_location         = 550014;
+  // add authorization bearer header using the token at this location in redux
+  optional string auth_token_location       = 550015;
+}
