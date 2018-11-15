@@ -1,0 +1,9 @@
+syntax = "proto3";
+
+package readinglist;
+
+option go_package="github.com/tcncloud/protoc-gen-state/examples/test;readinglist";
+
+message ServerMessage{
+  string message = 1;
+}

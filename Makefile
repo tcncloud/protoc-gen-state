@@ -32,7 +32,7 @@ all: deps build
 build: generator protos
 
 protos:
-	mkdir generated
+	mkdir -p generated
 	protoc -I. -I./examples/test -I./state/options.proto \
 		--plugin=./protoc-gen-state \
 		--state_out=./generated ./examples/test/readinglist.proto

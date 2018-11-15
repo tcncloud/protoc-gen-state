@@ -4,6 +4,7 @@ package readinglist;
 
 option go_package="github.com/tcncloud/protoc-gen-state/examples/test;test";
 
+import "examples/test/readinglist2.proto";
 import "google/protobuf/timestamp.proto";
 
 service ReadingList {
@@ -12,7 +13,7 @@ service ReadingList {
   rpc ReadBook(Book) returns (Book){ }
   rpc UpdateBook(Book) returns (Book){ }
   rpc DeleteBook(Book) returns (Book){ }
-  rpc ErrorOut(Book) returns (Book){ }
+  rpc ErrorOut(Book) returns (ServerMessage){ }
 }
 
 message Empty{}
@@ -21,8 +22,4 @@ message Book{
   string title = 1;
   string author = 2;
   google.protobuf.Timestamp creation_date = 10;
-}
-
-message ServerMessage{
-  string message = 1;
 }

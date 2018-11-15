@@ -35,6 +35,21 @@ import (
 	"strings"
 )
 
+type Oracle struct {
+	protos []*gp.FileDescriptorProto
+}
+
+type File struct {
+	Name    string
+	Content string
+}
+
+type Package struct {
+	Name     string // name of the protobuf package given to the descriptor
+	GoPkg    string // the go_package option if there is one
+	FileName string // filename
+}
+
 func generate(filepaths []string, protos []*gp.FileDescriptorProto) ([]*File, error, error) {
 	// file descriptor proto slice
 	oracle := Oracle{protos}
@@ -51,15 +66,11 @@ func generate(filepaths []string, protos []*gp.FileDescriptorProto) ([]*File, er
 		}
 		// append to the output but change the name of the file
 		out = append(out, &File{
-			Name:    strings.Replace(pkg.Name, ".", "/", -1) + "/" + pkg.Name + ".generated.proto",
+			Name:    strings.Replace(pkg.Name, ".", "/", -1) + "/" + pkg.FileName + ".generated.proto",
 			Content: "test",
 		})
 	}
 	return out, nil, nil
-}
-
-type Oracle struct {
-	protos []*gp.FileDescriptorProto
 }
 
 // returns true if the package name is a dependency for any of the files in oracle
@@ -88,6 +99,7 @@ func (o Oracle) Packages() []Package {
 				}
 				return ""
 			}(),
+			FileName: f.GetName(),
 		}] = struct{}{}
 	}
 	out := make([]Package, 0)
@@ -124,14 +136,4 @@ func (o Oracle) FilesIn(p *Package) []*gp.FileDescriptorProto {
 		}
 	}
 	return out
-}
-
-type File struct {
-	Name    string
-	Content string
-}
-
-type Package struct {
-	Name  string // name of the protobuf package given to the descriptor
-	GoPkg string // the go_package option if there is one
 }
