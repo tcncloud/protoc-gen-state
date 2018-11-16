@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package readinglist;
 
-option go_package="github.com/tcncloud/protoc-gen-state/examples/test;test";
+option go_package="github.com/tcncloud/protoc-gen-state/examples/test;readinglist";
 
 import "examples/test/readinglist2.proto";
 import "google/protobuf/timestamp.proto";

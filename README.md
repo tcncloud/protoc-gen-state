@@ -2,9 +2,10 @@
 Seriously, give it a minute
 
 ## internal: test usage and generation
-`make`       - should create a folder called `generated` with the output 
-
-`make clean` - cleans it up (removes binary and generated folder)
+| command | result |
+| ------- | ------ |
+| `make` | <ul><li>builds the plugin</li><li>runs it on the test proto</li><li>creates an output folder called generated</li><li>runs tests based on those generated files</li></ul> |
+| `make clean` | cleans it up (removes binary and generated folder) |
 
 
 ---

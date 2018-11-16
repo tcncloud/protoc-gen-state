@@ -27,7 +27,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-all: deps build
+all: deps build test
 
 build: generator protos
 
@@ -46,3 +46,6 @@ deps:
 clean:
 	rm -f ./protoc-gen-state
 	rm -rf generated
+
+test:
+	ginkgo .

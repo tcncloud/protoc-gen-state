@@ -32,7 +32,7 @@ package main
 import (
 	// "fmt"
 	gp "github.com/golang/protobuf/protoc-gen-go/descriptor"
-	"strings"
+	// "strings"
 )
 
 type Oracle struct {
@@ -51,25 +51,44 @@ type Package struct {
 }
 
 func generate(filepaths []string, protos []*gp.FileDescriptorProto) ([]*File, error, error) {
-	// file descriptor proto slice
-	oracle := Oracle{protos}
+	// these files are generated everytime
+	outputFiles := []string{
+		"actions_pb.ts",
+		"epics_pb.ts",
+		"protoc_services.ts",
+		"protoc_types.ts",
+		"reducer_pb.ts",
+		"state_pb.ts",
+		"to_message_pb.ts",
+	}
+	// // file descriptor proto slice
+	// oracle := Oracle{protos} TODO for advanced generation
+	// // get struct of { package, go_package }
+	// pkgs := oracle.Packages() TODO use this for package aggregation
+
 	// list of output files
 	out := make([]*File, 0)
-	// get struct of { package, go_package }
-	pkgs := oracle.Packages()
 
-	for _, pkg := range pkgs {
-		// get all files that match the package name
-		files := oracle.GenerationFilesIn(&pkg)
-		if len(files) == 0 {
-			continue
-		}
-		// append to the output but change the name of the file
+	for _, outputFile := range outputFiles {
 		out = append(out, &File{
-			Name:    strings.Replace(pkg.Name, ".", "/", -1) + "/" + pkg.FileName + ".generated.proto",
-			Content: "test",
+			Name:    outputFile,
+			Content: "placeholder",
 		})
 	}
+
+	// for _, pkg := range pkgs {
+	// 	// get all files that match the package name
+	// 	files := oracle.GenerationFilesIn(&pkg)
+	// 	if len(files) == 0 {
+	// 		continue
+	// 	}
+
+	// 	// append to the output but change the name of the file
+	// 	out = append(out, &File{
+	// 		Name:    strings.Replace(pkg.Name, ".", "/", -1) + "/" + pkg.FileName + ".generated.proto",
+	// 		Content: "test",
+	// 	})
+	// }
 	return out, nil, nil
 }
 
