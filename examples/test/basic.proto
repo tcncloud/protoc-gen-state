@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package examples.test;
+package state; // match package of state/options.proto
 option go_package="github.com/tcncloud/protoc-gen-state/examples/test;test";
 
 import "state/options.proto";

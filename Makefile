@@ -27,15 +27,17 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+GENERATED=generated
+
 all: deps build test
 
 build: generator protos
 
 protos:
-	mkdir -p generated
+	mkdir -p $(GENERATED)
 	protoc -I. -I./examples/test -I./state/options.proto \
 		--plugin=./protoc-gen-state \
-		--state_out=./generated ./examples/test/readinglist.proto
+		--state_out=$(GENERATED) ./examples/test/basic.proto
 
 generator:
 	go build .
@@ -45,7 +47,7 @@ deps:
 
 clean:
 	rm -f ./protoc-gen-state
-	rm -rf generated
+	rm -rf $(GENERATED)
 
 test:
 	ginkgo .

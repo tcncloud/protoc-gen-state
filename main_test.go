@@ -7,7 +7,10 @@ import (
 )
 
 var _ = Describe("Main", func() {
-	Describe("Generates Files", func() {
+	path := "generated/"
+
+	// these files are generated every the plugin is successfully run
+	Describe("Static Generated Files", func() {
 		path := "generated/"
 		files := []string{
 			"actions_pb.ts",
@@ -26,4 +29,12 @@ var _ = Describe("Main", func() {
 		}
 	})
 
+	// dynamically creates aggregate files by package name
+	Describe("Dynamic Generated Files", func() {
+		fileName := "readinglist_aggregate.ts"
+
+		It("Should generate an aggregate file for the readinglist package", func() {
+			Expect(path + fileName).To(BeAnExistingFile())
+		})
+	})
 })
