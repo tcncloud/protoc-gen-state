@@ -51,3 +51,7 @@ clean:
 
 test:
 	ginkgo .
+
+# test - generate multiple proto files, panic
+# test - <1 or >3 messages in state proto, panic
+# test - messages besides ReduxState, CustomActions, ExternalLink in state proto, panic

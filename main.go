@@ -49,9 +49,9 @@ func main() {
 	if err := proto.Unmarshal(data, &req); err != nil {
 		panic(fmt.Errorf("got error unmarshaling request: %v", err))
 	}
-	files, err, internalErr := generate(req.GetFileToGenerate(), req.GetProtoFile())
-	if internalErr != nil {
-		panic(fmt.Errorf("error generating: %v", err))
+	files, err := generate(req.GetFileToGenerate(), req.GetProtoFile())
+	if err != nil {
+		panic(err)
 	}
 	resp := plugin_go.CodeGeneratorResponse{
 		Error: func() (out *string) {

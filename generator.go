@@ -30,27 +30,23 @@
 package main
 
 import (
-	// "fmt"
+	"errors"
+	"fmt"
 	gp "github.com/golang/protobuf/protoc-gen-go/descriptor"
-	// "strings"
+	"strconv"
+	"strings"
 )
-
-type Oracle struct {
-	protos []*gp.FileDescriptorProto
-}
 
 type File struct {
 	Name    string
 	Content string
 }
 
-type Package struct {
-	Name     string // name of the protobuf package given to the descriptor
-	GoPkg    string // the go_package option if there is one
-	FileName string // filename
-}
+func generate(filepaths []string, protos []*gp.FileDescriptorProto) ([]*File, error) {
+	// the two messages we'll be reading
+	var stateMessage *gp.DescriptorProto
+	var customMessage *gp.DescriptorProto
 
-func generate(filepaths []string, protos []*gp.FileDescriptorProto) ([]*File, error, error) {
 	// these files are generated everytime
 	outputFiles := []string{
 		"actions_pb.ts",
@@ -61,18 +57,112 @@ func generate(filepaths []string, protos []*gp.FileDescriptorProto) ([]*File, er
 		"state_pb.ts",
 		"to_message_pb.ts",
 	}
-	// // file descriptor proto slice
-	// oracle := Oracle{protos} TODO for advanced generation
-	// // get struct of { package, go_package }
-	// pkgs := oracle.Packages() TODO use this for package aggregation
+
+	// throw an error if len(filepaths) > 1
+	if len(filepaths) > 1 {
+		return nil, errors.New("Multiple file inputs detected. This plugin is designed to generate redux state from a single proto file")
+	}
+
+	// find the file descriptor and package name for the state message
+	// var statePackageName string
+	var stateFile *gp.FileDescriptorProto
+	for _, p := range protos {
+		if p.GetName() == filepaths[0] {
+			// statePackageName = p.GetPackage()
+			stateFile = p
+		}
+	}
+
+	messageCount := len(stateFile.GetMessageType())
+	// at least one message must be defined or we can't generate anything
+	if messageCount == 0 {
+		return nil, errors.New("No messages defined in state proto: " + stateFile.GetName() + ". Please include a ReduxState or CustomActions message.")
+	}
+	// there are only 3 message allowed in the state message
+	if messageCount > 3 {
+		return nil, errors.New("Too many messages defined in state proto: " + stateFile.GetName() + ". Only ReduxState, CustomActions, and ExternalLink messages allowed.")
+	}
+
+	// enforce that the messages provided are the allowed messages
+	// TODO look into removing ExternalLink message
+	allowedNames := []string{"ReduxState", "CustomActions", "ExternalLink"}
+	for _, m := range stateFile.GetMessageType() {
+		if !contains(allowedNames, m.GetName()) {
+			return nil, errors.New("Bad message name encountered: " + m.GetName() + ". Only ReduxState, CustomActions, and ExternalLink messages allowed in state message.")
+		} else if m.GetName() == "ReduxState" {
+			stateMessage = m
+		} else if m.GetName() == "CustomActions" {
+			customMessage = m
+		}
+	}
+
+	// gather the configuration annotations, throw if they're required
+	debounce, err := GetFileExtensionInt(stateFile, "debounce")
+	defaultTimeout, err := GetFileExtensionInt(stateFile, "default_timeout")
+	defaultRetries, err := GetFileExtensionInt(stateFile, "default_retries")
+	port, err := GetFileExtensionInt(stateFile, "port")
+	debug, err := GetFileExtensionBool(stateFile, "debug")
+	protocTsPath, err := GetFileExtensionString(stateFile, "protoc_ts_path")
+	hostname, err := GetFileExtensionString(stateFile, "hostname")
+	hostnameLocation, err := GetFileExtensionString(stateFile, "hostname_location")
+	authTokenLocation, err := GetFileExtensionString(stateFile, "auth_token_location")
+
+	if err != nil {
+		return nil, fmt.Errorf("Error encountered while parsing file level annotations: %v", err)
+	}
+
+	stateFields := []*gp.FieldDescriptorProto{}
+	customFields := []*gp.FieldDescriptorProto{}
+	messageFiles := []*gp.FileDescriptorProto{}
+	serviceFiles := []*gp.FileDescriptorProto{}
+
+	// populate messageFiles and serviceFiles
+	for _, proto := range protos {
+		for _, d := range proto.Dependency {
+			if proto.GetName() == d {
+				continue
+			} else {
+				if len(proto.GetMessageType()) > 0 && !containsFile(messageFiles, proto) {
+					messageFiles = append(messageFiles, proto)
+				}
+				if len(proto.GetService()) > 0 && !containsFile(serviceFiles, proto) {
+					serviceFiles = append(serviceFiles, proto)
+				}
+			}
+		}
+	}
+
+	// populate the stateFields by looking at the ReduxState message
+	for _, field := range stateMessage.GetField() {
+		stateFields = append(stateFields, field)
+	}
+	// populate the customFields by looking at the CustomActions message
+	for _, field := range customMessage.GetField() {
+		customFields = append(customFields, field)
+	}
 
 	// list of output files
 	out := make([]*File, 0)
 
+	// create aggregate for each unique package name
+	out = append(out, CreateAggregateByPackage(messageFiles, protocTsPath, stateFile.GetPackage())...)
+
+	filler := []string{"// hello"} // TODO TESTING
+	filler = append(filler, strconv.FormatInt(debounce, 10))
+	filler = append(filler, strconv.FormatBool(debug))
+	filler = append(filler, strconv.FormatInt(defaultTimeout, 10))
+	filler = append(filler, strconv.FormatInt(defaultRetries, 10))
+	filler = append(filler, strconv.FormatInt(port, 10))
+	filler = append(filler, protocTsPath)
+	filler = append(filler, hostname)
+	filler = append(filler, hostnameLocation)
+	filler = append(filler, authTokenLocation)
+	filler = append(filler, "// hello")
+
 	for _, outputFile := range outputFiles {
 		out = append(out, &File{
 			Name:    outputFile,
-			Content: "placeholder",
+			Content: strings.Join(filler, "\n"),
 		})
 	}
 
@@ -89,70 +179,5 @@ func generate(filepaths []string, protos []*gp.FileDescriptorProto) ([]*File, er
 	// 		Content: "test",
 	// 	})
 	// }
-	return out, nil, nil
-}
-
-// returns true if the package name is a dependency for any of the files in oracle
-func (o Oracle) IsDependency(name string) bool {
-	for _, f := range o.protos {
-		for _, d := range f.Dependency {
-			if name == d {
-				return true
-			}
-		}
-	}
-	return false
-}
-
-// for every file in the oracle slice,
-// make a struct of { package, go_package }
-func (o Oracle) Packages() []Package {
-	pkgs := make(map[Package]struct{})
-
-	for _, f := range o.protos {
-		pkgs[Package{
-			Name: f.GetPackage(),
-			GoPkg: func() string {
-				if opts := f.GetOptions(); opts != nil {
-					return opts.GetGoPackage()
-				}
-				return ""
-			}(),
-			FileName: f.GetName(),
-		}] = struct{}{}
-	}
-	out := make([]Package, 0)
-
-	for p, _ := range pkgs {
-		out = append(out, p)
-	}
-	return out
-}
-
-// for now just gathers all files in that package name
-func (o Oracle) GenerationFilesIn(pkg *Package) []*gp.FileDescriptorProto {
-	// gather the results
-	out := make([]*gp.FileDescriptorProto, 0)
-	// return all files that match this package name
-	files := o.FilesIn(pkg)
-	// add all the files to the output
-	for _, f := range files {
-		// exclude deps like google/protobuf
-		if o.IsDependency(f.GetName()) {
-			continue
-		}
-		out = append(out, f)
-	}
-	return out
-}
-
-// subset of oracle that matches the package name (not go_package)
-func (o Oracle) FilesIn(p *Package) []*gp.FileDescriptorProto {
-	var out []*gp.FileDescriptorProto
-	for _, f := range o.protos {
-		if f.GetPackage() == p.Name {
-			out = append(out, f)
-		}
-	}
-	return out
+	return out, nil
 }
