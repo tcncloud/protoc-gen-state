@@ -119,9 +119,11 @@ func CreateAggregateByPackage(msgFiles []*gp.FileDescriptorProto, protocTsPath s
 // find a method descriptor from the annotation string name
 func FindMethodDescriptor(serviceFiles []*gp.FileDescriptorProto, fullMethodName string) (*gp.MethodDescriptorProto, error) {
 	for _, servFile := range serviceFiles {
+		packageName := servFile.GetPackage()
 		for _, service := range servFile.GetService() {
+			serviceName := service.GetName()
 			for _, method := range service.GetMethod() {
-				if method.GetName() == fullMethodName {
+				if fmt.Sprintf("%s.%s.%s", packageName, serviceName, method.GetName()) == fullMethodName {
 					// make sure it doesn't use client-side streaming (not supported with grpc-web)
 					if method.GetClientStreaming() {
 						return nil, fmt.Errorf("Client-side streaming not supported. Failed on method: %s", fullMethodName)
