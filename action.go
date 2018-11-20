@@ -21,27 +21,6 @@ type Reset struct {
 	Type string
 }
 
-func GetAnnotation(meth state.StringFieldOptions, crud Crud, repeated bool) string {
-	switch crud {
-	case CREATE:
-		return meth.GetCreate()
-	case GET:
-		{
-			if repeated {
-				return meth.GetList()
-			} else {
-				return meth.GetGet()
-			}
-		}
-	case UPDATE:
-		return meth.GetUpdate()
-	case DELETE:
-		return meth.GetDelete()
-	default:
-		return ""
-	}
-}
-
 func CreateActionFile(stateFields []*gp.FieldDescriptorProto, customFields []*gp.FieldDescriptorProto, serviceFiles []*gp.FileDescriptorProto) (*File, error) {
 	output := createActionImports()
 	for _, field := range stateFields {
@@ -68,7 +47,8 @@ func CreateActionFile(stateFields []*gp.FieldDescriptorProto, customFields []*gp
 		var meth *gp.MethodDescriptorProto
 		for c := CREATE; c < CRUD_MAX; c++ {
 			// verify the annotation exists
-			if GetAnnotation(methods, c, repeated) != "" {
+      val, err := GetAnnotation(methods, c, repeated)
+      if err != nil {
 				meth, err = FindMethodDescriptor(serviceFiles, GetAnnotation(methods, c, repeated))
 			}
 		}

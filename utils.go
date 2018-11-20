@@ -2,6 +2,8 @@ package main
 
 import (
 	"fmt"
+  "errors"
+
 	gp "github.com/golang/protobuf/protoc-gen-go/descriptor"
 	"strings"
 )
@@ -63,6 +65,35 @@ func CrudName(crud Crud, repeated bool) string {
 		return ""
 	}
 }
+
+func annotationReturnHelper(optionVal string) (string, error){
+  if optionVal == "" {
+    return "", errors.New("Field Option does not exist")
+  }
+  return optionVal, nil
+}
+
+func GetAnnotation(meth state.StringFieldOptions, crud Crud, repeated bool) (string, error) {
+  switch crud {
+  case CREATE:
+    return annotationReturnHelper(meth.GetCreate())
+  case GET:
+    {
+      if repeated {
+        return annotationReturnHelper(meth.GetList())
+      } else {
+        return annotationReturnHelper(meth.GetGet())
+      }
+    }
+  case UPDATE:
+    return annotationReturnHelper(meth.GetUpdate())
+  case DELETE:
+    return annotationReturnHelper(meth.GetDelete())
+  default:
+    return "", errors.New("Crud option does not exist on field option")
+  }
+}
+
 
 func contains(s []string, e string) bool {
 	for _, a := range s {
