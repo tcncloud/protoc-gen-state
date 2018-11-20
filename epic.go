@@ -22,54 +22,119 @@ import * as protocActions from './actions_pb';
 import * as ProtocTypes from './protoc_types_pb';
 import * as ProtocServices from './protoc_services_pb';
 
-{{range $i, $e := .}}
-export const createLibraryEpic = (action$, store) => action$
-	.filter(isActionOf([
-		protocActions.{{$
-{{end}}
-export interface ProtocState { {{range $i, $entity := .}}
-{{$entity.FieldName}}: {
-	isLoading: boolean;
-	error: { code: string; message: string; },
-	{{if $entity.Repeated}}value: ProtocTypes{{$entity.FullTypeName}}.AsObject;
-	{{else}}value: ProtocTypes{{$entity.FullTypeName}}.AsObject | null;{{end}}
-},
-{{end}}
+function createErrorObject(code: number|string|undefined, message: string): NodeJS.ErrnoException {
+	var err: NodeJS.ErrnoException = new Error();
+	err.message = message;
+	if(code && typeof code == 'number') { err.code = code.toString(); }
+	if(code && typeof code == 'string') { err.code = code; }
+	return err;
 }
 
-export const initialProtocState : ProtocState = { {{range $i, $entity := .}}
-{{$entity.FieldName}}: {
-	isLoading: false,
-	error: null,
-	{{if $entity.Repeated}}value: [],
-	{{else}}value: null,{{end}}
-},
-{{end}}
-}
+{{range $i, $e := .}}
+export const {{$e.Name}}Epic = (action$, store) => action$
+	.filter(isActionOf([
+		protocActions.{{$e.Name}}Request,
+		protocActions.{{$e.Name}}RequestPromise,
+	]))
+	.debounceTime({{$e.Debounce}})
+	.map((action) => {
+		if(action.payload && action.payload.resolve && action.payload.reject){
+			return {
+				...action.payload,
+				request: toMessage(action.payload.library, ProtocTypes.readinglist.Book)
+			}
+		} else {
+			return { request: toMessage(action.payload, ProtocTypes.readinglist.Book) }
+		}
+	})
+	.flatMap((action) => {
+		{{if $e.Repeat}}
+			{{template "grpcStream" .}}
+		{{ else }}
+			{{template "grpcUnary" .}}
+		{{end}}
+			.retry({{$e.Retry}})
+			.timeout({{$e.Timeout}})
+			.map(resObj => {
+				if(action.resolve){
+					action.resolve(resObj as {{$e.InputType}}{{if $e.Repeat}}[]{{end}});
+				}
+				reutrn protocActions.{{$e.Name}}Success(resObj as {{$e.InputType}}{{if $e.Repeat}}[]{{end}});
+			})
+			.catch(error => {
+				const err: NodeJS.ErrnoException = createErrorObject(error.code, error.message);
+				if(action.reject){ action.reject(err); }
+				return Observable.of(protocActions.{{$e.Name}}Failure(err));
+			})
+	})
+	.takeUntil(action$.filter(isActionOf(protocActions.{{$e.Name}}Cancel)))
+	.repeat();
+{{end}
 `
 
+const grpcUnary = `return Observable
+	.defer(() => new Promise((resolve, reject) => {
+		{{.Host}}
+		{{.Auth}}
+		grpc.unary({{$e.FullMethodName}}, {
+			request: action.request,
+			host: host,
+			onEnd: (res: UnaryOutput<{{$e.OutputType}}>) => {
+				if(res.status != grpc.Code.OK){
+					const err: NodeJS.ErrnoException = createErrorObject(res.status, res.statusMessage);
+					reject(err);
+				}
+				if(res.message){
+					resolve(res.message.toObject());
+				}
+			}
+		});
+	}))`
+
+const grpcStream = `return Observable
+	.defer(() => new Promise((resolve, reject) => {
+		var arr: {{$e.OutputType}}[] = [];
+		const client = grpc.client({{$e.FullMethodName}}, {
+			host: host,
+		});
+		client.onMessage((message: {{$e.OutputType}}) => {
+			arr.push(message.toObject());
+		})
+		client.onEnd((code: grpc.Code, msg: string) => {
+			if (code != grpc.Code.OK) {
+				reject(createErrorObject(code, msg));
+			}
+			resolve(arr);
+		});
+		client.start({{if .Auth == ""}}new grpc.Metadata({ "Authorization": Bearer ${store.getState().{{.Auth}}}{{end}} }));
+		client.send(action.request)
+	}))`
+
 type EpicEntity struct {
-	FieldName    string
-	FullTypeName string
-	Repeated     bool
+	Name           string
+	InputType      string
+	OutputType     string
+	FullMethodName string
+	Debounce       int64
+	Timeout        int64
+	Retries        int64
+	Repeat         bool
 }
 
 func CreateEpicFile(stateFields []*gp.FieldDescriptorProto) (*File, error) {
-	stateEntities := []*StateEntity{}
+	epicEntities := []*EpicEntity{}
 
-	// transform stateFields into our StateEntity implementation so template can read values
-	for _, entity := range stateFields {
-		stateEntities = append(stateEntities, &StateEntity{
-			FieldName:    entity.GetJsonName(),
-			FullTypeName: entity.GetTypeName(),
-			Repeated:     entity.GetLabel() == 3,
+	// transform stateFields into our EpicEntity implementation so template can read values
+	for _, _ = range stateFields {
+		epicEntities = append(epicEntities, &EpicEntity{
+			//TODO
 		})
 	}
 
 	tmpl := template.Must(template.New("state").Parse(stateTemplate))
 
 	var output bytes.Buffer
-	tmpl.Execute(&output, stateEntities)
+	tmpl.Execute(&output, epicEntities)
 
 	return &File{
 		Name:    "epics_pb.ts",
