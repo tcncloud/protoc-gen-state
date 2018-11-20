@@ -101,3 +101,47 @@ func GetExtensionBool(desc *gp.FileDescriptorProto, extName *proto.ExtensionDesc
 	}
 	return false, nil
 }
+
+func GetFieldOptionsString(desc *gp.FieldDescriptorProto, extName *proto.ExtensionDesc) (state.StringFieldOptions, error) {
+	junk := state.StringFieldOptions{}
+	if desc == nil || desc.GetOptions() == nil {
+		return junk, nil
+	}
+	if proto.HasExtension(desc.GetOptions(), extName) {
+		pkg, err := proto.GetExtension(desc.GetOptions(), extName)
+		if err != nil {
+			return junk, errors.New("Failed to get debounce extension")
+		}
+		return *pkg.(*state.StringFieldOptions), nil
+	}
+	return junk, nil
+}
+
+func GetFieldOptionsInt(desc *gp.FieldDescriptorProto, extName *proto.ExtensionDesc) (state.IntFieldOptions, error) {
+	junk := state.IntFieldOptions{}
+	if desc == nil || desc.GetOptions() == nil {
+		return junk, nil
+	}
+	if proto.HasExtension(desc.GetOptions(), extName) {
+		pkg, err := proto.GetExtension(desc.GetOptions(), extName)
+		if err != nil {
+			return junk, errors.New("Failed to get debounce extension")
+		}
+		return *pkg.(*state.IntFieldOptions), nil
+	}
+	return junk, nil
+}
+
+func GetFieldAnnotationInt(desc *gp.FieldDescriptorProto, extName *proto.ExtensionDesc) (int64, error) {
+	if desc == nil || desc.GetOptions() == nil {
+		return 0, nil
+	}
+	if proto.HasExtension(desc.GetOptions(), extName) {
+		pkg, err := proto.GetExtension(desc.GetOptions(), extName)
+		if err != nil {
+			return 0, errors.New("Failed to get debounce extension")
+		}
+		return *pkg.(*int64), nil
+	}
+	return 0, nil
+}
