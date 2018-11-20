@@ -50,7 +50,7 @@ func generate(filepaths []string, protos []*gp.FileDescriptorProto) ([]*File, er
 	// these files are generated everytime
 	outputFiles := []string{
 		// "actions_pb.ts",
-		"epics_pb.ts",
+		// "epics_pb.ts",
 		"protoc_services.ts",
 		"protoc_types.ts",
 		"reducer_pb.ts",

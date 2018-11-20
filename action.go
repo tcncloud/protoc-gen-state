@@ -142,6 +142,30 @@ export const delete{{$e.JsonName | title}}Failure = createAction('PROTOC_DELETE_
 export const delete{{$e.JsonName | title}}Cancel = createAction('PROTOC_DELETE_{{$e.JsonName | caps}}_CANCEL');{{end}}
 `
 
+const customTemplate = `{{range $i, $e := .}}
+export const custom{{$e.JsonName | title}}Request = createAction('PROTOC_CUSTOM_{{$e.JsonName | caps}}_REQUEST', (resolve) => {
+	return ({{$e.JsonName}}: {{$e.InputType}}) => resolve({{$e.JsonName}})
+});
+
+export const custom{{$e.JsonName | title}}RequestPromise = createAction('PROTOC_CUSTOM_{{$e.JsonName | caps}}_REQUEST_PROMISE', (resolve) => {
+	return (
+		{{$e.JsonName}}: {{$e.InputType}},
+		resolve: (payload: {{$e.OutputType}}{{if $e.Repeat}}[]{{end}}) => void,
+		reject: (error: NodeJS.ErrnoException) => void,
+	) => res({ {{$e.JsonName}}, resolve, reject });
+});
+
+export const custom{{$e.JsonName | title}}Success = createAction('PROTOC_CUSTOM_{{$e.JsonName | caps}}_SUCCESS', (resolve) => {
+	return ({{$e.JsonName}}: {{$e.OutputType}}{{if $e.Repeat}}[]{{end}}) => resolve({{$e.JsonName}})
+});
+
+export const custom{{$e.JsonName | title}}Failure = createAction('PROTOC_CUSTOM_{{$e.JsonName | caps}}_FAILURE', (resolve) => {
+	return (error: NodeJS.ErrnoException) => resolve(error)
+});
+
+export const custom{{$e.JsonName | title}}Cancel = createAction('PROTOC_CUSTOM_{{$e.JsonName | caps}}_CANCEL');{{end}}
+`
+
 const resetTemplate = `{{range $i, $e := .}}
 export const reset{{$e.JsonName | title}} = createAction('PROTOC_RESET_{{$e.JsonName | caps}}');{{end}}
 `
@@ -168,7 +192,9 @@ func CreateActionFile(stateFields []*gp.FieldDescriptorProto, customFields []*gp
 	createEntities := []*ActionEntity{}
 	updateEntities := []*ActionEntity{}
 	deleteEntities := []*ActionEntity{}
+	customEntities := []*ActionEntity{}
 
+	// populate Entities slices with state fields
 	for _, field := range stateFields {
 		repeated := field.GetLabel() == 3
 
@@ -229,6 +255,47 @@ func CreateActionFile(stateFields []*gp.FieldDescriptorProto, customFields []*gp
 		})
 	}
 
+	// do the same things for custom actions
+	// TODO combine the logic since its basically the same
+	for _, field := range customFields {
+		repeated := field.GetLabel() == 3
+		// get the method annoations
+		methods, err := GetFieldOptionsString(field, state.E_Method)
+		if err != nil {
+			return nil, fmt.Errorf("Error getting field level annotations: %v", err)
+		}
+
+		// only custom method annotations allowed in CustomActions
+		for c := CREATE; c < CRUD_MAX; c++ {
+			if GetAnnotation(methods, c, repeated) != "" {
+				return nil, fmt.Errorf("Invalid method annotation. Only method annotation '(method).custom' is allowed within CustomActions message. Correct the annotation on field: %s", *field.JsonName)
+			}
+		}
+
+		// and it must have a custom annotation
+		var meth *gp.MethodDescriptorProto
+		crudAnnotation := methods.GetCustom()
+		if crudAnnotation != "" {
+			meth, err = FindMethodDescriptor(serviceFiles, crudAnnotation)
+			if err != nil {
+				return nil, err
+			}
+		} else {
+			return nil, fmt.Errorf("CustomAction field provided without an accompanying '(method).custom' annotation. Please provide one on field: %s", *field.JsonName)
+		}
+
+		// hopefully the method exists
+		if meth != nil {
+			// TODO this uses repeated from the field value but should use repeated from the output type
+			customEntities = append(customEntities, &ActionEntity{
+				JsonName:   *field.JsonName,
+				InputType:  fmt.Sprintf("ProtocTypes%s.AsObject", meth.GetInputType()),
+				OutputType: fmt.Sprintf("ProtocTypes%s.AsObject", meth.GetOutputType()),
+				Repeat:     repeated,
+			})
+		}
+	}
+
 	// helper funcs for templates
 	funcMap := template.FuncMap{
 		"caps":  strings.ToUpper,
@@ -242,6 +309,7 @@ func CreateActionFile(stateFields []*gp.FieldDescriptorProto, customFields []*gp
 	createT := template.Must(template.New("create").Funcs(funcMap).Parse(createTemplate))
 	deleteT := template.Must(template.New("delete").Funcs(funcMap).Parse(deleteTemplate))
 	updateT := template.Must(template.New("update").Funcs(funcMap).Parse(updateTemplate))
+	customT := template.Must(template.New("update").Funcs(funcMap).Parse(customTemplate))
 
 	// append to output
 	var output bytes.Buffer
@@ -251,6 +319,7 @@ func CreateActionFile(stateFields []*gp.FieldDescriptorProto, customFields []*gp
 	createT.Execute(&output, createEntities)
 	deleteT.Execute(&output, deleteEntities)
 	updateT.Execute(&output, updateEntities)
+	customT.Execute(&output, customEntities)
 
 	// return the completed file
 	return &File{
