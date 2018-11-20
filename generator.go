@@ -49,7 +49,7 @@ func generate(filepaths []string, protos []*gp.FileDescriptorProto) ([]*File, er
 
 	// these files are generated everytime
 	outputFiles := []string{
-		"actions_pb.ts",
+		// "actions_pb.ts",
 		"epics_pb.ts",
 		"protoc_services.ts",
 		"protoc_types.ts",
@@ -155,7 +155,12 @@ func generate(filepaths []string, protos []*gp.FileDescriptorProto) ([]*File, er
 	out = append(out, statePb)
 
 	// create action file
-	// TODO
+	actionPb, err := CreateActionFile(stateFields, customFields, serviceFiles)
+	if err != nil {
+		return nil, fmt.Errorf("Error generating actions_pb file: %v", err)
+	}
+	out = append(out, actionPb)
+
 	// create reducer file
 	// TODO
 	// create epic file
@@ -186,18 +191,5 @@ func generate(filepaths []string, protos []*gp.FileDescriptorProto) ([]*File, er
 		})
 	}
 
-	// for _, pkg := range pkgs {
-	// 	// get all files that match the package name
-	// 	files := oracle.GenerationFilesIn(&pkg)
-	// 	if len(files) == 0 {
-	// 		continue
-	// 	}
-
-	// 	// append to the output but change the name of the file
-	// 	out = append(out, &File{
-	// 		Name:    strings.Replace(pkg.Name, ".", "/", -1) + "/" + pkg.FileName + ".generated.proto",
-	// 		Content: "test",
-	// 	})
-	// }
 	return out, nil
 }
