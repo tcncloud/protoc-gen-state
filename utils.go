@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	gp "github.com/golang/protobuf/protoc-gen-go/descriptor"
+	"github.com/tcncloud/protoc-gen-state/state"
 	"strings"
 )
 
@@ -26,7 +27,7 @@ const (
 	CUSTOM   Crud = 5
 )
 
-func SideEffectName(s SideEffect, repeated bool) string {
+func SideEffectName(s SideEffect) string {
 	switch s {
 	case REQUEST:
 		return "request"
@@ -131,4 +132,25 @@ func FindMethodDescriptor(serviceFiles []*gp.FileDescriptorProto, fullMethodName
 		}
 	}
 	return nil, fmt.Errorf("Unable to locate method: \"%s\". Missing Method Declaration in Service.", fullMethodName)
+}
+
+func GetAnnotation(meth state.StringFieldOptions, crud Crud, repeated bool) string {
+	switch crud {
+	case CREATE:
+		return meth.GetCreate()
+	case GET:
+		{
+			if repeated {
+				return meth.GetList()
+			} else {
+				return meth.GetGet()
+			}
+		}
+	case UPDATE:
+		return meth.GetUpdate()
+	case DELETE:
+		return meth.GetDelete()
+	default:
+		return ""
+	}
 }
