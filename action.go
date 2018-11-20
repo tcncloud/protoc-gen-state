@@ -5,6 +5,7 @@ import (
 	"fmt"
 	gp "github.com/golang/protobuf/protoc-gen-go/descriptor"
 	"github.com/tcncloud/protoc-gen-state/state"
+	"strings"
 	"text/template"
 )
 
@@ -21,60 +22,60 @@ import * as ProtocTypes from './protoc_types_pb';
 }
 
 const createTemplate = `{{range $i, $e := .}}
-export const create{{$e.JsonName}}Request = createAction('PROTOC_CREATE_{{$e.JsonName}}_REQUEST', (resolve) => {
+export const create{{$e.JsonName | title}}Request = createAction('PROTOC_CREATE_{{$e.JsonName | caps}}_REQUEST', (resolve) => {
 	return ({{$e.JsonName}}: {{$e.InputType}}) => resolve({{$e.JsonName}})
 });
 
-export const create{{$e.JsonName}}RequestPromise = createAction('PROTOC_CREATE_{{$e.JsonName}}_REQUEST_PROMISE', (resolve) => {
+export const create{{$e.JsonName | title}}RequestPromise = createAction('PROTOC_CREATE_{{$e.JsonName | caps}}_REQUEST_PROMISE', (resolve) => {
 	return (
 		{{$e.JsonName}}: {{$e.InputType}},
-		resolve: (payload: {{$e.OutputType}}) => void,
+		resolve: (payload: {{$e.OutputType}}{{if $e.Repeat}}[]{{end}}) => void,
 		reject: (error: NodeJS.ErrnoException) => void,
 	) => res({ {{$e.JsonName}}, resolve, reject });
 });
 
-export const create{{$e.JsonName}}Success = createAction('PROTOC_CREATE_{{$e.JsonName}}_SUCCESS', (resolve) => {
+export const create{{$e.JsonName | title}}Success = createAction('PROTOC_CREATE_{{$e.JsonName | caps}}_SUCCESS', (resolve) => {
 	return ({{$e.JsonName}}: {{$e.OutputType}}) => resolve({{$e.JsonName}})
 });
 
-export const create{{$e.JsonName}}Failure = createAction('PROTOC_CREATE_{{$e.JsonName}}_FAILURE', (resolve) => {
+export const create{{$e.JsonName | title}}Failure = createAction('PROTOC_CREATE_{{$e.JsonName | caps}}_FAILURE', (resolve) => {
 	return (error: NodeJS.ErrnoException) => resolve(error)
 });
 
-export const create{{$e.JsonName}}Cancel = createAction('PROTOC_CREATE_{{$e.JsonName}}_CANCEL');{{end}}
+export const create{{$e.JsonName | title}}Cancel = createAction('PROTOC_CREATE_{{$e.JsonName | caps}}_CANCEL');{{end}}
 `
 
 const updateTemplate = `{{range $i, $e := .}}
-export const update{{$e.JsonName}}Request = createAction('PROTOC_UPDATE_{{$e.JsonName}}_REQUEST', (resolve) => {
+export const update{{$e.JsonName | title}}Request = createAction('PROTOC_UPDATE_{{$e.JsonName | caps}}_REQUEST', (resolve) => {
 	return (prev: {{$e.InputType}}, updated: {{$e.InputType}}) => resolve({prev, updated})
 })
 
-export const update{{$e.JsonName}}RequestPromise = createAction('PROTOC_UPDATE_{{$e.JsonName}}_REQUEST_PROMISE', (res) => {
+export const update{{$e.JsonName | title}}RequestPromise = createAction('PROTOC_UPDATE_{{$e.JsonName | caps}}_REQUEST_PROMISE', (res) => {
 	return (
 		prev: {{$e.InputType}},
 		updated: {{$e.InputType}},
-		resolve: (prev: {{$e.InputType}}, updated: {{$e.InputType}}j) => void,
+		resolve: (prev: {{$e.InputType}}, updated: {{$e.InputType}}) => void,
 		reject: (error: NodeJS.ErrnoException) => void,
 	) => res({ prev, updated, resolve, reject })
 });
 
-export const update{{$e.JsonName}}Success = createAction('PROTOC_UPDATE_{{$e.JsonName}}_SUCCESS', (resolve) => {
+export const update{{$e.JsonName | title}}Success = createAction('PROTOC_UPDATE_{{$e.JsonName | caps}}_SUCCESS', (resolve) => {
 	return ({{$e.JsonName}}: { prev: {{$e.InputType}}, updated: {{$e.InputType}} }) => resolve({{$e.JsonName}})
 })
 
-export const update{{$e.JsonName}}Failure = createAction('PROTOC_UPDATE_{{$e.JsonName}}_FAILURE', (resolve) => {
+export const update{{$e.JsonName | title}}Failure = createAction('PROTOC_UPDATE_{{$e.JsonName | caps}}_FAILURE', (resolve) => {
 	return (error: NodeJS.ErrnoException) => resolve(error)
 });
 
-export const update{{$e.JsonName}}Cancel = createAction('PROTOC_UPDATE_{{$e.JsonName}}_CANCEL');{{end}}
+export const update{{$e.JsonName | title}}Cancel = createAction('PROTOC_UPDATE_{{$e.JsonName | caps}}_CANCEL');{{end}}
 `
 
 const getTemplate = `{{range $i, $e := .}}
-export const get{{$e.JsonName}}Request = createAction('PROTOC_GET_{{$e.JsonName}}_REQUEST', (resolve) => {
+export const get{{$e.JsonName | title}}Request = createAction('PROTOC_GET_{{$e.JsonName | caps}}_REQUEST', (resolve) => {
 	return ({{$e.JsonName}}: {{$e.InputType}}) => resolve({{$e.JsonName}})
 });
 
-export const get{{$e.JsonName}}RequestPromise = createAction('PROTOC_GET_{{$e.JsonName}}_REQUEST_PROMISE', (resolve) => {
+export const get{{$e.JsonName | title}}RequestPromise = createAction('PROTOC_GET_{{$e.JsonName | caps}}_REQUEST_PROMISE', (resolve) => {
 	return (
 		{{$e.JsonName}}: {{$e.InputType}},
 		resolve: (payload: {{$e.OutputType}}) => void,
@@ -82,67 +83,67 @@ export const get{{$e.JsonName}}RequestPromise = createAction('PROTOC_GET_{{$e.Js
 	) => res({ {{$e.JsonName}}, resolve, reject });
 });
 
-export const get{{$e.JsonName}}Success = createAction('PROTOC_GET_{{$e.JsonName}}_SUCCESS', (resolve) => {
+export const get{{$e.JsonName | title}}Success = createAction('PROTOC_GET_{{$e.JsonName | caps}}_SUCCESS', (resolve) => {
 	return ({{$e.JsonName}}: {{$e.OutputType}}) => resolve({{$e.JsonName}})
 });
 
-export const get{{$e.JsonName}}Failure = createAction('PROTOC_GET_{{$e.JsonName}}_FAILURE', (resolve) => {
+export const get{{$e.JsonName | title}}Failure = createAction('PROTOC_GET_{{$e.JsonName | caps}}_FAILURE', (resolve) => {
 	return (error: NodeJS.ErrnoException) => resolve(error)
 });
 
-export const get{{$e.JsonName}}Cancel = createAction('PROTOC_GET_{{$e.JsonName}}_CANCEL');{{end}}
+export const get{{$e.JsonName | title}}Cancel = createAction('PROTOC_GET_{{$e.JsonName | caps}}_CANCEL');{{end}}
 `
 
 const listTemplate = `{{range $i, $e := .}}
-export const list{{$e.JsonName}}Request = createAction('PROTOC_LIST_{{$e.JsonName}}_REQUEST', (resolve) => {
+export const list{{$e.JsonName | title}}Request = createAction('PROTOC_LIST_{{$e.JsonName | caps}}_REQUEST', (resolve) => {
 	return ({{$e.JsonName}}: {{$e.InputType}}) => resolve({{$e.JsonName}})
 });
 
-export const list{{$e.JsonName}}RequestPromise = createAction('PROTOC_LIST_{{$e.JsonName}}_REQUEST_PROMISE', (resolve) => {
+export const list{{$e.JsonName | title}}RequestPromise = createAction('PROTOC_LIST_{{$e.JsonName | caps}}_REQUEST_PROMISE', (resolve) => {
 	return (
 		{{$e.JsonName}}: {{$e.InputType}},
-		resolve: (payload: {{$e.OutputType}}) => void,
+		resolve: (payload: {{$e.OutputType}}[]) => void,
 		reject: (error: NodeJS.ErrnoException) => void,
 	) => res({ {{$e.JsonName}}, resolve, reject });
 });
 
-export const list{{$e.JsonName}}Success = createAction('PROTOC_LIST_{{$e.JsonName}}_SUCCESS', (resolve) => {
-	return ({{$e.JsonName}}: {{$e.OutputType}}) => resolve({{$e.JsonName}})
+export const list{{$e.JsonName | title}}Success = createAction('PROTOC_LIST_{{$e.JsonName | caps}}_SUCCESS', (resolve) => {
+	return ({{$e.JsonName}}: {{$e.OutputType}}[]) => resolve({{$e.JsonName}})
 });
 
-export const list{{$e.JsonName}}Failure = createAction('PROTOC_LIST_{{$e.JsonName}}_FAILURE', (resolve) => {
+export const list{{$e.JsonName | title}}Failure = createAction('PROTOC_LIST_{{$e.JsonName | caps}}_FAILURE', (resolve) => {
 	return (error: NodeJS.ErrnoException) => resolve(error)
 });
 
-export const list{{$e.JsonName}}Cancel = createAction('PROTOC_LIST_{{$e.JsonName}}_CANCEL');{{end}}
+export const list{{$e.JsonName | title}}Cancel = createAction('PROTOC_LIST_{{$e.JsonName | caps}}_CANCEL');{{end}}
 `
 
 const deleteTemplate = `{{range $i, $e := .}}
-export const delete{{$e.JsonName}}Request = createAction('PROTOC_DELETE_{{$e.JsonName}}_REQUEST', (resolve) => {
+export const delete{{$e.JsonName | title}}Request = createAction('PROTOC_DELETE_{{$e.JsonName | caps}}_REQUEST', (resolve) => {
 	return ({{$e.JsonName}}: {{$e.InputType}}) => resolve({{$e.JsonName}})
 });
 
-export const delete{{$e.JsonName}}RequestPromise = createAction('PROTOC_DELETE_{{$e.JsonName}}_REQUEST_PROMISE', (resolve) => {
+export const delete{{$e.JsonName | title}}RequestPromise = createAction('PROTOC_DELETE_{{$e.JsonName | caps}}_REQUEST_PROMISE', (resolve) => {
 	return (
 		{{$e.JsonName}}: {{$e.InputType}},
-		resolve: (payload: {{$e.OutputType}}) => void,
+		resolve: (payload: {{$e.OutputType}}{{if $e.Repeat}}[]{{end}}) => void,
 		reject: (error: NodeJS.ErrnoException) => void,
 	) => res({ {{$e.JsonName}}, resolve, reject });
 });
 
-export const delete{{$e.JsonName}}Success = createAction('PROTOC_DELETE_{{$e.JsonName}}_SUCCESS', (resolve) => {
+export const delete{{$e.JsonName | title}}Success = createAction('PROTOC_DELETE_{{$e.JsonName | caps}}_SUCCESS', (resolve) => {
 	return ({{$e.JsonName}}: {{$e.OutputType}}) => resolve({{$e.JsonName}})
 });
 
-export const delete{{$e.JsonName}}Failure = createAction('PROTOC_DELETE_{{$e.JsonName}}_FAILURE', (resolve) => {
+export const delete{{$e.JsonName | title}}Failure = createAction('PROTOC_DELETE_{{$e.JsonName | caps}}_FAILURE', (resolve) => {
 	return (error: NodeJS.ErrnoException) => resolve(error)
 });
 
-export const delete{{$e.JsonName}}Cancel = createAction('PROTOC_DELETE_{{$e.JsonName}}_CANCEL');{{end}}
+export const delete{{$e.JsonName | title}}Cancel = createAction('PROTOC_DELETE_{{$e.JsonName | caps}}_CANCEL');{{end}}
 `
 
 const resetTemplate = `{{range $i, $e := .}}
-export const reset{{$e.JsonName}} = createAction('PROTOC_RESET_{{$e.JsonName}}');{{end}}
+export const reset{{$e.JsonName | title}} = createAction('PROTOC_RESET_{{$e.JsonName | caps}}');{{end}}
 `
 
 const header = `/* THIS FILE IS GENERATED FROM THE TOOL PROTOC-GEN-STATE */
@@ -157,15 +158,16 @@ type ActionEntity struct {
 	JsonName   string
 	InputType  string
 	OutputType string
+	Repeat     bool
 }
 
 func CreateActionFile(stateFields []*gp.FieldDescriptorProto, customFields []*gp.FieldDescriptorProto, serviceFiles []*gp.FileDescriptorProto) (*File, error) {
-	createEntities := []*ActionEntity{}
-	updateEntities := []*ActionEntity{}
-	deleteEntities := []*ActionEntity{}
 	getEntities := []*ActionEntity{}
 	listEntities := []*ActionEntity{}
 	resetEntities := []*ActionEntity{}
+	createEntities := []*ActionEntity{}
+	updateEntities := []*ActionEntity{}
+	deleteEntities := []*ActionEntity{}
 
 	for _, field := range stateFields {
 		repeated := field.GetLabel() == 3
@@ -198,8 +200,9 @@ func CreateActionFile(stateFields []*gp.FieldDescriptorProto, customFields []*gp
 				// found it so add it to the action entity for this crud value (c)
 				action := &ActionEntity{
 					JsonName:   *field.JsonName,
-					InputType:  meth.GetInputType(),
-					OutputType: meth.GetOutputType(),
+					InputType:  fmt.Sprintf("ProtocTypes%s.AsObject", meth.GetInputType()),
+					OutputType: fmt.Sprintf("ProtocTypes%s.AsObject", meth.GetOutputType()),
+					Repeat:     repeated,
 				}
 				switch c {
 				case CREATE:
@@ -220,28 +223,34 @@ func CreateActionFile(stateFields []*gp.FieldDescriptorProto, customFields []*gp
 			}
 		}
 
-		// create a reset action too
+		// create a reset action for each field name
 		resetEntities = append(resetEntities, &ActionEntity{
 			JsonName: *field.JsonName,
 		})
 	}
 
+	// helper funcs for templates
+	funcMap := template.FuncMap{
+		"caps":  strings.ToUpper,
+		"title": strings.Title,
+	}
+
 	// generate the templates
-	createT := template.Must(template.New("create").Parse(createTemplate))
-	deleteT := template.Must(template.New("delete").Parse(deleteTemplate))
-	updateT := template.Must(template.New("update").Parse(updateTemplate))
-	getT := template.Must(template.New("get").Parse(getTemplate))
-	listT := template.Must(template.New("list").Parse(listTemplate))
-	resetT := template.Must(template.New("reset").Parse(resetTemplate))
+	getT := template.Must(template.New("get").Funcs(funcMap).Parse(getTemplate))
+	listT := template.Must(template.New("list").Funcs(funcMap).Parse(listTemplate))
+	resetT := template.Must(template.New("reset").Funcs(funcMap).Parse(resetTemplate))
+	createT := template.Must(template.New("create").Funcs(funcMap).Parse(createTemplate))
+	deleteT := template.Must(template.New("delete").Funcs(funcMap).Parse(deleteTemplate))
+	updateT := template.Must(template.New("update").Funcs(funcMap).Parse(updateTemplate))
 
 	// append to output
 	var output bytes.Buffer
-	createT.Execute(&output, createEntities)
-	deleteT.Execute(&output, deleteEntities)
-	updateT.Execute(&output, updateEntities)
 	getT.Execute(&output, getEntities)
 	listT.Execute(&output, listEntities)
 	resetT.Execute(&output, resetEntities)
+	createT.Execute(&output, createEntities)
+	deleteT.Execute(&output, deleteEntities)
+	updateT.Execute(&output, updateEntities)
 
 	// return the completed file
 	return &File{
