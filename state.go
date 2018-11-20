@@ -2,7 +2,6 @@ package main
 
 import (
   "bytes"
-  // "fmt"
   "text/template"
 
 	gp "github.com/golang/protobuf/protoc-gen-go/descriptor"
@@ -17,8 +16,8 @@ export interface ProtocState { {{range $i, $entity := .}}
   {{$entity.FieldName}}: {
     isLoading: boolean;
     error: { code: string; message: string; },
-    {{if $entity.Repeated}}value: {{$entity.FullTypeName}};
-    {{else}}value: {{$entity.FullTypeName}} | null;{{end}}
+    {{if $entity.Repeated}}value: ProtocTypes{{$entity.FullTypeName}}.AsObject;
+    {{else}}value: ProtocTypes{{$entity.FullTypeName}}.AsObject | null;{{end}}
   },
   {{end}}
 }
@@ -33,17 +32,6 @@ export const initialProtocState : ProtocState = { {{range $i, $entity := .}}
   {{end}}
 }
 `
-// const stateTemplate = `/* THIS FILE IS GENERATED FROM THE TOOL PROTOC-GEN-STATE  */
-// /* ANYTHING YOU EDIT WILL BE OVERWRITTEN IN FUTURE BUILDS */
-
-// import * as ProtocTypes from './protoc_types_pb';
-
-// export interface ProtocState {
-//   {{range $i, $StateEntity := .}}
-//   {{$StateEntity.FieldName}}
-//   {{end}}
-// }
-// `
 
 type StateEntity struct {
   FieldName string
@@ -51,20 +39,18 @@ type StateEntity struct {
   Repeated bool
 }
 
-
 func CreateStateFile(stateFields []*gp.FieldDescriptorProto) (*File, error) {
   stateEntities := []*StateEntity{}
 
+  // transform stateFields into our StateEntity implementation so template can read values
   for _, entity := range stateFields {
-    newEntity := &StateEntity{
-      FieldName: *entity.Name,
-      FullTypeName: *entity.TypeName,
+    stateEntities = append(stateEntities, &StateEntity{
+      FieldName: entity.GetJsonName(),
+      FullTypeName: entity.GetTypeName(),
       Repeated: entity.GetLabel() == 3,
-    }
-    stateEntities = append(stateEntities, newEntity)
+    })
   }
 
-  // fmt.Println("output: ", stateEntities[0].fieldName)
   tmpl := template.Must(template.New("state").Parse(stateTemplate))
 
   var output bytes.Buffer
