@@ -59,16 +59,16 @@ func GetFileExtensionString(desc *gp.FileDescriptorProto, name string) (string, 
 //   ಠ_ಠ   okay
 func GetExtensionInt(desc *gp.FileDescriptorProto, extName *proto.ExtensionDesc) (int64, error) {
 	if desc == nil || desc.GetOptions() == nil {
-		return 0, nil
+		return -1, nil
 	}
 	if proto.HasExtension(desc.GetOptions(), extName) {
 		pkg, err := proto.GetExtension(desc.GetOptions(), extName)
 		if err != nil {
-			return 0, errors.New("Failed to get debounce extension")
+			return -1, errors.New("Failed to get debounce extension")
 		}
 		return *pkg.(*int64), nil
 	}
-	return 0, nil
+	return -1, nil
 }
 
 //   ಠ_ಠ   okay
@@ -134,14 +134,14 @@ func GetFieldOptionsInt(desc *gp.FieldDescriptorProto, extName *proto.ExtensionD
 
 func GetFieldAnnotationInt(desc *gp.FieldDescriptorProto, extName *proto.ExtensionDesc) (int64, error) {
 	if desc == nil || desc.GetOptions() == nil {
-		return 0, nil
+		return -1, nil
 	}
 	if proto.HasExtension(desc.GetOptions(), extName) {
 		pkg, err := proto.GetExtension(desc.GetOptions(), extName)
 		if err != nil {
-			return 0, errors.New("Failed to get debounce extension")
+			return -1, errors.New("Failed to get debounce extension")
 		}
 		return *pkg.(*int64), nil
 	}
-	return 0, nil
+	return -1, nil
 }

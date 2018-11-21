@@ -164,7 +164,7 @@ func generate(filepaths []string, protos []*gp.FileDescriptorProto) ([]*File, er
 	// create reducer file
 	// TODO
 	// create epic file
-	epicPb, err := CreateEpicFile(stateFields)
+	epicPb, err := CreateEpicFile(stateFields, customFields, serviceFiles, defaultTimeout, defaultRetries, authTokenLocation, hostnameLocation, hostname, port, debounce, debug)
 	if err != nil {
 		return nil, fmt.Errorf("Error generating actions_pb file: %v", err)
 	}

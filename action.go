@@ -215,7 +215,7 @@ func CreateActionFile(stateFields []*gp.FieldDescriptorProto, customFields []*gp
 			// verify the annotation exists in the methods struct
 			crudAnnotation := GetAnnotation(methods, c, repeated)
 			if crudAnnotation != "" {
-				meth, err = FindMethodDescriptor(serviceFiles, crudAnnotation)
+				meth, _, err = FindMethodDescriptor(serviceFiles, crudAnnotation)
 				if err != nil {
 					return nil, err
 				}
@@ -276,7 +276,7 @@ func CreateActionFile(stateFields []*gp.FieldDescriptorProto, customFields []*gp
 		var meth *gp.MethodDescriptorProto
 		crudAnnotation := methods.GetCustom()
 		if crudAnnotation != "" {
-			meth, err = FindMethodDescriptor(serviceFiles, crudAnnotation)
+			meth, _, err = FindMethodDescriptor(serviceFiles, crudAnnotation)
 			if err != nil {
 				return nil, err
 			}
