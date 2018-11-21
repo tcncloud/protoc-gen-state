@@ -50,7 +50,7 @@ func generate(filepaths []string, protos []*gp.FileDescriptorProto) ([]*File, er
 	// these files are generated everytime
 	outputFiles := []string{
 		// "actions_pb.ts",
-		"epics_pb.ts",
+		// "epics_pb.ts",
 		"protoc_services.ts",
 		"protoc_types.ts",
 		// "reducer_pb.ts",
@@ -170,7 +170,12 @@ func generate(filepaths []string, protos []*gp.FileDescriptorProto) ([]*File, er
 
 	// TODO
 	// create epic file
-	// TODO
+	epicPb, err := CreateEpicFile(stateFields)
+	if err != nil {
+		return nil, fmt.Errorf("Error generating actions_pb file: %v", err)
+	}
+	out = append(out, epicPb)
+
 	// create toMessage file
 	// TODO
 	// create message_aggregate file

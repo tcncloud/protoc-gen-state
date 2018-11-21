@@ -14,28 +14,7 @@ import (
 // TODO make sure maps are supported
 
 
-const reducerTemplate = `{{define "getRequest"}}case getType(protocActions['get{{.Name}}Request']):
-      return {
-        ...state,
-        {{.Name}}: {
-          ...state.{{.Name}},
-          isLoading: true,
-        }
-      }{{end}}
-
-{{define "getSuccess"}}case getType(protocActions['get{{.Name}}Success']):
-      var {{.Name}}Value: ProtocState["{{.Name}}"]["value"] = action.payload;
-      return {
-        ...state,
-        {{.Name}}: {
-          ...state.{{.Name}},
-          isLoading: false,
-          value: {{.Name}}Value,
-          error: initialProtocState.{{.Name}}.error,
-        }
-      }{{end}}
-
-/* THIS FILE IS GENERATED FROM THE TOOL PROTOC-GEN-STATE  */
+const reducerTemplate = `/* THIS FILE IS GENERATED FROM THE TOOL PROTOC-GEN-STATE  */
 /* ANYTHING YOU EDIT WILL BE OVERWRITTEN IN FUTURE BUILDS */
 
 import { getType, ActionType } from 'typesafe-actions';
@@ -48,62 +27,103 @@ type RootAction = ActionType<typeof protocActions>;
 
 export function protocReducer(state: ProtocState = initialProtocState, action: RootAction) {
   switch(action.type) { {{range $i, $entity := .}}
-    {{if eq $entity.SwitchCase 0}}{{template "getRequest" $entity}}{{end}}
-    {{if eq $entity.SwitchCase 1}}{{template "getSuccess" $entity}}{{end}}
-    {{end}}
+    case getType(protocActions['{{$entity.CludgEffectName}}']):
+      {{$entity.SwitchCase}}{{end}}
     default: return state;
   }
 };
-}
 `
 
-type SwitchCaseEnum int
-
-const (
-  getRequest    SwitchCaseEnum = 0
-  getSuccess    SwitchCaseEnum = 1
-  getFailure    SwitchCaseEnum = 2
-  getCancel     SwitchCaseEnum = 3
-  listRequest   SwitchCaseEnum = 4
-  listSuccess   SwitchCaseEnum = 5
-  listFailure   SwitchCaseEnum = 6
-  listCancel    SwitchCaseEnum = 7
-  reset         SwitchCaseEnum = 8
-)
-
-
 type ReducerEntity struct {
-  SwitchCase SwitchCaseEnum
+  SwitchCase string
   Name string
-  CludgName string
+  CludgEffectName string
 }
 
 func CreateReducerFile(stateFields []*gp.FieldDescriptorProto) (*File, error) {
   reducerEntities := []*ReducerEntity{}
 
-  // TODO
-  // loop through stateFields
-      // find the annotations defined for each field
-  methods, err := GetFieldOptionsString(stateFields[0], state.E_Method)
-  if err != nil {
-    fmt.Println("woops")
-  }
-  ann := GetAnnotation(methods, 0, stateFields[0].GetLabel() == 3)
-  if methods.GetList() == "" {
-    fmt.Println("fuuuuck", "\n\n\n\n\n\n\n\n\n\n\n\n\n\n")
-  } else {
-    fmt.Println(ann, "\n\n\n\n\n\n\n\n\n\n\n\n\n\n")
-  }
-  
   for _, entity := range stateFields {
+    methods, err := GetFieldOptionsString(entity, state.E_Method)
+    if err != nil {
+      return nil, err
+    }
+
+    for c := CREATE; c < CRUD_MAX; c++ {
+      switchCase := ""
+      repeated := entity.GetLabel() == 3
+      annotation := GetAnnotation(methods, c, repeated)
+
+      if annotation != "" {
+        for s := REQUEST; s < SIDE_EFFECT_MAX; s++ {
+          switch(s){
+          case REQUEST:
+            switchCase = fmt.Sprintf(`return {
+        ...state,
+        %s: {
+          ...state.%s,
+          isLoading: true,
+        }
+      }`, entity.GetJsonName(), entity.GetJsonName())
+          case SUCCESS:
+            varName := "new" + strings.Title(entity.GetJsonName()) + "Value"
+            if repeated {
+              varName += "Array"
+            }
+            switchCase += CrudNewValue(c, entity, repeated, varName) 
+            switchCase = fmt.Sprintf(`return {
+        ...state,
+        %s: {
+          ...state.%s,
+          isLoading: true,
+        }
+      }`, entity.GetJsonName(), entity.GetJsonName())
+          case FAILURE:
+            switchCase = fmt.Sprintf(`return {
+        ...state,
+        %s: {
+          ...state.%s,
+          isLoading: false,
+          error: { code: action.payload.code, message: action.payload.message },
+        }
+      }`, entity.GetJsonName(), entity.GetJsonName())
+          case CANCEL:
+            switchCase = fmt.Sprintf(`return {
+        ...state,
+        %s: {
+          ...state.%s,
+          isLoading: false,
+        }
+      }`, entity.GetJsonName(), entity.GetJsonName())
+          default:
+            return nil, fmt.Errorf("Unsupported Side Effect: %v", s)
+          }
+
+          reducerEntities = append(reducerEntities, &ReducerEntity{
+            SwitchCase: switchCase,
+            CludgEffectName: CrudName(c, repeated) + strings.Title(entity.GetJsonName()) + strings.Title(SideEffectName(s)),
+            Name: entity.GetJsonName(),
+          })
+        }
+      }
+    }
+
+    // create reset reducer block
     reducerEntities = append(reducerEntities, &ReducerEntity{
-      SwitchCase: 1,
-      CludgName: "get" + strings.Title(entity.GetJsonName()) + "Request",
+      SwitchCase: fmt.Sprintf(`return {
+        ...state,
+        %s: initialProtocState.%s
+      }`, entity.GetJsonName(), entity.GetJsonName()),
+      CludgEffectName: "reset" + strings.Title(entity.GetJsonName()),
       Name: entity.GetJsonName(),
     })
   }
 
-  tmpl := template.Must(template.New("reducer").Parse(reducerTemplate))
+  funcMap := template.FuncMap{
+    "title": strings.Title,
+  }
+
+  tmpl := template.Must(template.New("reducer").Funcs(funcMap).Parse(reducerTemplate))
 
   var output bytes.Buffer
   tmpl.Execute(&output, reducerEntities)
@@ -112,4 +132,15 @@ func CreateReducerFile(stateFields []*gp.FieldDescriptorProto) (*File, error) {
 		Name:    "reducer_pb.ts",
 		Content: output.String(),
 	}, nil
+}
+
+func CrudNewValue(c Crud, entity *gp.FieldDescriptorProto, repeated bool, varName string) string {
+  payloadName := entity.GetJsonName()
+  tsType := entity.MessageType().GetJsonName()
+  fmt.Println("tsType: ", tsType, "\n\n\nn\n\n\n\n\nn\n")
+  tsTypePackage := strings.Replace("ts.type.package", ".", "_", -1)
+  // TODO find these message type stuff below
+  // tsType := entity.message_type().name() + ".AsObject"
+  // tsTypePackage := replacePeriodsWithUnderscore(entity.message_type().file().package()
+  return tsTypePackage
 }

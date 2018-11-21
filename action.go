@@ -9,31 +9,197 @@ import (
 	"text/template"
 )
 
+/// Sacrificed some code duplication for readability/maintainability sake
+
 func createActionImports() string {
-	return `import { createAction from 'typesafe-actions';
+	return `/* THIS FILE IS GENERATED FROM THE TOOL PROTOC-GEN-STATE */
+/* ANYTHING YOU EDIT WILL BE OVERWRITTEN IN FUTURE BUILDS */
+
+import { createAction } from 'typesafe-actions';
 import * as ProtocTypes from './protoc_types_pb';
 
 `
 }
 
-type Reset struct {
-	Name string
-	Type string
+const createTemplate = `{{range $i, $e := .}}
+export const create{{$e.JsonName | title}}Request = createAction('PROTOC_CREATE_{{$e.JsonName | caps}}_REQUEST', (resolve) => {
+	return ({{$e.JsonName}}: {{$e.InputType}}) => resolve({{$e.JsonName}})
+});
+
+export const create{{$e.JsonName | title}}RequestPromise = createAction('PROTOC_CREATE_{{$e.JsonName | caps}}_REQUEST_PROMISE', (resolve) => {
+	return (
+		{{$e.JsonName}}: {{$e.InputType}},
+		resolve: (payload: {{$e.OutputType}}{{if $e.Repeat}}[]{{end}}) => void,
+		reject: (error: NodeJS.ErrnoException) => void,
+	) => res({ {{$e.JsonName}}, resolve, reject });
+});
+
+export const create{{$e.JsonName | title}}Success = createAction('PROTOC_CREATE_{{$e.JsonName | caps}}_SUCCESS', (resolve) => {
+	return ({{$e.JsonName}}: {{$e.OutputType}}) => resolve({{$e.JsonName}})
+});
+
+export const create{{$e.JsonName | title}}Failure = createAction('PROTOC_CREATE_{{$e.JsonName | caps}}_FAILURE', (resolve) => {
+	return (error: NodeJS.ErrnoException) => resolve(error)
+});
+
+export const create{{$e.JsonName | title}}Cancel = createAction('PROTOC_CREATE_{{$e.JsonName | caps}}_CANCEL');{{end}}
+`
+
+const updateTemplate = `{{range $i, $e := .}}
+export const update{{$e.JsonName | title}}Request = createAction('PROTOC_UPDATE_{{$e.JsonName | caps}}_REQUEST', (resolve) => {
+	return (prev: {{$e.InputType}}, updated: {{$e.InputType}}) => resolve({prev, updated})
+})
+
+export const update{{$e.JsonName | title}}RequestPromise = createAction('PROTOC_UPDATE_{{$e.JsonName | caps}}_REQUEST_PROMISE', (res) => {
+	return (
+		prev: {{$e.InputType}},
+		updated: {{$e.InputType}},
+		resolve: (prev: {{$e.InputType}}, updated: {{$e.InputType}}) => void,
+		reject: (error: NodeJS.ErrnoException) => void,
+	) => res({ prev, updated, resolve, reject })
+});
+
+export const update{{$e.JsonName | title}}Success = createAction('PROTOC_UPDATE_{{$e.JsonName | caps}}_SUCCESS', (resolve) => {
+	return ({{$e.JsonName}}: { prev: {{$e.InputType}}, updated: {{$e.InputType}} }) => resolve({{$e.JsonName}})
+})
+
+export const update{{$e.JsonName | title}}Failure = createAction('PROTOC_UPDATE_{{$e.JsonName | caps}}_FAILURE', (resolve) => {
+	return (error: NodeJS.ErrnoException) => resolve(error)
+});
+
+export const update{{$e.JsonName | title}}Cancel = createAction('PROTOC_UPDATE_{{$e.JsonName | caps}}_CANCEL');{{end}}
+`
+
+const getTemplate = `{{range $i, $e := .}}
+export const get{{$e.JsonName | title}}Request = createAction('PROTOC_GET_{{$e.JsonName | caps}}_REQUEST', (resolve) => {
+	return ({{$e.JsonName}}: {{$e.InputType}}) => resolve({{$e.JsonName}})
+});
+
+export const get{{$e.JsonName | title}}RequestPromise = createAction('PROTOC_GET_{{$e.JsonName | caps}}_REQUEST_PROMISE', (resolve) => {
+	return (
+		{{$e.JsonName}}: {{$e.InputType}},
+		resolve: (payload: {{$e.OutputType}}) => void,
+		reject: (error: NodeJS.ErrnoException) => void,
+	) => res({ {{$e.JsonName}}, resolve, reject });
+});
+
+export const get{{$e.JsonName | title}}Success = createAction('PROTOC_GET_{{$e.JsonName | caps}}_SUCCESS', (resolve) => {
+	return ({{$e.JsonName}}: {{$e.OutputType}}) => resolve({{$e.JsonName}})
+});
+
+export const get{{$e.JsonName | title}}Failure = createAction('PROTOC_GET_{{$e.JsonName | caps}}_FAILURE', (resolve) => {
+	return (error: NodeJS.ErrnoException) => resolve(error)
+});
+
+export const get{{$e.JsonName | title}}Cancel = createAction('PROTOC_GET_{{$e.JsonName | caps}}_CANCEL');{{end}}
+`
+
+const listTemplate = `{{range $i, $e := .}}
+export const list{{$e.JsonName | title}}Request = createAction('PROTOC_LIST_{{$e.JsonName | caps}}_REQUEST', (resolve) => {
+	return ({{$e.JsonName}}: {{$e.InputType}}) => resolve({{$e.JsonName}})
+});
+
+export const list{{$e.JsonName | title}}RequestPromise = createAction('PROTOC_LIST_{{$e.JsonName | caps}}_REQUEST_PROMISE', (resolve) => {
+	return (
+		{{$e.JsonName}}: {{$e.InputType}},
+		resolve: (payload: {{$e.OutputType}}[]) => void,
+		reject: (error: NodeJS.ErrnoException) => void,
+	) => res({ {{$e.JsonName}}, resolve, reject });
+});
+
+export const list{{$e.JsonName | title}}Success = createAction('PROTOC_LIST_{{$e.JsonName | caps}}_SUCCESS', (resolve) => {
+	return ({{$e.JsonName}}: {{$e.OutputType}}[]) => resolve({{$e.JsonName}})
+});
+
+export const list{{$e.JsonName | title}}Failure = createAction('PROTOC_LIST_{{$e.JsonName | caps}}_FAILURE', (resolve) => {
+	return (error: NodeJS.ErrnoException) => resolve(error)
+});
+
+export const list{{$e.JsonName | title}}Cancel = createAction('PROTOC_LIST_{{$e.JsonName | caps}}_CANCEL');{{end}}
+`
+
+const deleteTemplate = `{{range $i, $e := .}}
+export const delete{{$e.JsonName | title}}Request = createAction('PROTOC_DELETE_{{$e.JsonName | caps}}_REQUEST', (resolve) => {
+	return ({{$e.JsonName}}: {{$e.InputType}}) => resolve({{$e.JsonName}})
+});
+
+export const delete{{$e.JsonName | title}}RequestPromise = createAction('PROTOC_DELETE_{{$e.JsonName | caps}}_REQUEST_PROMISE', (resolve) => {
+	return (
+		{{$e.JsonName}}: {{$e.InputType}},
+		resolve: (payload: {{$e.OutputType}}{{if $e.Repeat}}[]{{end}}) => void,
+		reject: (error: NodeJS.ErrnoException) => void,
+	) => res({ {{$e.JsonName}}, resolve, reject });
+});
+
+export const delete{{$e.JsonName | title}}Success = createAction('PROTOC_DELETE_{{$e.JsonName | caps}}_SUCCESS', (resolve) => {
+	return ({{$e.JsonName}}: {{$e.OutputType}}) => resolve({{$e.JsonName}})
+});
+
+export const delete{{$e.JsonName | title}}Failure = createAction('PROTOC_DELETE_{{$e.JsonName | caps}}_FAILURE', (resolve) => {
+	return (error: NodeJS.ErrnoException) => resolve(error)
+});
+
+export const delete{{$e.JsonName | title}}Cancel = createAction('PROTOC_DELETE_{{$e.JsonName | caps}}_CANCEL');{{end}}
+`
+
+const customTemplate = `{{range $i, $e := .}}
+export const custom{{$e.JsonName | title}}Request = createAction('PROTOC_CUSTOM_{{$e.JsonName | caps}}_REQUEST', (resolve) => {
+	return ({{$e.JsonName}}: {{$e.InputType}}) => resolve({{$e.JsonName}})
+});
+
+export const custom{{$e.JsonName | title}}RequestPromise = createAction('PROTOC_CUSTOM_{{$e.JsonName | caps}}_REQUEST_PROMISE', (resolve) => {
+	return (
+		{{$e.JsonName}}: {{$e.InputType}},
+		resolve: (payload: {{$e.OutputType}}{{if $e.Repeat}}[]{{end}}) => void,
+		reject: (error: NodeJS.ErrnoException) => void,
+	) => res({ {{$e.JsonName}}, resolve, reject });
+});
+
+export const custom{{$e.JsonName | title}}Success = createAction('PROTOC_CUSTOM_{{$e.JsonName | caps}}_SUCCESS', (resolve) => {
+	return ({{$e.JsonName}}: {{$e.OutputType}}{{if $e.Repeat}}[]{{end}}) => resolve({{$e.JsonName}})
+});
+
+export const custom{{$e.JsonName | title}}Failure = createAction('PROTOC_CUSTOM_{{$e.JsonName | caps}}_FAILURE', (resolve) => {
+	return (error: NodeJS.ErrnoException) => resolve(error)
+});
+
+export const custom{{$e.JsonName | title}}Cancel = createAction('PROTOC_CUSTOM_{{$e.JsonName | caps}}_CANCEL');{{end}}
+`
+
+const resetTemplate = `{{range $i, $e := .}}
+export const reset{{$e.JsonName | title}} = createAction('PROTOC_RESET_{{$e.JsonName | caps}}');{{end}}
+`
+
+const header = `/* THIS FILE IS GENERATED FROM THE TOOL PROTOC-GEN-STATE */
+/* ANYTHING YOU EDIT WILL BE OVERWRITTEN IN FUTURE BUILDS */
+
+import { createAction } from 'typesafe-actions';
+import * as ProtocTypes from './protoc_types_pb';
+
+`
+
+type ActionEntity struct {
+	JsonName   string
+	InputType  string
+	OutputType string
+	Repeat     bool
 }
 
 func CreateActionFile(stateFields []*gp.FieldDescriptorProto, customFields []*gp.FieldDescriptorProto, serviceFiles []*gp.FileDescriptorProto) (*File, error) {
-	output := createActionImports()
+	getEntities := []*ActionEntity{}
+	listEntities := []*ActionEntity{}
+	resetEntities := []*ActionEntity{}
+	createEntities := []*ActionEntity{}
+	updateEntities := []*ActionEntity{}
+	deleteEntities := []*ActionEntity{}
+	customEntities := []*ActionEntity{}
+
+	// populate Entities slices with state fields
 	for _, field := range stateFields {
 		repeated := field.GetLabel() == 3
-		// get the method annotations
-		methods, err := GetFieldOptionsString(field, state.E_Method)
-		// // get the method timeout and retry field level override
-		// methodTimeout, err := GetFieldOptionsInt(field, state.E_MethodTimeout)
-		// methodRetries, err := GetFieldOptionsInt(field, state.E_MethodRetries)
-		// // get timeout and retries field level override
-		// timeout, err := GetFieldAnnotationInt(field, state.E_Timeout)
-		// retries, err := GetFieldAnnotationInt(field, state.E_Retries)
 
+		// verify the method annotations
+		methods, err := GetFieldOptionsString(field, state.E_Method)
 		if err != nil {
 			return nil, fmt.Errorf("Error getting field level annotations: %v", err)
 		}
@@ -46,52 +212,118 @@ func CreateActionFile(stateFields []*gp.FieldDescriptorProto, customFields []*gp
 		// loop through CLUDG verbs
 		var meth *gp.MethodDescriptorProto
 		for c := CREATE; c < CRUD_MAX; c++ {
-			// verify the annotation exists
-      val, err := GetAnnotation(methods, c, repeated)
-      if err != nil {
-				meth, err = FindMethodDescriptor(serviceFiles, GetAnnotation(methods, c, repeated))
+			// verify the annotation exists in the methods struct
+			crudAnnotation := GetAnnotation(methods, c, repeated)
+			if crudAnnotation != "" {
+				meth, err = FindMethodDescriptor(serviceFiles, crudAnnotation)
+				if err != nil {
+					return nil, err
+				}
+			}
+
+			// if method is still empty, the method could not be found so do nothing
+			if meth != nil {
+				// found it so add it to the action entity for this crud value (c)
+				action := &ActionEntity{
+					JsonName:   *field.JsonName,
+					InputType:  fmt.Sprintf("ProtocTypes%s.AsObject", meth.GetInputType()),
+					OutputType: fmt.Sprintf("ProtocTypes%s.AsObject", meth.GetOutputType()),
+					Repeat:     repeated,
+				}
+				switch c {
+				case CREATE:
+					createEntities = append(createEntities, action)
+				case DELETE:
+					deleteEntities = append(deleteEntities, action)
+				case UPDATE:
+					updateEntities = append(updateEntities, action)
+				case GET:
+					if repeated {
+						listEntities = append(listEntities, action)
+					} else {
+						getEntities = append(getEntities, action)
+					}
+				default:
+					// nothing
+				}
 			}
 		}
 
-		// if method is still empty, the method could not be found so do nothing
-		if meth != nil {
-			// // make an action block for each side effect
-			// for s := REQUEST; s < SIDE_EFFECT_MAX; s++ {
-			//   actionBlock, err := CreateActionBlock(meth, c, field.GetJsonName(), s, repeated)
-			//   if err != nil {
-			// 	   return nil, err
-			//   }
-			//   output += actionBlock
-			// }
-		}
-
-		// create a reset action too
-		resetBlock, err := resetTemplate(field.GetJsonName())
-		if err != nil {
-			return nil, err
-		}
-		output += resetBlock
+		// create a reset action for each field name
+		resetEntities = append(resetEntities, &ActionEntity{
+			JsonName: *field.JsonName,
+		})
 	}
 
+	// do the same things for custom actions
+	// TODO combine the logic since its basically the same
+	for _, field := range customFields {
+		repeated := field.GetLabel() == 3
+		// get the method annoations
+		methods, err := GetFieldOptionsString(field, state.E_Method)
+		if err != nil {
+			return nil, fmt.Errorf("Error getting field level annotations: %v", err)
+		}
+
+		// only custom method annotations allowed in CustomActions
+		for c := CREATE; c < CRUD_MAX; c++ {
+			if GetAnnotation(methods, c, repeated) != "" {
+				return nil, fmt.Errorf("Invalid method annotation. Only method annotation '(method).custom' is allowed within CustomActions message. Correct the annotation on field: %s", *field.JsonName)
+			}
+		}
+
+		// and it must have a custom annotation
+		var meth *gp.MethodDescriptorProto
+		crudAnnotation := methods.GetCustom()
+		if crudAnnotation != "" {
+			meth, err = FindMethodDescriptor(serviceFiles, crudAnnotation)
+			if err != nil {
+				return nil, err
+			}
+		} else {
+			return nil, fmt.Errorf("CustomAction field provided without an accompanying '(method).custom' annotation. Please provide one on field: %s", *field.JsonName)
+		}
+
+		// hopefully the method exists
+		if meth != nil {
+			// TODO this uses repeated from the field value but should use repeated from the output type
+			customEntities = append(customEntities, &ActionEntity{
+				JsonName:   *field.JsonName,
+				InputType:  fmt.Sprintf("ProtocTypes%s.AsObject", meth.GetInputType()),
+				OutputType: fmt.Sprintf("ProtocTypes%s.AsObject", meth.GetOutputType()),
+				Repeat:     repeated,
+			})
+		}
+	}
+
+	// helper funcs for templates
+	funcMap := template.FuncMap{
+		"caps":  strings.ToUpper,
+		"title": strings.Title,
+	}
+
+	// generate the templates
+	getT := template.Must(template.New("get").Funcs(funcMap).Parse(getTemplate))
+	listT := template.Must(template.New("list").Funcs(funcMap).Parse(listTemplate))
+	resetT := template.Must(template.New("reset").Funcs(funcMap).Parse(resetTemplate))
+	createT := template.Must(template.New("create").Funcs(funcMap).Parse(createTemplate))
+	deleteT := template.Must(template.New("delete").Funcs(funcMap).Parse(deleteTemplate))
+	updateT := template.Must(template.New("update").Funcs(funcMap).Parse(updateTemplate))
+	customT := template.Must(template.New("update").Funcs(funcMap).Parse(customTemplate))
+
+	// append to output
+	var output bytes.Buffer
+	getT.Execute(&output, getEntities)
+	listT.Execute(&output, listEntities)
+	resetT.Execute(&output, resetEntities)
+	createT.Execute(&output, createEntities)
+	deleteT.Execute(&output, deleteEntities)
+	updateT.Execute(&output, updateEntities)
+	customT.Execute(&output, customEntities)
+
+	// return the completed file
 	return &File{
 		Name:    "actions_pb.ts",
-		Content: output,
+		Content: createActionImports() + output.String(),
 	}, nil
-}
-
-func resetTemplate(payloadName string) (string, error) {
-	RESET := "export const {{.Name}} = createAction('{{.Type}}');\n"
-
-	r := Reset{
-		"reset" + payloadName,
-		"PROTOC_RESET_" + strings.ToUpper(payloadName),
-	}
-	t, err := template.New("reset").Parse(RESET)
-
-	var result bytes.Buffer
-	if err = t.Execute(&result, r); err != nil {
-		return "", fmt.Errorf("Failed executing reset template: %v", err)
-	}
-
-	return result.String(), nil
 }

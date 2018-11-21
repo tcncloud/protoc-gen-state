@@ -2,14 +2,15 @@ package main
 
 import (
 	"fmt"
-  "errors"
 
 	gp "github.com/golang/protobuf/protoc-gen-go/descriptor"
+	"github.com/tcncloud/protoc-gen-state/state"
 	"strings"
 )
 
 type SideEffect int
 type Crud int
+type CludgeEffect int
 
 const (
 	REQUEST         SideEffect = 0
@@ -28,7 +29,39 @@ const (
 	CUSTOM   Crud = 5
 )
 
-func SideEffectName(s SideEffect, repeated bool) string {
+// TODO must have a distinction between create object request and create list request
+const (
+  CREATE_REQUEST    CludgeEffect = 0
+  CREATE_SUCCESS    CludgeEffect = 1
+  CREATE_FAILURE    CludgeEffect = 2
+  CREATE_CANCEL     CludgeEffect = 3
+  GET_REQUEST       CludgeEffect = 4
+  GET_SUCCESS       CludgeEffect = 5
+  GET_FAILURE       CludgeEffect = 6
+  GET_CANCEL        CludgeEffect = 7
+  UPDATE_REQUEST    CludgeEffect = 8
+  UPDATE_SUCCESS    CludgeEffect = 9
+  UPDATE_FAILURE    CludgeEffect = 10
+  UPDATE_CANCEL     CludgeEffect = 11
+  DELETE_REQUEST    CludgeEffect = 12
+  DELETE_SUCCESS    CludgeEffect = 13
+  DELETE_FAILURE    CludgeEffect = 14
+  DELETE_CANCEL     CludgeEffect = 15
+  LIST_REQUEST      CludgeEffect = 16
+  LIST_SUCCESS      CludgeEffect = 17
+  LIST_FAILURE      CludgeEffect = 18
+  LIST_CANCEL       CludgeEffect = 19
+  RESET             CludgeEffect = 20
+)
+
+func CalculateCludgeEffect(c Crud, s SideEffect, repeated bool) CludgeEffect {
+  if c == GET && repeated {
+    c = CRUD_MAX
+  }
+  return CludgeEffect(int(c) * int(CRUD_MAX) + int(s))
+}
+
+func SideEffectName(s SideEffect) string {
 	switch s {
 	case REQUEST:
 		return "request"
@@ -65,35 +98,6 @@ func CrudName(crud Crud, repeated bool) string {
 		return ""
 	}
 }
-
-func annotationReturnHelper(optionVal string) (string, error){
-  if optionVal == "" {
-    return "", errors.New("Field Option does not exist")
-  }
-  return optionVal, nil
-}
-
-func GetAnnotation(meth state.StringFieldOptions, crud Crud, repeated bool) (string, error) {
-  switch crud {
-  case CREATE:
-    return annotationReturnHelper(meth.GetCreate())
-  case GET:
-    {
-      if repeated {
-        return annotationReturnHelper(meth.GetList())
-      } else {
-        return annotationReturnHelper(meth.GetGet())
-      }
-    }
-  case UPDATE:
-    return annotationReturnHelper(meth.GetUpdate())
-  case DELETE:
-    return annotationReturnHelper(meth.GetDelete())
-  default:
-    return "", errors.New("Crud option does not exist on field option")
-  }
-}
-
 
 func contains(s []string, e string) bool {
 	for _, a := range s {
@@ -149,9 +153,11 @@ func CreateAggregateByPackage(msgFiles []*gp.FileDescriptorProto, protocTsPath s
 // find a method descriptor from the annotation string name
 func FindMethodDescriptor(serviceFiles []*gp.FileDescriptorProto, fullMethodName string) (*gp.MethodDescriptorProto, error) {
 	for _, servFile := range serviceFiles {
+		packageName := servFile.GetPackage()
 		for _, service := range servFile.GetService() {
+			serviceName := service.GetName()
 			for _, method := range service.GetMethod() {
-				if method.GetName() == fullMethodName {
+				if fmt.Sprintf("%s.%s.%s", packageName, serviceName, method.GetName()) == fullMethodName {
 					// make sure it doesn't use client-side streaming (not supported with grpc-web)
 					if method.GetClientStreaming() {
 						return nil, fmt.Errorf("Client-side streaming not supported. Failed on method: %s", fullMethodName)
@@ -162,4 +168,25 @@ func FindMethodDescriptor(serviceFiles []*gp.FileDescriptorProto, fullMethodName
 		}
 	}
 	return nil, fmt.Errorf("Unable to locate method: \"%s\". Missing Method Declaration in Service.", fullMethodName)
+}
+
+func GetAnnotation(meth state.StringFieldOptions, crud Crud, repeated bool) string {
+	switch crud {
+	case CREATE:
+		return meth.GetCreate()
+	case GET:
+		{
+			if repeated {
+				return meth.GetList()
+			} else {
+				return meth.GetGet()
+			}
+		}
+	case UPDATE:
+		return meth.GetUpdate()
+	case DELETE:
+		return meth.GetDelete()
+	default:
+		return ""
+	}
 }
