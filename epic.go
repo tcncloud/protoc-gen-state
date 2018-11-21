@@ -96,7 +96,7 @@ export const {{$e.Name}}Epic = (action$, store) => action$
 				});
 				client.onMessage((message: {{.OutputType}}) => {
 					arr.push(message.toObject());
-				})
+				});
 				client.onEnd((code: grpc.Code, msg: string) => {
 					if (code != grpc.Code.OK) {
 						reject(createErrorObject(code, msg));
@@ -104,7 +104,7 @@ export const {{$e.Name}}Epic = (action$, store) => action$
 					resolve(arr);
 				});
 				client.start({{.Auth}});
-				client.send(action.request)
+				client.send(action.request);
 			})){{end}}`
 
 const epicExportTemplate = `export const protocEpics = combineEpics({{range $i, $e := .}}

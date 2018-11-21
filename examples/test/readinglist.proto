@@ -12,7 +12,7 @@ service ReadingList {
   rpc ReadBook(Book) returns (Book){ }
   rpc UpdateBook(Book) returns (Book){ }
   rpc DeleteBook(Book) returns (Book){ }
-  rpc ErrorOut(Book) returns (stream readinglist.ServerMessage){ }
+  rpc ErrorOut(Book) returns (Book){ }
 }
 
 message Book{

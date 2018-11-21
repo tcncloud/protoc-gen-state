@@ -13,6 +13,7 @@ option (default_timeout) = 3000;
 option (hostname_location) = "config.host";
 option (port) = 9090;
 option (protoc_ts_path) = "../../../../../";
+/* option (auth_token_location) = "config.token"; */
 
 message ReduxState {
   //// Used for unit tests, do not remove ////
