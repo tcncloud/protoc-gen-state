@@ -51,8 +51,8 @@ func generate(filepaths []string, protos []*gp.FileDescriptorProto) ([]*File, er
 	outputFiles := []string{
 		// "actions_pb.ts",
 		// "epics_pb.ts",
-		"protoc_services.ts",
-		"protoc_types.ts",
+		// "protoc_services.ts",
+		// "protoc_types.ts",
 		"reducer_pb.ts",
 		// "state_pb.ts",
 		"to_message_pb.ts",
@@ -172,10 +172,20 @@ func generate(filepaths []string, protos []*gp.FileDescriptorProto) ([]*File, er
 
 	// create toMessage file
 	// TODO
-	// create message_aggregate file
-	// TODO
-	// create service_aggregate file
-	// TODO
+
+	// create message_aggregate file from the messageFiles
+	typesPb, err := CreateAggregateTypesFile(messageFiles, stateFile.GetPackage())
+	if err != nil {
+		return nil, fmt.Errorf("Error generating protoc_types_pb file: %v", err)
+	}
+	out = append(out, typesPb)
+
+	// create service_aggregate file from the serviceFiles
+	servicesPb, err := CreateAggregateServicesFile(serviceFiles, protocTsPath, stateFile.GetPackage())
+	if err != nil {
+		return nil, fmt.Errorf("Error generating protoc_services_pb file: %v", err)
+	}
+	out = append(out, servicesPb)
 
 	filler := []string{"// hello"} // TODO TESTING
 	filler = append(filler, strconv.FormatInt(debounce, 10))

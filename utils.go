@@ -84,7 +84,6 @@ func containsFile(s []*gp.FileDescriptorProto, f *gp.FileDescriptorProto) bool {
 }
 
 func GetFilePath(name string) string {
-	// grab filename without path
 	// replace proto filetype
 	name = strings.Replace(name, ".proto", "_pb", 1)
 	return name
@@ -117,24 +116,23 @@ func CreateAggregateByPackage(msgFiles []*gp.FileDescriptorProto, protocTsPath s
 }
 
 // find a method descriptor from the annotation string name
-func FindMethodDescriptor(serviceFiles []*gp.FileDescriptorProto, fullMethodName string) (*gp.MethodDescriptorProto, string, error) {
+func FindMethodDescriptor(serviceFiles []*gp.FileDescriptorProto, fullMethodName string) (*gp.MethodDescriptorProto, error) {
 	for _, servFile := range serviceFiles {
 		packageName := servFile.GetPackage()
 		for _, service := range servFile.GetService() {
 			serviceName := service.GetName()
 			for _, method := range service.GetMethod() {
-				fullName := fmt.Sprintf("%s.%s.%s", packageName, serviceName, method.GetName())
-				if fullName == fullMethodName {
+				if fmt.Sprintf("%s.%s.%s", packageName, serviceName, method.GetName()) == fullMethodName {
 					// make sure it doesn't use client-side streaming (not supported with grpc-web)
 					if method.GetClientStreaming() {
-						return nil, "", fmt.Errorf("Client-side streaming not supported. Failed on method: %s", fullMethodName)
+						return nil, fmt.Errorf("Client-side streaming not supported. Failed on method: %s", fullMethodName)
 					}
-					return method, fullName, nil
+					return method, nil
 				}
 			}
 		}
 	}
-	return nil, "", fmt.Errorf("Unable to locate method: \"%s\". Missing Method Declaration in Service.", fullMethodName)
+	return nil, fmt.Errorf("Unable to locate method: \"%s\". Missing Method Declaration in Service.", fullMethodName)
 }
 
 func GetAnnotation(meth state.StringFieldOptions, crud Crud, repeated bool) string {
