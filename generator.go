@@ -53,7 +53,7 @@ func generate(filepaths []string, protos []*gp.FileDescriptorProto) ([]*File, er
 		// "epics_pb.ts",
 		// "protoc_services.ts",
 		// "protoc_types.ts",
-		"reducer_pb.ts",
+		// "reducer_pb.ts",
 		// "state_pb.ts",
 		"to_message_pb.ts",
 	}
@@ -162,6 +162,12 @@ func generate(filepaths []string, protos []*gp.FileDescriptorProto) ([]*File, er
 	out = append(out, actionPb)
 
 	// create reducer file
+	reducerPb, err := CreateReducerFile(stateFields)
+	if err != nil {
+		return nil, fmt.Errorf("Error generating reducer_pb file: %v", err)
+	}
+	out = append(out, reducerPb)
+
 	// TODO
 	// create epic file
 	epicPb, err := CreateEpicFile(stateFields, customFields, serviceFiles, defaultTimeout, defaultRetries, authTokenLocation, hostnameLocation, hostname, port, debounce, debug)

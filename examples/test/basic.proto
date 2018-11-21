@@ -20,8 +20,8 @@ message ReduxState {
   repeated readinglist.Book library = 1 [
     (method).create = "readinglist.ReadingList.CreateBook",
     (method).update = "readinglist.ReadingList.UpdateBook",
-    (method).delete = "readinglist.ReadingList.DeleteBook",
-    (method).list = "readinglist.ReadingList.ReadAllBooks"
+    (method).delete = "readinglist.ReadingList.DeleteBook"
+    // (method).list = "readinglist.ReadingList.ReadAllBooks"
   ];
   readinglist.Book book_of_the_month = 2 [
     (method).create = "readinglist.ReadingList.CreateBook",
