@@ -174,11 +174,10 @@ func CreateEpicFile(stateFields []*gp.FieldDescriptorProto, customFields []*gp.F
 		for c := CREATE; c < CRUD_MAX; c++ {
 			// clear for the loop
 			meth = nil
-			fullMethName := ""
 
 			crudAnnotation := GetAnnotation(methods, c, repeated)
 			if crudAnnotation != "" {
-				meth, fullMethName, err = FindMethodDescriptor(serviceFiles, crudAnnotation)
+				meth, err = FindMethodDescriptor(serviceFiles, crudAnnotation)
 				if err != nil {
 					return nil, err
 				}
@@ -199,7 +198,7 @@ func CreateEpicFile(stateFields []*gp.FieldDescriptorProto, customFields []*gp.F
 					Name:           CrudName(c, repeated) + strings.Title(*field.JsonName),
 					InputType:      fmt.Sprintf("ProtocTypes%s", meth.GetInputType()),
 					OutputType:     fmt.Sprintf("ProtocTypes%s", meth.GetOutputType()),
-					FullMethodName: fmt.Sprintf("ProtocServices.%s", fullMethName),
+					FullMethodName: fmt.Sprintf("ProtocServices.%s", crudAnnotation),
 					Debounce:       debounce,
 					Timeout:        timeout,
 					Retries:        retries,
@@ -239,11 +238,10 @@ func CreateEpicFile(stateFields []*gp.FieldDescriptorProto, customFields []*gp.F
 		}
 
 		var meth *gp.MethodDescriptorProto
-		fullMethName := ""
 
 		crudAnnotation := methods.GetCustom()
 		if crudAnnotation != "" {
-			meth, fullMethName, err = FindMethodDescriptor(serviceFiles, crudAnnotation)
+			meth, err = FindMethodDescriptor(serviceFiles, crudAnnotation)
 			if err != nil {
 				return nil, err
 			}
@@ -265,7 +263,7 @@ func CreateEpicFile(stateFields []*gp.FieldDescriptorProto, customFields []*gp.F
 				Name:           "custom" + strings.Title(*field.JsonName),
 				InputType:      fmt.Sprintf("ProtocTypes%s", meth.GetInputType()),
 				OutputType:     fmt.Sprintf("ProtocTypes%s", meth.GetOutputType()),
-				FullMethodName: fmt.Sprintf("ProtocServices.%s", fullMethName),
+				FullMethodName: fmt.Sprintf("ProtocServices.%s", crudAnnotation),
 				Debounce:       debounce,
 				Timeout:        timeout,
 				Retries:        retries,
