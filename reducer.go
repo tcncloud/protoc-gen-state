@@ -135,9 +135,9 @@ func CreateReducerFile(stateFields []*gp.FieldDescriptorProto) (*File, error) {
 }
 
 func CrudNewValue(c Crud, entity *gp.FieldDescriptorProto, repeated bool, varName string) string {
-  payloadName := entity.GetJsonName()
-  tsType := entity.MessageType().GetJsonName()
-  fmt.Println("tsType: ", tsType, "\n\n\nn\n\n\n\n\nn\n")
+  // payloadName := entity.GetJsonName()
+  // tsType := payloadName
+  // fmt.Println("tsType: ", tsType, "\n\n\nn\n\n\n\n\nn\n")
   tsTypePackage := strings.Replace("ts.type.package", ".", "_", -1)
   // TODO find these message type stuff below
   // tsType := entity.message_type().name() + ".AsObject"
