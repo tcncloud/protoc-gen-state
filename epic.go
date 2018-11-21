@@ -44,10 +44,10 @@ export const {{$e.Name}}Epic = (action$, store) => action$
 		if(action.payload && action.payload.resolve && action.payload.reject){
 			return {
 				...action.payload,
-				request: toMessage(action.payload.library, ProtocTypes.readinglist.Book)
+				request: toMessage(action.payload.library, {{$e.InputType}})
 			}
 		} else {
-			return { request: toMessage(action.payload, ProtocTypes.readinglist.Book) }
+			return { request: toMessage(action.payload, {{$e.InputType}}) }
 		}
 	})
 	.flatMap((action) => {
@@ -56,9 +56,9 @@ export const {{$e.Name}}Epic = (action$, store) => action$
 			.timeout({{$e.Timeout}})
 			.map(resObj => {
 				if(action.resolve){
-					action.resolve(resObj as {{$e.InputType}}{{if $e.Repeat}}[]{{end}});
+					action.resolve(resObj as {{$e.InputType}}.AsObject{{if $e.Repeat}}[]{{end}});
 				}
-				return protocActions.{{$e.Name}}Success(resObj as {{$e.InputType}}{{if $e.Repeat}}[]{{end}});
+				return protocActions.{{$e.Name}}Success(resObj as {{$e.InputType}}.AsObject{{if $e.Repeat}}[]{{end}});
 			})
 			.catch(error => {
 				const err: NodeJS.ErrnoException = createErrorObject(error.code, error.message);
@@ -90,7 +90,7 @@ export const {{$e.Name}}Epic = (action$, store) => action$
 {{define "grpcStream"}}   {{.Host}}
 		return Observable
 			.defer(() => new Promise((resolve, reject) => {
-				var arr: {{.OutputType}}[] = [];
+				var arr: {{.OutputType}}.AsObject[] = [];
 				const client = grpc.client({{.FullMethodName}}, {
 					host: host,
 				});
@@ -106,6 +106,10 @@ export const {{$e.Name}}Epic = (action$, store) => action$
 				client.start({{.Auth}});
 				client.send(action.request)
 			})){{end}}`
+
+const epicExportTemplate = `export const protocEpics = combineEpics({{range $i, $e := .}}
+	{{$e.Name}}Epic{{end}}
+)`
 
 type EpicEntity struct {
 	Name           string
@@ -123,15 +127,25 @@ type EpicEntity struct {
 func CreateEpicFile(stateFields []*gp.FieldDescriptorProto, customFields []*gp.FieldDescriptorProto, serviceFiles []*gp.FileDescriptorProto, defaultTimeout int64, defaultRetries int64, authTokenLocation string, hostnameLocation string, hostname string, portin int64, debounce int64, debug bool) (*File, error) {
 	epicEntities := []*EpicEntity{}
 
+	// set up port string
+	var port string
+	if portin != -1 {
+		port = ":" + strconv.FormatInt(portin, 10)
+	}
+
+	//set up host string
+	var host string
+	if hostname != "" {
+		host = fmt.Sprintf("var host = '%s%s';", hostname, port)
+	} else if hostnameLocation != "" {
+		host = fmt.Sprintf("var host = store.getState().%s.slice(0, -1) + '%s';", hostnameLocation, port)
+	} else {
+		return nil, fmt.Errorf("No hostname or hostnameLocation provided. Provide either the hostname or the hostname location in redux so the plugin knows where to send api calls.")
+	}
+
 	// transform stateFields into our EpicEntity implementation so template can read values
 	for _, field := range stateFields {
 		repeated := field.GetLabel() == 3
-
-		// set up port string
-		var port string
-		if portin != -1 {
-			port = ":" + strconv.FormatInt(portin, 10)
-		}
 
 		// verify the method annotations
 		methods, err := GetFieldOptionsString(field, state.E_Method)
@@ -181,20 +195,10 @@ func CreateEpicFile(stateFields []*gp.FieldDescriptorProto, customFields []*gp.F
 					}
 				}
 
-				//set up host string
-				var host string
-				if hostname != "" {
-					host = fmt.Sprintf("var host = '%s%s';", hostname, port)
-				} else if hostnameLocation != "" {
-					host = fmt.Sprintf("var host = store.getState().%s.slice(0, -1) + '%s';", hostnameLocation, port)
-				} else {
-					return nil, fmt.Errorf("No hostname or hostnameLocation provided. Provide either the hostname or the hostname location in redux so the plugin knows where to send api calls.")
-				}
-
 				epicEntities = append(epicEntities, &EpicEntity{
 					Name:           CrudName(c, repeated) + strings.Title(*field.JsonName),
-					InputType:      fmt.Sprintf("ProtocTypes%s.AsObject", meth.GetInputType()),
-					OutputType:     fmt.Sprintf("ProtocTypes%s.AsObject", meth.GetOutputType()),
+					InputType:      fmt.Sprintf("ProtocTypes%s", meth.GetInputType()),
+					OutputType:     fmt.Sprintf("ProtocTypes%s", meth.GetOutputType()),
 					FullMethodName: fmt.Sprintf("ProtocServices.%s", fullMethName),
 					Debounce:       debounce,
 					Timeout:        timeout,
@@ -207,10 +211,77 @@ func CreateEpicFile(stateFields []*gp.FieldDescriptorProto, customFields []*gp.F
 		}
 	}
 
+	// do the same for customActions
+	// TODO combine the logic
+	for _, field := range customFields {
+		repeated := field.GetLabel() == 3
+
+		// verify the method annotations
+		methods, err := GetFieldOptionsString(field, state.E_Method)
+		if err != nil {
+			return nil, fmt.Errorf("Error getting field level annotations: %v", err)
+		}
+
+		// field level overrides for timeout/retry
+		timeout, err := GetFieldAnnotationInt(field, state.E_Timeout)
+		if err != nil {
+			return nil, fmt.Errorf("Error getting field level timeout annotation: %v", err)
+		}
+		if timeout == -1 { // if it wasn't overriden
+			timeout = defaultTimeout
+		}
+		retries, err := GetFieldAnnotationInt(field, state.E_Retries)
+		if err != nil {
+			return nil, fmt.Errorf("Error getting field level retries annotation: %v", err)
+		}
+		if retries == -1 { // if it wasn't overriden
+			retries = defaultRetries
+		}
+
+		var meth *gp.MethodDescriptorProto
+		fullMethName := ""
+
+		crudAnnotation := methods.GetCustom()
+		if crudAnnotation != "" {
+			meth, fullMethName, err = FindMethodDescriptor(serviceFiles, crudAnnotation)
+			if err != nil {
+				return nil, err
+			}
+		}
+
+		if meth != nil {
+			// set up auth string for repeated values (streaming epics)
+			var idToken string
+			if authTokenLocation != "" {
+				if repeated {
+					idToken = fmt.Sprintf("new grpc.Metadata({ 'Authorization': `Bearer ${store.getState().%s` })", authTokenLocation)
+				} else {
+					idToken = fmt.Sprintf("var idToken = store.getState().%s;", authTokenLocation)
+				}
+			}
+
+			// TODO uses repeated from the field name, should use the output type
+			epicEntities = append(epicEntities, &EpicEntity{
+				Name:           "custom" + strings.Title(*field.JsonName),
+				InputType:      fmt.Sprintf("ProtocTypes%s", meth.GetInputType()),
+				OutputType:     fmt.Sprintf("ProtocTypes%s", meth.GetOutputType()),
+				FullMethodName: fmt.Sprintf("ProtocServices.%s", fullMethName),
+				Debounce:       debounce,
+				Timeout:        timeout,
+				Retries:        retries,
+				Repeat:         repeated,
+				Auth:           idToken,
+				Host:           host,
+			})
+		}
+	}
+
 	tmpl := template.Must(template.New("epic").Parse(epicTemplate))
+	exTmpl := template.Must(template.New("epic-exports").Parse(epicExportTemplate))
 
 	var output bytes.Buffer
 	tmpl.Execute(&output, epicEntities)
+	exTmpl.Execute(&output, epicEntities)
 
 	return &File{
 		Name:    "epics_pb.ts",
