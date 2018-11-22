@@ -170,16 +170,14 @@ func FindMethodDescriptor(serviceFiles []*gp.FileDescriptorProto, fullMethodName
 }
 
 func FindDescriptor(protos []*gp.FileDescriptorProto, fullMessageName string) (*gp.DescriptorProto, *gp.FileDescriptorProto, error) {
-	debug := ""
 	for _, file := range protos {
 		packageName := file.GetPackage()
 		for _, message := range file.GetMessageType() {
 			msgName := fmt.Sprintf(".%s.%s", packageName, message.GetName())
-			debug += msgName + "\n"
 			if msgName == fullMessageName {
 				return message, file, nil
 			}
 		}
 	}
-	return nil, nil, fmt.Errorf("Unable to locate message: \"%s\". Perhaps the file wasn't listed as a dependency? %s", fullMessageName, debug)
+	return nil, nil, fmt.Errorf("Unable to locate message: \"%s\". Perhaps the file wasn't listed as a dependency?", fullMessageName)
 }
