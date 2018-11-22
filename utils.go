@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	gp "github.com/golang/protobuf/protoc-gen-go/descriptor"
-	"github.com/tcncloud/protoc-gen-state/state"
+	// "github.com/tcncloud/protoc-gen-state/state"
 	"strings"
 )
 
@@ -31,34 +31,34 @@ const (
 
 // TODO must have a distinction between create object request and create list request
 const (
-  CREATE_REQUEST    CludgeEffect = 0
-  CREATE_SUCCESS    CludgeEffect = 1
-  CREATE_FAILURE    CludgeEffect = 2
-  CREATE_CANCEL     CludgeEffect = 3
-  GET_REQUEST       CludgeEffect = 4
-  GET_SUCCESS       CludgeEffect = 5
-  GET_FAILURE       CludgeEffect = 6
-  GET_CANCEL        CludgeEffect = 7
-  UPDATE_REQUEST    CludgeEffect = 8
-  UPDATE_SUCCESS    CludgeEffect = 9
-  UPDATE_FAILURE    CludgeEffect = 10
-  UPDATE_CANCEL     CludgeEffect = 11
-  DELETE_REQUEST    CludgeEffect = 12
-  DELETE_SUCCESS    CludgeEffect = 13
-  DELETE_FAILURE    CludgeEffect = 14
-  DELETE_CANCEL     CludgeEffect = 15
-  LIST_REQUEST      CludgeEffect = 16
-  LIST_SUCCESS      CludgeEffect = 17
-  LIST_FAILURE      CludgeEffect = 18
-  LIST_CANCEL       CludgeEffect = 19
-  RESET             CludgeEffect = 20
+	CREATE_REQUEST CludgeEffect = 0
+	CREATE_SUCCESS CludgeEffect = 1
+	CREATE_FAILURE CludgeEffect = 2
+	CREATE_CANCEL  CludgeEffect = 3
+	GET_REQUEST    CludgeEffect = 4
+	GET_SUCCESS    CludgeEffect = 5
+	GET_FAILURE    CludgeEffect = 6
+	GET_CANCEL     CludgeEffect = 7
+	UPDATE_REQUEST CludgeEffect = 8
+	UPDATE_SUCCESS CludgeEffect = 9
+	UPDATE_FAILURE CludgeEffect = 10
+	UPDATE_CANCEL  CludgeEffect = 11
+	DELETE_REQUEST CludgeEffect = 12
+	DELETE_SUCCESS CludgeEffect = 13
+	DELETE_FAILURE CludgeEffect = 14
+	DELETE_CANCEL  CludgeEffect = 15
+	LIST_REQUEST   CludgeEffect = 16
+	LIST_SUCCESS   CludgeEffect = 17
+	LIST_FAILURE   CludgeEffect = 18
+	LIST_CANCEL    CludgeEffect = 19
+	RESET          CludgeEffect = 20
 )
 
 func CalculateCludgeEffect(c Crud, s SideEffect, repeated bool) CludgeEffect {
-  if c == GET && repeated {
-    c = CRUD_MAX
-  }
-  return CludgeEffect(int(c) * int(CRUD_MAX) + int(s))
+	if c == GET && repeated {
+		c = CRUD_MAX
+	}
+	return CludgeEffect(int(c)*int(CRUD_MAX) + int(s))
 }
 
 func SideEffectName(s SideEffect) string {
@@ -169,23 +169,17 @@ func FindMethodDescriptor(serviceFiles []*gp.FileDescriptorProto, fullMethodName
 	return nil, fmt.Errorf("Unable to locate method: \"%s\". Missing Method Declaration in Service.", fullMethodName)
 }
 
-func GetAnnotation(meth state.StringFieldOptions, crud Crud, repeated bool) string {
-	switch crud {
-	case CREATE:
-		return meth.GetCreate()
-	case GET:
-		{
-			if repeated {
-				return meth.GetList()
-			} else {
-				return meth.GetGet()
+func FindDescriptor(protos []*gp.FileDescriptorProto, fullMessageName string) (*gp.DescriptorProto, *gp.FileDescriptorProto, error) {
+	debug := ""
+	for _, file := range protos {
+		packageName := file.GetPackage()
+		for _, message := range file.GetMessageType() {
+			msgName := fmt.Sprintf(".%s.%s", packageName, message.GetName())
+			debug += msgName + "\n"
+			if msgName == fullMessageName {
+				return message, file, nil
 			}
 		}
-	case UPDATE:
-		return meth.GetUpdate()
-	case DELETE:
-		return meth.GetDelete()
-	default:
-		return ""
 	}
+	return nil, nil, fmt.Errorf("Unable to locate message: \"%s\". Perhaps the file wasn't listed as a dependency? %s", fullMessageName, debug)
 }

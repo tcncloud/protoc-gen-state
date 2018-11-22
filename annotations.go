@@ -145,3 +145,24 @@ func GetFieldAnnotationInt(desc *gp.FieldDescriptorProto, extName *proto.Extensi
 	}
 	return -1, nil
 }
+
+func GetAnnotation(meth state.StringFieldOptions, crud Crud, repeated bool) string {
+	switch crud {
+	case CREATE:
+		return meth.GetCreate()
+	case GET:
+		{
+			if repeated {
+				return meth.GetList()
+			} else {
+				return meth.GetGet()
+			}
+		}
+	case UPDATE:
+		return meth.GetUpdate()
+	case DELETE:
+		return meth.GetDelete()
+	default:
+		return ""
+	}
+}

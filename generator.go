@@ -33,8 +33,6 @@ import (
 	"errors"
 	"fmt"
 	gp "github.com/golang/protobuf/protoc-gen-go/descriptor"
-	"strconv"
-	"strings"
 )
 
 type File struct {
@@ -46,17 +44,6 @@ func generate(filepaths []string, protos []*gp.FileDescriptorProto) ([]*File, er
 	// the two messages we'll be reading
 	var stateMessage *gp.DescriptorProto
 	var customMessage *gp.DescriptorProto
-
-	// these files are generated everytime
-	outputFiles := []string{
-		// "actions_pb.ts",
-		// "epics_pb.ts",
-		// "protoc_services.ts",
-		// "protoc_types.ts",
-		// "reducer_pb.ts",
-		// "state_pb.ts",
-		"to_message_pb.ts",
-	}
 
 	// throw an error if len(filepaths) > 1
 	if len(filepaths) > 1 {
@@ -168,7 +155,6 @@ func generate(filepaths []string, protos []*gp.FileDescriptorProto) ([]*File, er
 	}
 	out = append(out, reducerPb)
 
-	// TODO
 	// create epic file
 	epicPb, err := CreateEpicFile(stateFields, customFields, serviceFiles, defaultTimeout, defaultRetries, authTokenLocation, hostnameLocation, hostname, port, debounce, debug)
 	if err != nil {
@@ -177,7 +163,11 @@ func generate(filepaths []string, protos []*gp.FileDescriptorProto) ([]*File, er
 	out = append(out, epicPb)
 
 	// create toMessage file
-	// TODO
+	toMessagePb, err := CreateToMessageFile(serviceFiles, protos)
+	if err != nil {
+		return nil, fmt.Errorf("Error generating to_message_pb file: %v", err)
+	}
+	out = append(out, toMessagePb)
 
 	// create message_aggregate file from the messageFiles
 	typesPb, err := CreateAggregateTypesFile(messageFiles, stateFile.GetPackage())
@@ -192,25 +182,6 @@ func generate(filepaths []string, protos []*gp.FileDescriptorProto) ([]*File, er
 		return nil, fmt.Errorf("Error generating protoc_services_pb file: %v", err)
 	}
 	out = append(out, servicesPb)
-
-	filler := []string{"// hello"} // TODO TESTING
-	filler = append(filler, strconv.FormatInt(debounce, 10))
-	filler = append(filler, strconv.FormatBool(debug))
-	filler = append(filler, strconv.FormatInt(defaultTimeout, 10))
-	filler = append(filler, strconv.FormatInt(defaultRetries, 10))
-	filler = append(filler, strconv.FormatInt(port, 10))
-	filler = append(filler, protocTsPath)
-	filler = append(filler, hostname)
-	filler = append(filler, hostnameLocation)
-	filler = append(filler, authTokenLocation)
-	filler = append(filler, "// hello")
-
-	for _, outputFile := range outputFiles {
-		out = append(out, &File{
-			Name:    outputFile,
-			Content: strings.Join(filler, "\n"),
-		})
-	}
 
 	return out, nil
 }
