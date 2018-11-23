@@ -163,7 +163,7 @@ func generate(filepaths []string, protos []*gp.FileDescriptorProto) ([]*File, er
 	out = append(out, epicPb)
 
 	// create toMessage file
-	toMessagePb, err := CreateToMessageFile(serviceFiles, protos)
+	toMessagePb, err := CreateToMessageFile(serviceFiles, protos, protocTsPath)
 	if err != nil {
 		return nil, fmt.Errorf("Error generating to_message_pb file: %v", err)
 	}

@@ -1,8 +1,9 @@
 package main
 
 import (
-	// "bytes"
-	// "text/template"
+	"bytes"
+	"strings"
+	"text/template"
 
 	"fmt"
 	gp "github.com/golang/protobuf/protoc-gen-go/descriptor"
@@ -52,7 +53,10 @@ func setNestedTypes(message *gp.DescriptorProto, msgFile *gp.FileDescriptorProto
 	if _, ok := typeMap[message]; ok {
 		return typeMap, fileSlice, nil
 	}
-	fileSlice = append(fileSlice, msgFile)
+
+	if !containsFile(fileSlice, msgFile) {
+		fileSlice = append(fileSlice, msgFile)
+	}
 
 	map_exists := false
 	for _, field := range message.GetField() {
@@ -79,7 +83,22 @@ func setNestedTypes(message *gp.DescriptorProto, msgFile *gp.FileDescriptorProto
 	return typeMap, fileSlice, nil
 }
 
-func CreateToMessageFile(servFiles []*gp.FileDescriptorProto, protos []*gp.FileDescriptorProto) (*File, error) {
+const importTemplate = `{{range $i, $e := .}}
+import {{$e.ModuleName}} from '{{$e.FileName}}_pb';{{end}}`
+
+const mappingTemplate = `{{range $i, $e := .}}
+const messageMap = new Map();
+{{end}}`
+
+type ImportEntity struct {
+	ModuleName string
+	FileName   string
+}
+
+type MappingEntity struct {
+}
+
+func CreateToMessageFile(servFiles []*gp.FileDescriptorProto, protos []*gp.FileDescriptorProto, protocTsPath string) (*File, error) {
 
 	// TODO: first part finished, should have a type map set up now
 	_, fileSlice, err := createTypeMapAndImportSlice(servFiles, protos)
@@ -87,20 +106,39 @@ func CreateToMessageFile(servFiles []*gp.FileDescriptorProto, protos []*gp.FileD
 		return nil, fmt.Errorf("Error when building typeMap and fileSlice: %v", err)
 	}
 
-	// DEBUG TODO
-	result := ""
+	// map fileSlice to import entities
+	importEntities := []*ImportEntity{}
 	for _, f := range fileSlice {
-		result += f.GetName() + "\n"
+		fname := strings.Replace(f.GetName(), "/", "_", -1)
+		if f.GetName()[:15] == "google/protobuf" {
+			importEntities = append(importEntities, &ImportEntity{
+				FileName:   fmt.Sprintf("google-protobuf/%s", f.GetName()[:len(f.GetName())-6]),
+				ModuleName: fname[:len(fname)-6],
+			})
+		} else {
+			importEntities = append(importEntities, &ImportEntity{
+				FileName:   protocTsPath + GetFilePath(f.GetName()),
+				ModuleName: fname[:len(fname)-6],
+			})
+		}
 	}
-	// DEBUG TODO
+
+	// generate the mappings
+	// mappingEntities, err := generateTypeMapToString(typeMap)
+
+	var output bytes.Buffer
+	// generate import statements
+	imports := template.Must(template.New("imports").Parse(importTemplate))
+	imports.Execute(&output, importEntities)
 
 	return &File{
 		Name:    "to_message_pb.ts",
-		Content: result, // TODO
+		Content: output.String() + toMessageFunction,
 	}, nil
 }
 
 const toMessageFunction = `
+
 function getNestedMessageConstructor(messageType, fieldName) {
 	return messageMap.has(messageType) && messageMap.get(messageType).get(fieldName);
 }
