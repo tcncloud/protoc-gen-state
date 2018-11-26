@@ -44,6 +44,7 @@ generator:
 
 deps:
 	go get -u github.com/golang/protobuf/protoc-gen-go
+	go get -u github.com/iancoleman/strcase
 
 clean:
 	rm -f ./protoc-gen-state
