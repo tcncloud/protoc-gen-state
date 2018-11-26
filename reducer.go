@@ -70,14 +70,20 @@ func CreateReducerFile(stateFields []*gp.FieldDescriptorProto) (*File, error) {
             if repeated {
               varName += "Array"
             }
-            switchCase += CrudNewValue(c, entity, repeated, varName) 
-            switchCase = fmt.Sprintf(`return {
+            val, err := CrudNewValue(c, entity, repeated, varName) 
+            if err != nil {
+              return nil, err
+            }
+            switchCase = fmt.Sprintf(`%s
+      return {
         ...state,
         %s: {
           ...state.%s,
-          isLoading: true,
+          isLoading: false,
+          value: %s,
+          error: initialProtocState.%s.error
         }
-      }`, entity.GetJsonName(), entity.GetJsonName())
+      }`, val, entity.GetJsonName(), entity.GetJsonName(), varName, entity.GetJsonName())
           case FAILURE:
             switchCase = fmt.Sprintf(`return {
         ...state,
@@ -134,13 +140,48 @@ func CreateReducerFile(stateFields []*gp.FieldDescriptorProto) (*File, error) {
 	}, nil
 }
 
-func CrudNewValue(c Crud, entity *gp.FieldDescriptorProto, repeated bool, varName string) string {
-  // payloadName := entity.GetJsonName()
-  // tsType := payloadName
-  // fmt.Println("tsType: ", tsType, "\n\n\nn\n\n\n\n\nn\n")
-  tsTypePackage := strings.Replace("ts.type.package", ".", "_", -1)
-  // TODO find these message type stuff below
-  // tsType := entity.message_type().name() + ".AsObject"
-  // tsTypePackage := replacePeriodsWithUnderscore(entity.message_type().file().package()
-  return tsTypePackage
+func CrudNewValue(c Crud, entity *gp.FieldDescriptorProto, repeated bool, varName string) (string, error) {
+  tsPackageAndType := CreatePackageAndTypeString(entity.GetTypeName())
+  payloadName := entity.GetJsonName()
+  tsTypeFromState := "ProtocState[\"" + payloadName + "\"][\"value\"]"
+  output := ""
+  var err error
+
+  switch c {
+  case CREATE:
+    if repeated {
+      output = fmt.Sprintf(`var %s: ProtocTypes.%s.AsObject[] = [...state.%s.value, action.payload] as ProtocTypes.%s.AsObject[];`, varName, tsPackageAndType, payloadName, tsPackageAndType)
+    } else {
+      output = fmt.Sprintf(`var %s: %s = action.payload as %s;`, varName, tsTypeFromState, tsTypeFromState)
+    }
+  case GET:
+    if repeated {
+      output = fmt.Sprintf(`var %s: Protoctypes.%s.AsObject[] = action.payload;`, varName, tsPackageAndType)
+    } else {
+      output = fmt.Sprintf(`var %s: %s = action.payload;`, varName, tsTypeFromState)
+    }
+  case UPDATE:
+    if repeated {
+      output = fmt.Sprintf(`var %s: Protoctypes.%s.AsObject[] = [...state.%s.value] as ProtocTypes.%s.AsObject[];
+      var index: number = _.findIndex(%s, action.payload.prev);
+      if(index === -1){
+        %s.push(action.payload.updated);
+      } else {
+        %s[index] = action.payload.updated as Protoctypes.%s.AsObject[];
+      }`, varName, tsPackageAndType, payloadName, tsPackageAndType, varName, varName, varName, tsPackageAndType)
+    } else {
+      output = fmt.Sprintf(`var %s: %s = { ...action.payload } as %s;`, varName, tsTypeFromState, tsTypeFromState)
+    }
+  case DELETE:
+    if repeated {
+      output = fmt.Sprintf(`var index: number = _.findIndex(state.%s.value, action.payload);
+      var %s: ProtocTypes.%s.AsObject[] = [...state.%s.value.slice(0,index), ...state.%s.value.slice(index+1)];`, payloadName, varName, tsPackageAndType, payloadName, payloadName)
+    } else {
+      output = fmt.Sprintf(`var %s: %s = null;`, varName, tsTypeFromState)
+    }
+  default:
+    err = fmt.Errorf("Invalid CRUD received in CrudNewValue: %v", int(c))
+  }
+
+  return output, err
 }
