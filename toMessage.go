@@ -2,28 +2,14 @@ package main
 
 import (
 	"bytes"
-	"strings"
-	"text/template"
-
 	"fmt"
 	gp "github.com/golang/protobuf/protoc-gen-go/descriptor"
 	strcase "github.com/iancoleman/strcase"
+	"strings"
+	"text/template"
 )
 
 /// note: adapted from a 400 line c++ file. sorry in advance
-
-const toMessageTemplate = `/* THIS FILE IS GENERATED FROM THE TOOL PROTOC-GEN-STATE  */
-/* ANYTHING YOU EDIT WILL BE OVERWRITTEN IN FUTURE BUILDS */
-
-import * as ProtocTypes from './protoc_types_pb';
-
-`
-
-type MessageEntity struct {
-	FieldName    string
-	FullTypeName string
-	Repeated     bool
-}
 
 func createTypeMapAndImportSlice(servFiles []*gp.FileDescriptorProto, allFiles []*gp.FileDescriptorProto) (map[*gp.DescriptorProto]map[*gp.FieldDescriptorProto]*gp.DescriptorProto, map[*gp.DescriptorProto]*gp.FileDescriptorProto, []*gp.FileDescriptorProto, error) {
 	typeMap := make(map[*gp.DescriptorProto]map[*gp.FieldDescriptorProto]*gp.DescriptorProto, 0)

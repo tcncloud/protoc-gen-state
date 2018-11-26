@@ -7,11 +7,10 @@ import (
 )
 
 var _ = Describe("Main", func() {
-	path := "generated/"
+	path := "e2e/generated/"
 
 	// these files are generated every the plugin is successfully run
 	Describe("Static Generated Files", func() {
-		path := "generated/"
 		files := []string{
 			"actions_pb.ts",
 			"epics_pb.ts",
