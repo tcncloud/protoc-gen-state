@@ -79,9 +79,11 @@ func CreateReducerFile(stateFields []*gp.FieldDescriptorProto) (*File, error) {
         ...state,
         %s: {
           ...state.%s,
-          isLoading: true,
+          isLoading: false,
+          value: %s,
+          error: initialProtocState.%s.error
         }
-      }`, val, entity.GetJsonName(), entity.GetJsonName())
+      }`, val, entity.GetJsonName(), entity.GetJsonName(), varName, entity.GetJsonName())
           case FAILURE:
             switchCase = fmt.Sprintf(`return {
         ...state,
