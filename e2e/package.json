@@ -1,0 +1,50 @@
+{
+  "name": "e2e",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "scripts": {
+    "start": "run-s run-bazel webpack-start",
+    "build": "mkdir -p generated/BasicState && protoc -I. -I./protos -I ../state/options.proto --plugin=../protoc-gen-state --state_out=generated/BasicState ./protos/basic.proto",
+    "run-gen-state": "bazel build //bazel/protoc-gen-state/example/fullApp:ts_protos && concurrently --kill-others \"bazel run //bazel/protoc-gen-state/example/fullApp/proxyServer/basic:server\" \"webpack-dev-server --config ./webpack.gen-state.js --env.development -d\"",
+    "build-gen-state": "./bazel/protoc-gen-state/example/fullApp/start.sh",
+    "test-gen-state": "node_modules/.bin/ts-node --node_options=--preserve-symlinks --node_options=--max-old-space-size=8192"
+  },
+  "devDependencies" : {
+    "@types/google-protobuf": "3.2.7",
+    "@types/jasmine": "2.8.7",
+    "@types/lodash": "4.14.110",
+    "@types/node": "10.5.0",
+    "@types/prop-types": "15.5.6",
+    "@types/react": "^16.4.6",
+    "@types/react-dom": "16.0.6",
+    "@types/react-redux": "5.0.21",
+    "@types/rx": "4.1.1",
+    "jasmine": "3.1.0",
+    "jasmine-enzyme": "6.0.2",
+    "module-alias": "2.1.0",
+    "npm-run-all": "4.1.3",
+    "protobufjs": "6.8.6",
+    "redux-devtools-extension": "^2.13.5",
+    "ts-loader": "4.5.0",
+    "ts-node": "7.0.0",
+    "tsickle": "0.32.1",
+    "tslint": "5.11.0",
+    "tslint-config-airbnb": "5.11.0",
+    "tslint-react": "3.6.0",
+    "typescript": "^3.1.1"
+  },
+  "dependencies": {
+    "google-protobuf": "3.5.0",
+    "grpc-web-client": "0.6.3",
+    "lodash": "4.17.10",
+    "react": "16.5.1",
+    "react-dom": "16.5.1",
+    "react-redux": "5.0.7",
+    "redux": "3.7.2",
+    "redux-observable": "0.18.0",
+    "redux-saga": "0.16.0",
+    "rxjs": "5.5.6",
+    "typesafe-actions": "2.0.4"
+  }
+}

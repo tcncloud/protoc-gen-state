@@ -1,0 +1,19 @@
+{
+  "extends": "./tsconfig.gen-state.json",
+  "compilerOptions": {
+    "module": "commonjs",
+    "paths": {
+      "@App/*": [
+        "*"
+      ],
+      "*": [
+        "*",
+        "node_modules/*",
+        "node_modules/@types/*"
+      ],
+      "proto/*": [
+        "generated/*"
+      ]
+    }
+  }
+}

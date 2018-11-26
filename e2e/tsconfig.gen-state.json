@@ -1,0 +1,52 @@
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "outDir": "build/",
+    "module": "esnext",
+    "target": "esnext",
+    "moduleResolution": "node",
+    "lib": [
+      "es2015",
+      "es6",
+      "es7",
+      "dom"
+    ],
+    "sourceMap": true,
+    "allowJs": false,
+    "jsx": "react",
+    "forceConsistentCasingInFileNames": true,
+    "noEmitOnError": false,
+    "noEmit": false,
+    "noImplicitReturns": true,
+    "noImplicitThis": true,
+    "noImplicitAny": false,
+    "strictNullChecks": false,
+    "suppressImplicitAnyIndexErrors": true,
+    "noUnusedLocals": false,
+    "noUnusedParameters": true,
+    "allowSyntheticDefaultImports": true,
+    "preserveSymlinks": true,
+    "esModuleInterop": true,
+    "strictFunctionTypes": false,
+    "paths": {
+      "*": [
+        "*"
+      ],
+      "proto/*": [
+        "generated/*"
+      ],
+      "@App/*": [
+        "*"
+      ]
+    }
+  },
+  "include": [
+    "src/**/*",
+    "generated/BasicState/*",
+    "generated/basic/*"
+  ],
+  "exclude": [
+    "build",
+    "node_modules"
+  ]
+}
