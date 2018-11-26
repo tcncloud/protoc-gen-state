@@ -5,7 +5,7 @@ import (
   "regexp"
 
 	gp "github.com/golang/protobuf/protoc-gen-go/descriptor"
-	"github.com/tcncloud/protoc-gen-state/state"
+	// "github.com/tcncloud/protoc-gen-state/state"
 	"strings"
 )
 
@@ -30,11 +30,6 @@ const (
 	CUSTOM   Crud = 5
 )
 
-type ModifiedFieldDescriptorProto struct {
-  field *gp.FieldDescriptorProto
-  message *gp.DescriptorProto
-  file *gp.FileDescriptorProto
-}
 
 func CreatePackageAndTypeString(in string) string {
   // remove the first character if it's a period
@@ -170,23 +165,15 @@ func FindMethodDescriptor(serviceFiles []*gp.FileDescriptorProto, fullMethodName
 	return nil, fmt.Errorf("Unable to locate method: \"%s\". Missing Method Declaration in Service.", fullMethodName)
 }
 
-func GetAnnotation(meth state.StringFieldOptions, crud Crud, repeated bool) string {
-	switch crud {
-	case CREATE:
-		return meth.GetCreate()
-	case GET:
-		{
-			if repeated {
-				return meth.GetList()
-			} else {
-				return meth.GetGet()
+func FindDescriptor(protos []*gp.FileDescriptorProto, fullMessageName string) (*gp.DescriptorProto, *gp.FileDescriptorProto, error) {
+	for _, file := range protos {
+		packageName := file.GetPackage()
+		for _, message := range file.GetMessageType() {
+			msgName := fmt.Sprintf(".%s.%s", packageName, message.GetName())
+			if msgName == fullMessageName {
+				return message, file, nil
 			}
 		}
-	case UPDATE:
-		return meth.GetUpdate()
-	case DELETE:
-		return meth.GetDelete()
-	default:
-		return ""
 	}
+	return nil, nil, fmt.Errorf("Unable to locate message: \"%s\". Perhaps the file wasn't listed as a dependency?", fullMessageName)
 }

@@ -7,7 +7,7 @@ option go_package="github.com/tcncloud/protoc-gen-state/examples/test;test";
 import "google/protobuf/timestamp.proto";
 
 service ReadingList {
-  rpc ReadAllBooks(readinglist.Empty) returns (stream Book){ }
+  rpc ReadAllBooks(Empty) returns (stream Book){ }
   rpc CreateBook(Book) returns (Book){ }
   rpc ReadBook(Book) returns (Book){ }
   rpc UpdateBook(Book) returns (Book){ }
