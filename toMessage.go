@@ -86,27 +86,12 @@ func setNestedTypes(message *gp.DescriptorProto, msgFile *gp.FileDescriptorProto
 const importTemplate = `{{range $i, $e := .}}
 import {{$e.ModuleName}} from '{{$e.FileName}}_pb';{{end}}`
 
-const mappingTemplate = `{{range $i, $e := .}}
-const messageMap = new Map();
-{{end}}`
-
 type ImportEntity struct {
 	ModuleName string
 	FileName   string
 }
 
-type MappingEntity struct {
-}
-
-func CreateToMessageFile(servFiles []*gp.FileDescriptorProto, protos []*gp.FileDescriptorProto, protocTsPath string) (*File, error) {
-
-	// TODO: first part finished, should have a type map set up now
-	_, fileSlice, err := createTypeMapAndImportSlice(servFiles, protos)
-	if err != nil {
-		return nil, fmt.Errorf("Error when building typeMap and fileSlice: %v", err)
-	}
-
-	// map fileSlice to import entities
+func generateImportEntities(fileSlice []*gp.FileDescriptorProto, protocTsPath string) []*ImportEntity {
 	importEntities := []*ImportEntity{}
 	for _, f := range fileSlice {
 		fname := strings.Replace(f.GetName(), "/", "_", -1)
@@ -122,14 +107,120 @@ func CreateToMessageFile(servFiles []*gp.FileDescriptorProto, protos []*gp.FileD
 			})
 		}
 	}
+	return importEntities
+}
 
-	// generate the mappings
-	// mappingEntities, err := generateTypeMapToString(typeMap)
+const mappingTemplate = `const messageMap = new Map();
+const mapFieldMap = new Map();
+{{range $i, $e := .}}
+const {{$e.MapName}} = new Map();
+{{range _, $t := $e.TypeLines }}
+{{$e.MapName}}.set('{{$t.Name}}', {{$t.FileName}}.{{$t.TypeName}});
+{{end}}
+messageMap.set({{$e.FileName}}.{{$e.TypeName}}, {{$e.MapName}});
+{{end}}`
+
+type MappingEntity struct {
+	MapName   string
+	FileName  string
+	TypeName  string
+	TypeLines []*TypeLine
+}
+
+type TypeLine struct {
+	Name     string
+	FileName string
+	TypeName string
+}
+
+func generateMappingEntities(typeMap map[*gp.DescriptorProto]map[*gp.FieldDescriptorProto]*gp.DescriptorProto, protos []*gp.FileDescriptorProto) ([]*MappingEntity, error) {
+
+	isMap := func(field *gp.FieldDescriptorProto, desc *gp.DescriptorProto) bool {
+		opts := desc.GetOptions()
+		if field.GetType() == gp.FieldDescriptorProto_TYPE_MESSAGE && opts != nil && *opts.MapEntry {
+			return true
+		}
+		return false
+	}
+
+	mappingEntities := []*MappingEntity{}
+	// TODO handle case with empty map in template
+	for desc, sub := range typeMap {
+		fullNameUnderscore := strings.Replace(desc.GetName(), ".", "_", -1)
+		mapName := fullNameUnderscore + "_map"
+
+		typeLines := []*TypeLine{}
+		for field, descriptor := range sub {
+			repeated := field.GetLabel() == 3
+			// get file that defines the message type
+			_, fileDesc, err := FindDescriptor(protos, field.GetTypeName())
+			if err != nil {
+				return nil, err
+			}
+			filename := strings.Replace(fileDesc.GetName(), "/", "_", -1)
+			filename = filename[:len(filename)-6] // remove .proto
+
+			var name string
+			if isMap(field, descriptor) {
+				// TODO
+				// mapFieldValueType := descriptor.GetField()[1].GetType() // 1?
+				// if mapFieldValueType == FieldDescriptorProto_TYPE_MESSAGE { } // ?
+				name = field.GetName() + "Map"
+			} else if repeated {
+				name = field.GetName() + "List"
+			} else {
+				name = field.GetName()
+			}
+
+			typeLines = append(typeLines, &TypeLine{
+				Name:     name,
+				FileName: filename,
+				TypeName: "tmp",
+			})
+		}
+		// get filename
+		_, file, err := FindDescriptor(protos, desc.GetName())
+		if err != nil {
+			return nil, err
+		}
+		fileName := file.GetName()
+		fileName = fileName[:len(fileName)-6] // remove .proto
+
+		mappingEntities = append(mappingEntities, &MappingEntity{
+			MapName:   mapName,
+			FileName:  fileName,
+			TypeName:  "tmp",
+			TypeLines: typeLines,
+		})
+	}
+	return mappingEntities, nil
+}
+
+func CreateToMessageFile(servFiles []*gp.FileDescriptorProto, protos []*gp.FileDescriptorProto, protocTsPath string) (*File, error) {
+
+	// TODO: first part finished, should have a type map set up now
+	typeMap, fileSlice, err := createTypeMapAndImportSlice(servFiles, protos)
+	if err != nil {
+		return nil, fmt.Errorf("Error when building typeMap and fileSlice: %v", err)
+	}
+
+	// map fileSlice to import entities
+	importEntities := generateImportEntities(fileSlice, protocTsPath) /*[]*ImportEntity{}*/
+
+	// use the typeMap to create entities for the main template
+	mappingEntities, err := generateMappingEntities(typeMap, protos) /*[]*MappingEntity{}*/
+	if err != nil {
+		return nil, err
+	}
 
 	var output bytes.Buffer
+
 	// generate import statements
 	imports := template.Must(template.New("imports").Parse(importTemplate))
 	imports.Execute(&output, importEntities)
+
+	body := template.Must(template.New("body").Parse(mappingTemplate))
+	body.Execute(&output, mappingEntities)
 
 	return &File{
 		Name:    "to_message_pb.ts",
