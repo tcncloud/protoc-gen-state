@@ -112,6 +112,7 @@ func generate(filepaths []string, protos []*gp.FileDescriptorProto) ([]*File, er
 	}
 
 	stateFields := []*gp.FieldDescriptorProto{}
+  reducerFields := []*ModifiedFieldDescriptorProto{}
 	customFields := []*gp.FieldDescriptorProto{}
 	messageFiles := []*gp.FileDescriptorProto{}
 	serviceFiles := []*gp.FileDescriptorProto{}
@@ -135,6 +136,11 @@ func generate(filepaths []string, protos []*gp.FileDescriptorProto) ([]*File, er
 	// populate the stateFields by looking at the ReduxState message
 	for _, field := range stateMessage.GetField() {
 		stateFields = append(stateFields, field)
+    reducerFields = append(reducerFields, &ModifiedFieldDescriptorProto{
+      field: field,
+      message: stateMessage,
+      file: stateFile,
+    })
 	}
 	// populate the customFields by looking at the CustomActions message
 	for _, field := range customMessage.GetField() {
