@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-  "regexp"
+	"regexp"
 
 	gp "github.com/golang/protobuf/protoc-gen-go/descriptor"
 	// "github.com/tcncloud/protoc-gen-state/state"
@@ -30,23 +30,22 @@ const (
 	CUSTOM   Crud = 5
 )
 
-
 func CreatePackageAndTypeString(in string) string {
-  // remove the first character if it's a period
-  if in[0] == '.' {
-    in = in[1:]
-  }
+	// remove the first character if it's a period
+	if in[0] == '.' {
+		in = in[1:]
+	}
 
-  period := regexp.MustCompile("\\.")
-  numPeriods := len(period.FindAllStringIndex(in, -1))
+	period := regexp.MustCompile("\\.")
+	numPeriods := len(period.FindAllStringIndex(in, -1))
 
-  // if there is only one period, the package name has no periods in it
-  if numPeriods <= 1 {
-    return in
-  }
+	// if there is only one period, the package name has no periods in it
+	if numPeriods <= 1 {
+		return in
+	}
 
-  // replace all but the last period with underscore
-  return strings.Replace(in, ".", "_", numPeriods -1)
+	// replace all but the last period with underscore
+	return strings.Replace(in, ".", "_", numPeriods-1)
 }
 
 func SideEffectName(s SideEffect) string {
@@ -88,11 +87,11 @@ func CrudName(crud Crud, repeated bool) string {
 }
 
 func Tabs(n int) string {
-  output := ""
-  for i:=0; i<n; i++ {
-    output += "  "
-  }
-  return output
+	output := ""
+	for i := 0; i < n; i++ {
+		output += "  "
+	}
+	return output
 }
 
 func contains(s []string, e string) bool {
