@@ -291,7 +291,7 @@ export function toMessage(obj: any, messageClass: any) {
 				}
 			}
 		} else {
-			throw new Error("No corresponding gRPC setter method for given key: " + key + ");
+			throw new Error("No corresponding gRPC setter method for given key: " + key);
 		}
 	});
 

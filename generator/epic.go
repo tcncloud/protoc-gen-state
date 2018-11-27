@@ -137,7 +137,7 @@ export const {{$e.Name}}Epic = (action$, store) => action$
 			})){{end}}`
 
 const epicExportTemplate = `export const protocEpics = combineEpics({{range $i, $e := .}}
-	{{$e.Name}}Epic{{end}}
+	{{$e.Name}}Epic,{{end}}
 )`
 
 type EpicEntity struct {
