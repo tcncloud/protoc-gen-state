@@ -39,10 +39,10 @@ Configuration for the plugin is provided by annotations inside the proto file.
 | | file | default_retries | sets the file level default number of retries | 0 |
 | | file | default_timeout | sets the file level default timeout in ms | 15000 |
 | | file | port | port to append after the hostname for api calls | |
-|x| field.method | (method).custom | defines the full RPC method name (package.service.method) for a custom action. Required for each CustomAction. Throws an error if used elsewhere. | |
 | | field | retries | overrides the default retries for a specific field | |
 | | field | timeout | overrides the default timeout for a specific [CLUDG](https://cloud.google.com/apis/design/standard_methods) method on a specific field | |
-| | field.method | (method).\<cludg\> | defines the full RPC method name (package.service.method) to be used for a specific [CLUDG](https://cloud.google.com/apis/design/standard_methods) method for a specific field | |
+|x| field.method | (method).\<cludg\> | defines the full RPC method name (package.service.method) to be used for a specific [CLUDG](https://cloud.google.com/apis/design/standard_methods) method for a specific field | |
+|x| field.method | (method).custom | defines the full RPC method name (package.service.method) for a custom action. Required for each CustomAction. Throws an error if used elsewhere. | |
 | | field.method | (method_timeout).\<cludg\> | overrides all timeouts for this specific [CLUDG](https://cloud.google.com/apis/design/standard_methods) method | |
 | | field.method | (method_retries).\<cludg\> | overrides all retries for this specific [CLUDG](https://cloud.google.com/apis/design/standard_methods) method | |
 
