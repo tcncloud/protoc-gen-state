@@ -2,3 +2,4 @@ generated/
 protoc-gen-state
 
 build
+e2e/generated
