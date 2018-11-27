@@ -36,6 +36,7 @@ import (
 
 	"github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/protoc-gen-go/plugin"
+	gen "github.com/tcncloud/protoc-gen-state/generator"
 )
 
 func main() {
@@ -49,7 +50,7 @@ func main() {
 	if err := proto.Unmarshal(data, &req); err != nil {
 		panic(fmt.Errorf("got error unmarshaling request: %v", err))
 	}
-	files, err := generate(req.GetFileToGenerate(), req.GetProtoFile())
+	files, err := gen.Generate(req.GetFileToGenerate(), req.GetProtoFile())
 	if err != nil {
 		panic(err)
 	}
