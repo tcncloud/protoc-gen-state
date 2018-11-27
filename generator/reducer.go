@@ -185,18 +185,18 @@ func CrudNewValue(c Crud, entity *gp.FieldDescriptorProto, repeated bool, varNam
 		}
 	case GET:
 		if repeated {
-			output = fmt.Sprintf(`var %s: Protoctypes.%s.AsObject[] = action.payload;`, varName, tsPackageAndType)
+			output = fmt.Sprintf(`var %s: ProtocTypes.%s.AsObject[] = action.payload;`, varName, tsPackageAndType)
 		} else {
 			output = fmt.Sprintf(`var %s: %s = action.payload;`, varName, tsTypeFromState)
 		}
 	case UPDATE:
 		if repeated {
-			output = fmt.Sprintf(`var %s: Protoctypes.%s.AsObject[] = [...state.%s.value] as ProtocTypes.%s.AsObject[];
+			output = fmt.Sprintf(`var %s: ProtocTypes.%s.AsObject[] = [...state.%s.value] as ProtocTypes.%s.AsObject[];
       var index: number = _.findIndex(%s, action.payload.prev);
       if(index === -1){
         %s.push(action.payload.updated);
       } else {
-        %s[index] = action.payload.updated as Protoctypes.%s.AsObject[];
+        %s[index] = action.payload.updated as ProtocTypes.%s.AsObject[];
       }`, varName, tsPackageAndType, payloadName, tsPackageAndType, varName, varName, varName, tsPackageAndType)
 		} else {
 			output = fmt.Sprintf(`var %s: %s = { ...action.payload } as %s;`, varName, tsTypeFromState, tsTypeFromState)
