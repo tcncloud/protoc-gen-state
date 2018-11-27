@@ -3,3 +3,5 @@ protoc-gen-state
 
 build
 e2e/generated
+
+node_modules/

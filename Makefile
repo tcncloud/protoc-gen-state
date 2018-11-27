@@ -31,16 +31,16 @@ GENERATED=e2e/generated
 
 all: deps build test
 
-build: generator protos
+build: gen protos
+
+gen:
+	go build .
 
 protos:
 	mkdir -p $(GENERATED)
 	protoc -I. -I./e2e/protos -I./state/options.proto \
 		--plugin=./protoc-gen-state \
 		--state_out=$(GENERATED) ./e2e/protos/basic.proto
-
-generator:
-	go build .
 
 deps:
 	go get -u github.com/golang/protobuf/protoc-gen-go
