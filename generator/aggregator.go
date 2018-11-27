@@ -78,8 +78,8 @@ import * as {{$e.Name}}_service_in from "{{$e.Location}}_service";{{end}}`
 
 const serviceExports = `
 {{range $i, $e := .}}
-export var {{$e.Package}} = { {{range $j, $x := $e.Exports}}
-	...{{$x}}_service_in,{{end}}
+export var {{$e.Package}} = {
+{{range $j, $x := $e.Exports}}  ...{{$x}}_service_in,{{end}}
 }{{end}}`
 
 type ServiceEntity struct {
