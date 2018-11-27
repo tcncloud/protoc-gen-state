@@ -1,14 +1,14 @@
-## protoc-gen-state -- in active development
+## protoc-gen-state
 
 [![Build Status](https://www.travis-ci.org/tcncloud/protoc-gen-state.svg?branch=master)](https://www.travis-ci.org/tcncloud/protoc-gen-state)
 
-## General Overview
+### General Overview
 
 This is a protoc plugin that generates redux state (actions, reducer, epics, state) to match a State protobuf message. If your app only has CRUD operations for data types, it's as simple as dispatching an action and retrieving the value from redux. Can also handle non-CRUD actions and epics for more generic api calls.
 
 Run the tests with `yarn test`
 
-## Broad Strokes
+### Broad Strokes
 
 Define a [.proto](#example) file with three messages.
  * **ReduxState** - The only required message. Will generate redux state based on the fields.
@@ -24,7 +24,7 @@ Define a [.proto](#example) file with three messages.
 
  * **ExternalLink** - Optional. The other message generate actions, so this is used to link an external file without generating anything additional. Useful for linking a service file which doesn't define any messages or linking a file with messages used in other RPCs but don't need to be in redux.
 
-## Annotations
+### Annotations
 Configuration for the plugin is provided by annotations inside the proto file.
 
 | required | level | name | description | default |
@@ -104,6 +104,13 @@ Which will generate the following actions:
 * customCountryNameChangeSuccess
 * customCountryNameChangeFailure
 * customCountryNameChangeCancel
+
+and the following epics:
+* createMyOrgEpic
+* deleteMyOrgEpic
+* customCountryNameChangeEpic
+
+with reducer blocks that handle all of the actions accordingly.
 
 The plugin will match the method annotation string with the corresponding rpc method from the service files. The signature of the action creators will match the rpc method signature. For example, if an rpc returns a stream of objects the Success action will pass an array of objects. A more in-depth description of action files generated can be found: [here](#actions_pb)
 
