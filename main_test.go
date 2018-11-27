@@ -7,7 +7,7 @@ import (
 )
 
 var _ = Describe("Main", func() {
-	path := "e2e/generated/"
+	path := "generated/"
 
 	// these files are generated every the plugin is successfully run
 	Describe("Static Generated Files", func() {

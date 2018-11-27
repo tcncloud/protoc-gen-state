@@ -27,9 +27,9 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-GENERATED=e2e/generated
+GENERATED=generated/
 
-all: deps build test test-js
+all: deps build test clean test-js clean-js
 
 build: gen protos
 
@@ -47,16 +47,19 @@ deps:
 	go get -u github.com/iancoleman/strcase
 
 clean:
-	rm -f ./protoc-gen-state
+	# rm -f ./protoc-gen-state
 	rm -rf $(GENERATED)
+
+clean-js:
 	rm -rf node_modules/
-	rm -rf build/
+	rm -rf e2e/generated/
 
 test:
 	ginkgo .
 
 test-js:
 	yarn
+	yarn run build
 	npx tsc -p "./tsconfig.json"
 
 # test - generate multiple proto files, panic

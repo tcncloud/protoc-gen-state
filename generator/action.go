@@ -55,7 +55,7 @@ export const create{{$e.JsonName | title}}Request = createAction('PROTOC_CREATE_
 	return ({{$e.JsonName}}: {{$e.InputType}}) => resolve({{$e.JsonName}})
 });
 
-export const create{{$e.JsonName | title}}RequestPromise = createAction('PROTOC_CREATE_{{$e.JsonName | caps}}_REQUEST_PROMISE', (resolve) => {
+export const create{{$e.JsonName | title}}RequestPromise = createAction('PROTOC_CREATE_{{$e.JsonName | caps}}_REQUEST_PROMISE', (res) => {
 	return (
 		{{$e.JsonName}}: {{$e.InputType}},
 		resolve: (payload: {{$e.OutputType}}{{if $e.Repeat}}[]{{end}}) => void,
@@ -104,7 +104,7 @@ export const get{{$e.JsonName | title}}Request = createAction('PROTOC_GET_{{$e.J
 	return ({{$e.JsonName}}: {{$e.InputType}}) => resolve({{$e.JsonName}})
 });
 
-export const get{{$e.JsonName | title}}RequestPromise = createAction('PROTOC_GET_{{$e.JsonName | caps}}_REQUEST_PROMISE', (resolve) => {
+export const get{{$e.JsonName | title}}RequestPromise = createAction('PROTOC_GET_{{$e.JsonName | caps}}_REQUEST_PROMISE', (res) => {
 	return (
 		{{$e.JsonName}}: {{$e.InputType}},
 		resolve: (payload: {{$e.OutputType}}) => void,
@@ -128,7 +128,7 @@ export const list{{$e.JsonName | title}}Request = createAction('PROTOC_LIST_{{$e
 	return ({{$e.JsonName}}: {{$e.InputType}}) => resolve({{$e.JsonName}})
 });
 
-export const list{{$e.JsonName | title}}RequestPromise = createAction('PROTOC_LIST_{{$e.JsonName | caps}}_REQUEST_PROMISE', (resolve) => {
+export const list{{$e.JsonName | title}}RequestPromise = createAction('PROTOC_LIST_{{$e.JsonName | caps}}_REQUEST_PROMISE', (res) => {
 	return (
 		{{$e.JsonName}}: {{$e.InputType}},
 		resolve: (payload: {{$e.OutputType}}[]) => void,
@@ -152,7 +152,7 @@ export const delete{{$e.JsonName | title}}Request = createAction('PROTOC_DELETE_
 	return ({{$e.JsonName}}: {{$e.InputType}}) => resolve({{$e.JsonName}})
 });
 
-export const delete{{$e.JsonName | title}}RequestPromise = createAction('PROTOC_DELETE_{{$e.JsonName | caps}}_REQUEST_PROMISE', (resolve) => {
+export const delete{{$e.JsonName | title}}RequestPromise = createAction('PROTOC_DELETE_{{$e.JsonName | caps}}_REQUEST_PROMISE', (res) => {
 	return (
 		{{$e.JsonName}}: {{$e.InputType}},
 		resolve: (payload: {{$e.OutputType}}{{if $e.Repeat}}[]{{end}}) => void,
@@ -176,7 +176,7 @@ export const custom{{$e.JsonName | title}}Request = createAction('PROTOC_CUSTOM_
 	return ({{$e.JsonName}}: {{$e.InputType}}) => resolve({{$e.JsonName}})
 });
 
-export const custom{{$e.JsonName | title}}RequestPromise = createAction('PROTOC_CUSTOM_{{$e.JsonName | caps}}_REQUEST_PROMISE', (resolve) => {
+export const custom{{$e.JsonName | title}}RequestPromise = createAction('PROTOC_CUSTOM_{{$e.JsonName | caps}}_REQUEST_PROMISE', (res) => {
 	return (
 		{{$e.JsonName}}: {{$e.InputType}},
 		resolve: (payload: {{$e.OutputType}}{{if $e.Repeat}}[]{{end}}) => void,
