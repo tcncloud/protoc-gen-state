@@ -143,6 +143,7 @@ func containsFile(s []*gp.FileDescriptorProto, f *gp.FileDescriptorProto) bool {
 func GetFilePath(name string) string {
 	// replace proto filetype
 	name = strings.Replace(name, ".proto", "_pb", 1)
+	// name = name[:strings.LastIndex(name, "/")]
 	return name
 }
 
