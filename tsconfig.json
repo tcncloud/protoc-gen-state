@@ -28,9 +28,14 @@
     "preserveSymlinks": true,
     "esModuleInterop": true,
     "strictFunctionTypes": false,
+    "typeRoots": [
+      "node_modules/**/*",
+      "node_modules/@types",
+    ],
     "paths": {
       "*": [
-        "*"
+        "*",
+        "node_modules/*"
       ],
       "proto/*": [
         "e2e/generated/*"
