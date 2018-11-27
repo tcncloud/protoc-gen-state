@@ -75,22 +75,34 @@ export const create{{$e.JsonName | title}}Cancel = createAction('PROTOC_CREATE_{
 `
 
 const updateTemplate = `{{range $i, $e := .}}
+{{if $e.Repeat}}
 export const update{{$e.JsonName | title}}Request = createAction('PROTOC_UPDATE_{{$e.JsonName | caps}}_REQUEST', (resolve) => {
 	return (prev: {{$e.InputType}}, updated: {{$e.InputType}}) => resolve({prev, updated})
-})
+}){{else}}
+export const update{{$e.JsonName | title}}Request = createAction('PROTOC_UPDATE_{{$e.JsonName | caps}}_REQUEST', (resolve) => {
+	return ({{$e.JsonName}}: {{$e.InputType}}) => resolve({{$e.JsonName}})
+}){{end}}
 
 export const update{{$e.JsonName | title}}RequestPromise = createAction('PROTOC_UPDATE_{{$e.JsonName | caps}}_REQUEST_PROMISE', (res) => {
-	return (
+	return ({{if $e.Repeat}}
 		prev: {{$e.InputType}},
 		updated: {{$e.InputType}},
 		resolve: (prev: {{$e.InputType}}, updated: {{$e.InputType}}) => void,
 		reject: (error: NodeJS.ErrnoException) => void,
-	) => res({ prev, updated, resolve, reject })
+	) => res({ prev, updated, resolve, reject }){{else}}
+		{{$e.JsonName}}: {{$e.InputType}},
+		resolve: (payload: {{$e.InputType}}) => void,
+		reject: (error: NodeJS.ErrnoException) => void,
+	) => res({ {{$e.JsonName}}, resolve, reject }){{end}}
 });
 
+{{if $e.Repeat}}
 export const update{{$e.JsonName | title}}Success = createAction('PROTOC_UPDATE_{{$e.JsonName | caps}}_SUCCESS', (resolve) => {
 	return ({{$e.JsonName}}: { prev: {{$e.InputType}}, updated: {{$e.InputType}} }) => resolve({{$e.JsonName}})
-})
+}){{else}}
+export const update{{$e.JsonName | title}}Success = createAction('PROTOC_UPDATE_{{$e.JsonName | caps}}_SUCCESS', (resolve) => {
+	return ({{$e.JsonName}}: {{$e.InputType}}) => resolve({{$e.JsonName}})
+}){{end}}
 
 export const update{{$e.JsonName | title}}Failure = createAction('PROTOC_UPDATE_{{$e.JsonName | caps}}_FAILURE', (resolve) => {
 	return (error: NodeJS.ErrnoException) => resolve(error)
