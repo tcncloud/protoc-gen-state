@@ -82,13 +82,20 @@ export const {{$e.Name}}Epic = (action$, store) => action$
 	.flatMap((action) => {
 {{if $e.Repeat}} {{template "grpcStream" $e}} {{ else }} {{template "grpcUnary" $e}} {{end}}
 			.retry({{$e.Retries}})
-			.timeout({{$e.Timeout}})
+			.timeout({{$e.Timeout}}){{if $e.Updater}}
+			.map(obj => ({ ...obj } as { prev: {{$e.OutputType}}.AsObject, updated: {{$e.OutputType}}.AsObject } ))
+			.map(lib => {
+				if(action.resolve){
+					action.resolve(lib.prev, lib.updated);
+				}
+				return protocActions.{{$e.Name}}Success(lib);
+			}){{else}}
 			.map(resObj => {
 				if(action.resolve){
-					action.resolve(resObj as {{$e.InputType}}.AsObject{{if $e.Repeat}}[]{{end}});
+					action.resolve(resObj as {{$e.OutputType}}.AsObject{{if $e.Repeat}}[]{{end}});
 				}
-				return protocActions.{{$e.Name}}Success(resObj as {{$e.InputType}}.AsObject{{if $e.Repeat}}[]{{end}});
-			})
+				return protocActions.{{$e.Name}}Success(resObj as {{$e.OutputType}}.AsObject{{if $e.Repeat}}[]{{end}});
+			}){{end}}
 			.catch(error => {
 				const err: NodeJS.ErrnoException = createErrorObject(error.code, error.message);
 				if(action.reject){ action.reject(err); }
@@ -151,6 +158,7 @@ type EpicEntity struct {
 	Repeat         bool
 	Auth           string
 	Host           string
+	Updater        bool
 }
 
 func CreateEpicFile(stateFields []*gp.FieldDescriptorProto, customFields []*gp.FieldDescriptorProto, serviceFiles []*gp.FileDescriptorProto, defaultTimeout int64, defaultRetries int64, authTokenLocation string, hostnameLocation string, hostname string, portin int64, debounce int64, debug bool) (*File, error) {
@@ -222,6 +230,20 @@ func CreateEpicFile(stateFields []*gp.FieldDescriptorProto, customFields []*gp.F
 						idToken = fmt.Sprintf("var idToken = store.getState().%s;", authTokenLocation)
 					}
 				}
+				// only returns arrays on these
+				var repeatEntity bool
+				if CrudName(c, repeated) == "list" {
+					repeatEntity = true
+				} else {
+					repeatEntity = false
+				}
+
+				var updater bool
+				if CrudName(c, repeated) == "update" && repeated {
+					updater = true
+				} else {
+					updater = false
+				}
 
 				epicEntities = append(epicEntities, &EpicEntity{
 					Name:           CrudName(c, repeated) + strings.Title(*field.JsonName),
@@ -231,9 +253,10 @@ func CreateEpicFile(stateFields []*gp.FieldDescriptorProto, customFields []*gp.F
 					Debounce:       debounce,
 					Timeout:        timeout,
 					Retries:        retries,
-					Repeat:         repeated,
+					Repeat:         repeatEntity,
 					Auth:           idToken,
 					Host:           host,
+					Updater:        updater,
 				})
 			}
 		}
