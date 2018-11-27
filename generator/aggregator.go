@@ -104,8 +104,10 @@ func CreateAggregateServicesFile(serviceFiles []*gp.FileDescriptorProto, protocT
 			exports := []string{}
 			for i := f; i < len(serviceFiles); i++ {
 				if serviceFiles[i].GetPackage() == file.GetPackage() {
-					filePath := GetFilePath(serviceFiles[i].GetName())
-					name := strings.Replace(strings.ToLower(filePath), "/", "_", -1)
+					filePathOriginal := GetFilePath(serviceFiles[i].GetName())
+					index := strings.LastIndex(filePathOriginal, "/") + 1
+					filePath := filePathOriginal[index:]
+					name := strings.Replace(strings.ToLower(filePathOriginal), "/", "_", -1)
 					exports = append(exports, name)
 					serviceEntities = append(serviceEntities, &ServiceEntity{
 						Location: protocTsPath + filePath,
