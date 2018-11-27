@@ -8,7 +8,7 @@
     "build-ts": "mkdir -p e2e/generated/basic && protoc --plugin=\"protoc-gen-ts=node_modules/.bin/protoc-gen-ts\" --js_out=\"import_style=commonjs,binary:e2e/generated/basic\" --ts_out=\"e2e/generated/basic\" e2e/protos/readinglist.proto",
     "build": "mkdir -p e2e/generated/basic && protoc --plugin=\"protoc-gen-ts=node_modules/.bin/protoc-gen-ts\" --js_out=\"import_style=commonjs,binary:e2e/generated/basic\" --ts_out=\"service=true:e2e/generated/basic\" e2e/protos/readinglist.proto && mkdir -p e2e/generated/BasicState && protoc -I. -I./e2e/protos -I./state/options.proto --plugin=./protoc-gen-state --state_out=e2e/generated/BasicState ./e2e/protos/basic.proto",
     "run": "yarn run build && echo 'should start a backend server' && webpack-dev-server --config ./webpack.config.js --env.development -d",
-    "test": "node_modules/.bin/ts-node --node_options=--preserve-symlinks --node_options=--max-old-space-size=8192 node_modules/jasmine/bin/jasmine"
+    "test": "JASMINE_CONFIG_PATH=e2e/spec/support/jasmine.json node_modules/.bin/ts-node --node_options=--preserve-symlinks --node_options=--max-old-space-size=8192 node_modules/jasmine/bin/jasmine"
   },
   "devDependencies": {
     "@babel/cli": "^7.1.5",
