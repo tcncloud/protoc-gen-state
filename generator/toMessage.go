@@ -195,7 +195,7 @@ func generateMappingEntities(typeMap map[*gp.DescriptorProto]map[*gp.FieldDescri
 			})
 		}
 		file := descMap[desc]
-		fileName := file.GetName()
+		fileName := strings.Replace(file.GetName(), "/", "_", -1)
 		fileName = fileName[:len(fileName)-6] // remove .proto
 
 		mappingEntities = append(mappingEntities, &MappingEntity{
