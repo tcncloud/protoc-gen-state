@@ -196,7 +196,7 @@ func CrudNewValue(c Crud, entity *gp.FieldDescriptorProto, repeated bool, varNam
       if(index === -1){
         %s.push(action.payload.updated);
       } else {
-        %s[index] = action.payload.updated as ProtocTypes.%s.AsObject[];
+        %s[index] = action.payload.updated as ProtocTypes.%s.AsObject;
       }`, varName, tsPackageAndType, payloadName, tsPackageAndType, varName, varName, varName, tsPackageAndType)
 		} else {
 			output = fmt.Sprintf(`var %s: %s = { ...action.payload } as %s;`, varName, tsTypeFromState, tsTypeFromState)
