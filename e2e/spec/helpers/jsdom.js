@@ -10,8 +10,8 @@ global.navigator = dom.window.navigator;
 window.Object = Object;
 window.Math = Math;
 window.encodeURIComponent = encodeURIComponent;
-window.localStorage = new LocalStorageMock();
-window.sessionStorage = new LocalStorageMock();
+// window.localStorage = new LocalStorageMock();
+// window.sessionStorage = new LocalStorageMock();
 
 function LocalStorageMock () {
   this.getItem = function (key) {
