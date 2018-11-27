@@ -9,7 +9,7 @@ module.exports = (env) => {
     entry: {
       main: [
         require.resolve('./webpack.polyfills.js'),
-        path.resolve(__dirname, 'src/index.tsx'),
+        path.resolve(__dirname, 'e2e/src/index.tsx'),
       ],
     },
 
@@ -24,8 +24,8 @@ module.exports = (env) => {
     resolve: {
       modules: [path.resolve(__dirname, 'node_modules')],
       alias: {
-        '@App': path.resolve(__dirname, './'),
-        'proto': path.resolve(__dirname, 'generated/'),
+        '@App': path.resolve(__dirname, 'e2e'),
+        'proto': path.resolve(__dirname, 'e2e/generated/'),
       },
       extensions: ['.js', '.jsx', '.ts', '.tsx'],
       symlinks: false,
@@ -77,7 +77,7 @@ module.exports = (env) => {
     plugins: [
       // Config for HTML Webpack Plugin (goes with HTML Loader)
       new HtmlWebPackPlugin({
-        template: path.resolve(__dirname, 'src/public/index.html'),
+        template: path.resolve(__dirname, 'e2e/src/public/index.html'),
         filename: 'index.html',
       }),
     ]

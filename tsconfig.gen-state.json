@@ -33,7 +33,7 @@
         "*"
       ],
       "proto/*": [
-        "generated/*"
+        "e2e/generated/*"
       ],
       "@App/*": [
         "*"
@@ -42,8 +42,8 @@
   },
   "include": [
     "src/**/*",
-    "generated/BasicState/*",
-    "generated/basic/*"
+    "e2e/generated/BasicState/*",
+    "e2e/generated/basic/*"
   ],
   "exclude": [
     "build",
