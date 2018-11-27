@@ -13,3 +13,4 @@ before_script:
 - export PATH=$PATH:/tmp/proto/bin
 - go get -u github.com/onsi/ginkgo/ginkgo
 - go get -u github.com/onsi/gomega/...
+- export GO111MODULE=on
