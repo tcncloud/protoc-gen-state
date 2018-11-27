@@ -29,7 +29,7 @@
 
 GENERATED=e2e/generated
 
-all: deps build test
+all: deps build test test-js
 
 build: gen protos
 
@@ -49,9 +49,15 @@ deps:
 clean:
 	rm -f ./protoc-gen-state
 	rm -rf $(GENERATED)
+	rm -rf node_modules/
+	rm -rf build/
 
 test:
 	ginkgo .
+
+test-js:
+	yarn
+	npx tsc -p "./tsconfig.json"
 
 # test - generate multiple proto files, panic
 # test - <1 or >3 messages in state proto, panic
