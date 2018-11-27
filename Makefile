@@ -29,9 +29,11 @@
 
 GENERATED=generated/
 
-all: deps build test clean test-js clean-js
+all: deps build test
 
 build: gen protos
+
+test: test-go clean-go test-js clean-js
 
 gen:
 	go build .
@@ -46,7 +48,7 @@ deps:
 	go get -u github.com/golang/protobuf/protoc-gen-go
 	go get -u github.com/iancoleman/strcase
 
-clean:
+clean-go:
 	# rm -f ./protoc-gen-state
 	rm -rf $(GENERATED)
 
@@ -54,13 +56,14 @@ clean-js:
 	rm -rf node_modules/
 	rm -rf e2e/generated/
 
-test:
+test-go:
 	ginkgo .
 
 test-js:
 	yarn
 	yarn run build
 	npx tsc -p "./tsconfig.json"
+	yarn run test
 
 # test - generate multiple proto files, panic
 # test - <1 or >3 messages in state proto, panic

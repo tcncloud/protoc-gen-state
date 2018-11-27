@@ -1,16 +1,14 @@
-# protoc-gen-state - WORK IN PROGRESS
-Seriously, give it a minute
+# protoc-gen-state
+Generates redux state (actions, epics, reducer) from a protobuf file. 
+
+Readme is under construction, refer to the example in `e2e/src` for usage.
 
 ## internal: test usage and generation
 | command | result |
 | ------- | ------ |
-| `make` | <ul><li>builds the plugin</li><li>runs it on the test proto</li><li>creates an output folder called generated</li><li>runs tests based on those generated files</li></ul> |
-| `make clean` | cleans it up (removes binary and generated folder) |
-
+| `make` | <ul><li>builds the plugin</li><li>runs the go tests and cleans up</li><li>runs the javascript tests and cleans up</li></ul>
 
 ---
 
-
-### NOTES
-##### generate options proto for go
-`protoc --go_out=. github.com/tcncloud/protoc-gen-state/state/*.proto` from __$(GOPATH)/src__
+[NOTES]:   <> (### NOTES)
+[comment]: <> (`protoc --go_out=. github.com/tcncloud/protoc-gen-state/state/*.proto` )
