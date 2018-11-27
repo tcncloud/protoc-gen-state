@@ -5,12 +5,12 @@
   "license": "MIT",
   "scripts": {
     "start": "run-s run-bazel webpack-start",
-    "build": "mkdir -p generated/BasicState && protoc -I. -I./protos -I ../state/options.proto --plugin=../protoc-gen-state --state_out=generated/BasicState ./protos/basic.proto",
+    "build": "mkdir -p e2e/generated/basic && protoc --plugin=\"protoc-gen-ts=node_modules/.bin/protoc-gen-ts\" --js_out=\"import_style=commonjs,binary:e2e/generated/basic\" --ts_out=\"e2e/generated/basic\" e2e/protos/readinglist.proto && mkdir -p e2e/generated/BasicState && protoc -I. -I./e2e/protos -I./state/options.proto --plugin=./protoc-gen-state --state_out=e2e/generated/BasicState ./e2e/protos/basic.proto",
     "run-gen-state": "bazel build //bazel/protoc-gen-state/example/fullApp:ts_protos && concurrently --kill-others \"bazel run //bazel/protoc-gen-state/example/fullApp/proxyServer/basic:server\" \"webpack-dev-server --config ./webpack.gen-state.js --env.development -d\"",
     "build-gen-state": "./bazel/protoc-gen-state/example/fullApp/start.sh",
     "test-gen-state": "node_modules/.bin/ts-node --node_options=--preserve-symlinks --node_options=--max-old-space-size=8192"
   },
-  "devDependencies" : {
+  "devDependencies": {
     "@types/google-protobuf": "3.2.7",
     "@types/jasmine": "2.8.7",
     "@types/lodash": "4.14.110",
@@ -28,6 +28,7 @@
     "redux-devtools-extension": "^2.13.5",
     "ts-loader": "4.5.0",
     "ts-node": "7.0.0",
+    "ts-protoc-gen": "^0.8.0",
     "tsickle": "0.32.1",
     "tslint": "5.11.0",
     "tslint-config-airbnb": "5.11.0",

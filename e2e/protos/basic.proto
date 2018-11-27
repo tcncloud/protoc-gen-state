@@ -3,8 +3,8 @@ syntax = "proto3";
 package state; // match package of state/options.proto
 option go_package="github.com/tcncloud/protoc-gen-state/e2e/protos;protos";
 
-import "../state/options.proto";
-import "protos/readinglist.proto";
+import "state/options.proto";
+import "e2e/protos/readinglist.proto";
 
 option (debounce) = 510;
 option (debug) = false;
@@ -12,7 +12,7 @@ option (default_retries) = 0;
 option (default_timeout) = 3000;
 option (hostname_location) = "config.host";
 option (port) = 9090;
-option (protoc_ts_path) = "../../../../../";
+option (protoc_ts_path) = "../generated/basic/e2e/protos";
 /* option (auth_token_location) = "config.token"; */
 
 message ReduxState {
