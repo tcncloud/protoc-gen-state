@@ -1,6 +1,9 @@
 # WORK IN PROGRESS 
 
 ## protoc-gen-state
+
+[![Build Status](https://www.travis-ci.org/tcncloud/protoc-gen-state.svg?branch=master)](https://www.travis-ci.org/tcncloud/protoc-gen-state)
+
 Generates redux state (actions, epics, reducer) from a protobuf file. 
 
 Readme is under construction, refer to the example in `e2e/src` for usage.
