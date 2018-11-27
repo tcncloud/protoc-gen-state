@@ -1,5 +1,5 @@
 {
-  "extends": "./tsconfig.gen-state.json",
+  "extends": "./tsconfig.json",
   "compilerOptions": {
     "module": "commonjs",
     "paths": {
