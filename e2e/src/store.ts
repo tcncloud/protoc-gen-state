@@ -26,16 +26,16 @@ function configureStore(initialState?: RootState) {
   );
 
   // Hot reload reducers
-  if (module.hot) {
-    module.hot.accept(() => {
-      // TODO hot reload epics
-      // https://github.com/reactjs/react-redux/issues/602
-      // const nextEpic = require('./rootEpic').RootEpic;
-      // Store.replaceMiddleware(nextEpic);
-      const nextReducer = require('./rootReducer').RootReducer;
-      Store.replaceReducer(nextReducer);
-    })
-  }
+  // if (module.hot) {
+  //   module.hot.accept(() => {
+  //     // TODO hot reload epics
+  //     // https://github.com/reactjs/react-redux/issues/602
+  //     // const nextEpic = require('./rootEpic').RootEpic;
+  //     // Store.replaceMiddleware(nextEpic);
+  //     const nextReducer = require('./rootReducer').RootReducer;
+  //     Store.replaceReducer(nextReducer);
+  //   })
+  // }
 
   return store;
 }
