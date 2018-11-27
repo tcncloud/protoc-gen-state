@@ -35,9 +35,9 @@ build: generator protos
 
 protos:
 	mkdir -p $(GENERATED)
-	protoc -I. -I./examples/test -I./state/options.proto \
+	protoc -I. -I./e2e/protos -I./state/options.proto \
 		--plugin=./protoc-gen-state \
-		--state_out=$(GENERATED) ./examples/test/basic.proto
+		--state_out=$(GENERATED) ./e2e/protos/basic.proto
 
 generator:
 	go build .
