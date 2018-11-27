@@ -43,8 +43,7 @@
   },
   "include": [
     "e2e/src/**/*",
-    "e2e/generated/BasicState/*",
-    "e2e/generated/basic/*"
+    "e2e/generated/**/*"
   ],
   "exclude": [
     "build",
