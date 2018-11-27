@@ -27,7 +27,7 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-package main
+package generator
 
 import (
 	"errors"
@@ -40,7 +40,7 @@ type File struct {
 	Content string
 }
 
-func generate(filepaths []string, protos []*gp.FileDescriptorProto) ([]*File, error) {
+func Generate(filepaths []string, protos []*gp.FileDescriptorProto) ([]*File, error) {
 	// the two messages we'll be reading
 	var stateMessage *gp.DescriptorProto
 	var customMessage *gp.DescriptorProto
