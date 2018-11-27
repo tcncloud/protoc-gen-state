@@ -30,13 +30,14 @@
     "strictFunctionTypes": false,
     "paths": {
       "*": [
-        "*"
+        "*",
+        "e2e/*"
       ],
       "proto/*": [
         "e2e/generated/*"
       ],
       "@App/*": [
-        "*"
+        "e2e/*"
       ]
     }
   },

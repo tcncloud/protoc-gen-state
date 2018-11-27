@@ -4,10 +4,10 @@
     "module": "commonjs",
     "paths": {
       "@App/*": [
-        "*"
+        "e2e/*"
       ],
       "*": [
-        "*",
+        "e2e/*",
         "node_modules/*",
         "node_modules/@types/*"
       ],
