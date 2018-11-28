@@ -60,7 +60,7 @@ const (
 
 func RemoveEntryFromEnd(in string) string {
   if strings.HasSuffix(in, "Entry") {
-    return in[:(len(in)-1 - len("Entry"))]
+    return in[:(len(in) - len("Entry"))]
   }
   return in
 }
