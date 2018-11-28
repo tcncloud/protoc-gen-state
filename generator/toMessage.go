@@ -156,8 +156,9 @@ type TypeLine struct {
 func generateMappingEntities(typeMap map[*gp.DescriptorProto]map[*gp.FieldDescriptorProto]*gp.DescriptorProto, descMap map[*gp.DescriptorProto]*gp.FileDescriptorProto, protos []*gp.FileDescriptorProto) ([]*MappingEntity, error) {
 
 	isMap := func(field *gp.FieldDescriptorProto, desc *gp.DescriptorProto) bool {
-		opts := desc.GetOptions()
-		if field.GetType() == gp.FieldDescriptorProto_TYPE_MESSAGE && opts != nil && *opts.MapEntry {
+		// opts := desc.GetOptions()
+		// if field.GetType() == gp.FieldDescriptorProto_TYPE_MESSAGE && opts != nil && *opts.MapEntry {
+    if field.GetType() == gp.FieldDescriptorProto_TYPE_MESSAGE {
 			return true
 		}
 		return false

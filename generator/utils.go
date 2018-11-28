@@ -58,6 +58,13 @@ const (
 	CUSTOM   Crud = 5
 )
 
+func RemoveEntryFromEnd(in string) string {
+  if strings.HasSuffix(in, "Entry") {
+    return in[:(len(in)-1 - len("Entry"))]
+  }
+  return in
+}
+
 func CreatePackageAndTypeString(in string) string {
 	// remove the first character if it's a period
 	if in[0] == '.' {

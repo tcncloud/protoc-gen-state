@@ -5,3 +5,4 @@ build
 e2e/generated
 
 node_modules/
+OldGenerated
