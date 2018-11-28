@@ -58,11 +58,13 @@ const (
 	CUSTOM   Crud = 5
 )
 
-func RemoveEntryFromEnd(in string) string {
-  if strings.HasSuffix(in, "Entry") {
-    return in[:(len(in) - len("Entry"))]
-  }
-  return in
+func ReplaceEntry(in string, name string) string {
+	if strings.HasSuffix(in, "Entry") {
+		return in[:(len(in) - len("Entry"))]
+	}
+	index := strings.LastIndex(in, ".")
+	return in[:index] + name
+	// return in
 }
 
 func CreatePackageAndTypeString(in string) string {
@@ -209,6 +211,14 @@ func FindDescriptor(protos []*gp.FileDescriptorProto, fullMessageName string) (*
 			msgName := fmt.Sprintf(".%s.%s", packageName, message.GetName())
 			if msgName == fullMessageName {
 				return message, file, nil
+			}
+
+			// check nested types too
+			for _, nest := range message.GetNestedType() {
+				nestedName := fmt.Sprintf(".%s.%s.%s", packageName, message.GetName(), nest.GetName())
+				if nestedName == fullMessageName {
+					return nest, file, nil
+				}
 			}
 		}
 	}
