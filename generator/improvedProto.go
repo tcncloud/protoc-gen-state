@@ -49,7 +49,6 @@ type ImprovedMessageDescriptor struct {
   message         *gp.DescriptorProto
   fields          []*ImprovedFieldDescriptor
   parentMessage   *ImprovedMessageDescriptor
-  childMessages   []*ImprovedMessageDescriptor //getNestedMessages
   packageName     string
   file            *gp.FileDescriptorProto
 }
@@ -58,6 +57,7 @@ type ImprovedMessageDescriptor struct {
 func FieldDescriptorToImproved(field *gp.FieldDescriptorProto, files []*gp.FileDescriptorProto) *ImprovedFieldDescriptor {
   var parentMsg *gp.DescriptorProto
   var foundFile *gp.FileDescriptorProto
+  parentMessagesString := ""
 
   for _, file := range files {
     packageName := file.GetPackage()
@@ -73,18 +73,16 @@ func FieldDescriptorToImproved(field *gp.FieldDescriptorProto, files []*gp.FileD
 
       // check nested types too
       nested := message.GetNestedType()
-      win, desc := checkNestedType(msgName, nested, field.GetTypeName())
+      win, desc, depth := checkNestedType(msgName, nested, field.GetTypeName())
       if win {
         // found the parent message
         parentMsg = desc
         foundFile = file
+        parentMessagesString = depth
         break;
       }
     }
   }
-
-  parentMessagesString := "" // all the message names leading up to this message name. Empty most of the time
-
 
   return &ImprovedFieldDescriptor{
     field: field,
@@ -100,7 +98,6 @@ func MessageDescriptorToImproved(message *gp.DescriptorProto) *ImprovedMessageDe
     message : message,
     fields : nil,
     parentMessage: nil,
-    childMessages: nil,
     packageName: "",
     file: nil,
   }
