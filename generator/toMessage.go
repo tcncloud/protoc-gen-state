@@ -164,7 +164,7 @@ type TypeLine struct {
 	TypeName string
 }
 
-func generateMappingEntities(typeMap map[*gp.DescriptorProto]map[*gp.FieldDescriptorProto]*gp.DescriptorProto, descMap map[*gp.DescriptorProto]*gp.FileDescriptorProto, protos []*gp.FileDescriptorProto) ([]*MappingEntity, error) {
+func generateMappingEntities(typeMap map[*gp.DescriptorProto]map[*gp.FieldDescriptorProto]*gp.DescriptorProto, descMap map[*gp.DescriptorProto]*gp.FileDescriptorProto, improvedDescriptors []*ImprovedMessageDescriptor, protos []*gp.FileDescriptorProto) ([]*MappingEntity, error) {
 
 	isMap := func(field *gp.FieldDescriptorProto, desc *gp.DescriptorProto) bool {
 		opts := desc.GetOptions()
@@ -177,6 +177,7 @@ func generateMappingEntities(typeMap map[*gp.DescriptorProto]map[*gp.FieldDescri
 	mappingEntities := []*MappingEntity{}
 	// TODO handle case with empty map in template
 	for desc, sub := range typeMap {
+		// packageNameUnderscore := strings.Replace(MessageDescriptorToImproved(desc, protos).packageName, ".", "_", -1)
 		packageNameUnderscore := strings.Replace(descMap[desc].GetPackage(), ".", "_", -1)
 		fullNameUnderscore := fmt.Sprintf("%s_%s", packageNameUnderscore, desc.GetName())
 		mapName := fullNameUnderscore + "_map"
@@ -203,12 +204,14 @@ func generateMappingEntities(typeMap map[*gp.DescriptorProto]map[*gp.FieldDescri
 				name = strcase.ToLowerCamel(field.GetName())
 			}
 
+			// typename := strings.TrimPrefix(field_type, "."+MessageDescriptorToImproved(desc, protos).packageName)
 			typename := strings.TrimPrefix(field_type, "."+descMap[desc].GetPackage())
 			if strings.HasPrefix(typename, ".google.protobuf") {
 				typename = typename[16:] // hacky
-			} else if strings.HasPrefix(typename, ".commons") {
-				typename = typename[8:]
 			}
+			// else if strings.HasPrefix(typename, ".commons") {
+			// 	typename = typename[8:]
+			// }
 
 			// number of dots in package
 			typeLines = append(typeLines, &TypeLine{
@@ -219,6 +222,7 @@ func generateMappingEntities(typeMap map[*gp.DescriptorProto]map[*gp.FieldDescri
 			})
 		}
 
+		// file := MessageDescriptorToImproved(desc, protos).file
 		file := descMap[desc]
 		fileName := strings.Replace(file.GetName(), "/", "_", -1)
 		fileName = fileName[:len(fileName)-6] // remove .proto
@@ -233,14 +237,14 @@ func generateMappingEntities(typeMap map[*gp.DescriptorProto]map[*gp.FieldDescri
 	return mappingEntities, nil
 }
 
-func createImprovedDescriptors(protos []*gp.FileDescriptorProto) ([]*ImprovedMessageDescriptor, error) {
+func createImprovedDescriptors(protos []*gp.FileDescriptorProto) []*ImprovedMessageDescriptor {
 	output := []*ImprovedMessageDescriptor{}
 	for _, file := range protos { // loop through files
 		for _, message := range file.GetMessageType() { // loop through messages
 			output = createNestedImprovedDescriptor(message, nil, file, output, protos)
 		}
 	}
-	return output, nil
+	return output
 }
 
 func createNestedImprovedDescriptor(message *gp.DescriptorProto, prev *ImprovedMessageDescriptor, file *gp.FileDescriptorProto, fullList []*ImprovedMessageDescriptor, protos []*gp.FileDescriptorProto) []*ImprovedMessageDescriptor {
@@ -275,6 +279,8 @@ func CreateToMessageFile(servFiles []*gp.FileDescriptorProto, protos []*gp.FileD
 	// build the template entities
 	// import entities
 
+	improvedDescriptors := createImprovedDescriptors(protos)
+
 	// TODO: first part finished, should have a type map set up now
 	typeMap, descMap, fileSlice, err := createTypeMapAndImportSlice(servFiles, protos)
 	if err != nil {
@@ -285,7 +291,7 @@ func CreateToMessageFile(servFiles []*gp.FileDescriptorProto, protos []*gp.FileD
 	importEntities := generateImportEntities(fileSlice, protocTsPath) /*[]*ImportEntity{}*/
 
 	// use the typeMap to create entities for the main template
-	mappingEntities, err := generateMappingEntities(typeMap, descMap, protos) /*[]*MappingEntity{}*/
+	mappingEntities, err := generateMappingEntities(typeMap, descMap, improvedDescriptors, protos) /*[]*MappingEntity{}*/
 	if err != nil {
 		return nil, err
 	}
