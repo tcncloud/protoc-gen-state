@@ -30,75 +30,99 @@
 package generator
 
 import (
-  "fmt"
+	"fmt"
 
 	gp "github.com/golang/protobuf/protoc-gen-go/descriptor"
 )
 
-
 type ImprovedFieldDescriptor struct {
-  field                 *gp.FieldDescriptorProto
-  parentMessagesString  string // all the message names leading up to this message name. Empty most of the time
-  packageName           string
-  file                  *gp.FileDescriptorProto
-  message               *ImprovedMessageDescriptor
+	field                *gp.FieldDescriptorProto
+	parentMessagesString string // all the message names leading up to this message name. Empty most of the time
+	packageName          string
+	file                 *gp.FileDescriptorProto
+	message              *ImprovedMessageDescriptor
 }
-
 
 type ImprovedMessageDescriptor struct {
-  message         *gp.DescriptorProto
-  fields          []*ImprovedFieldDescriptor
-  parentMessage   *ImprovedMessageDescriptor
-  packageName     string
-  file            *gp.FileDescriptorProto
+	message       *gp.DescriptorProto
+	fields        []*ImprovedFieldDescriptor
+	parentMessage *ImprovedMessageDescriptor
+	packageName   string
+	file          *gp.FileDescriptorProto
 }
-
 
 func FieldDescriptorToImproved(field *gp.FieldDescriptorProto, files []*gp.FileDescriptorProto) *ImprovedFieldDescriptor {
-  var parentMsg *gp.DescriptorProto
-  var foundFile *gp.FileDescriptorProto
-  parentMessagesString := ""
+	var parentMsg *gp.DescriptorProto
+	var foundFile *gp.FileDescriptorProto
+	parentMessagesString := ""
 
-  for _, file := range files {
-    packageName := file.GetPackage()
-    for _, message := range file.GetMessageType() {
-      msgName := fmt.Sprintf(".%s.%s", packageName, message.GetName())
+	for _, file := range files {
+		packageName := file.GetPackage()
+		for _, message := range file.GetMessageType() {
+			msgName := fmt.Sprintf(".%s.%s", packageName, message.GetName())
 
-      if msgName == field.GetTypeName() {
-        // found the parent message
-        parentMsg = message
-        foundFile = file
-        break;
-      }
+			if msgName == field.GetTypeName() {
+				// found the parent message
+				parentMsg = message
+				foundFile = file
+				break
+			}
 
-      // check nested types too
-      nested := message.GetNestedType()
-      win, desc, depth := checkNestedType(msgName, nested, field.GetTypeName())
-      if win {
-        // found the parent message
-        parentMsg = desc
-        foundFile = file
-        parentMessagesString = depth
-        break;
-      }
-    }
-  }
+			// check nested types too
+			nested := message.GetNestedType()
+			win, desc, depth := checkNestedType(msgName, nested, field.GetTypeName())
+			if win {
+				// found the parent message
+				parentMsg = desc
+				foundFile = file
+				parentMessagesString = depth
+				break
+			}
+		}
+	}
 
-  return &ImprovedFieldDescriptor{
-    field: field,
-    packageName: foundFile.GetPackage(),
-    file: foundFile,
-    parentMessagesString: parentMessagesString,
-    message: MessageDescriptorToImproved(parentMsg),
-  }
+	return &ImprovedFieldDescriptor{
+		field:                field,
+		packageName:          foundFile.GetPackage(),
+		file:                 foundFile,
+		parentMessagesString: parentMessagesString,
+		message:              MessageDescriptorToImproved(parentMsg, files),
+	}
 }
 
-func MessageDescriptorToImproved(message *gp.DescriptorProto) *ImprovedMessageDescriptor {
-  return &ImprovedMessageDescriptor{
-    message : message,
-    fields : nil,
-    parentMessage: nil,
-    packageName: "",
-    file: nil,
-  }
+func MessageDescriptorToImproved(message_in *gp.DescriptorProto, files []*gp.FileDescriptorProto) *ImprovedMessageDescriptor {
+	fields := []*ImprovedFieldDescriptor{}
+	for i := 0; i < len(message_in.GetField()); i++ {
+		fields = append(fields, FieldDescriptorToImproved(message_in.GetField()[i], files))
+	}
+
+	var foundFile *gp.FileDescriptorProto
+	var foundParentMessage *gp.DescriptorProto
+
+	for _, file := range files {
+		for _, currMessage := range file.GetMessageType() {
+			if currMessage.GetName() == message_in.GetName() {
+				foundParentMessage = nil
+				foundFile = file
+				break
+			}
+
+			// check nested messages for our message
+			found, parent := FindParentMessage(currMessage, message_in)
+			if found {
+				// found the parent message
+				foundParentMessage = parent
+				foundFile = file
+				break
+			}
+		}
+	}
+
+	return &ImprovedMessageDescriptor{
+		message:       message_in,
+		fields:        fields,
+		parentMessage: MessageDescriptorToImproved(foundParentMessage, files),
+		packageName:   foundFile.GetPackage(),
+		file:          foundFile,
+	}
 }

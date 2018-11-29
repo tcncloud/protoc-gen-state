@@ -216,22 +216,44 @@ func FindDescriptor(protos []*gp.FileDescriptorProto, fullMessageName string) (*
 }
 
 func checkNestedType(prefix string, nested []*gp.DescriptorProto, goal string) (bool, *gp.DescriptorProto, string) {
-  for _, n := range nested {
-    // full name of the object
-    nestedName := fmt.Sprintf("%s.%s", prefix, n.GetName())
-    // check for the match
-    if nestedName == goal {
-      return true, n, prefix
-    }
-    // if it has nested types, recursively call this function with the updated name
-    if len(n.GetNestedType()) != 0 {
-      // return checkNestedType(nestedName+"."+n.GetName(), n.GetNestedType(), goal)
-      win, desc, depth := checkNestedType(nestedName, n.GetNestedType(), goal)
-      if win {
-        return true, desc, depth
-      }
-    }
-  }
-  // break case
-  return false, nil, ""
+	for _, n := range nested {
+		// full name of the object
+		nestedName := fmt.Sprintf("%s.%s", prefix, n.GetName())
+		// check for the match
+		if nestedName == goal {
+			return true, n, prefix
+		}
+		// if it has nested types, recursively call this function with the updated name
+		if len(n.GetNestedType()) != 0 {
+			// return checkNestedType(nestedName+"."+n.GetName(), n.GetNestedType(), goal)
+			win, desc, depth := checkNestedType(nestedName, n.GetNestedType(), goal)
+			if win {
+				return true, desc, depth
+			}
+		}
+	}
+	// break case
+	return false, nil, ""
+}
+
+func FindParentMessage(possible_parent *gp.DescriptorProto, possible_child *gp.DescriptorProto) (bool, *gp.DescriptorProto) {
+	var prevMessage *gp.DescriptorProto
+	nested := possible_parent.GetNestedType()
+
+	for _, n := range nested {
+		// check for the match
+		if n.GetName() == possible_child.GetName() {
+			return true, possible_parent
+		}
+
+		// if it has nested types, recursively call this function with the updated name
+		if len(n.GetNestedType()) != 0 {
+			found, message := FindParentMessage(n, possible_child)
+			if found {
+				return true, message
+			}
+		}
+	}
+	// break case
+	return false, nil
 }

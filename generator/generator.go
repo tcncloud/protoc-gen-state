@@ -90,10 +90,10 @@ func Generate(filepaths []string, protos []*gp.FileDescriptorProto) ([]*File, er
 	port, err := GetFileExtensionInt(stateFile, "port")
 	debug, err := GetFileExtensionBool(stateFile, "debug")
 	protocTsPath, err := GetFileExtensionString(stateFile, "protoc_ts_path")
-  if protocTsPath[len(protocTsPath)-1] != '/' {
-    // add a slash to the end of the config option if it doesnt exist
-    protocTsPath += "/"
-  }
+	if protocTsPath[len(protocTsPath)-1] != '/' {
+		// add a slash to the end of the config option if it doesnt exist
+		protocTsPath += "/"
+	}
 	hostname, err := GetFileExtensionString(stateFile, "hostname")
 	hostnameLocation, err := GetFileExtensionString(stateFile, "hostname_location")
 	authTokenLocation, err := GetFileExtensionString(stateFile, "auth_token_location")
