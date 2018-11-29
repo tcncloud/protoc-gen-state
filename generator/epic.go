@@ -225,7 +225,7 @@ func CreateEpicFile(stateFields []*gp.FieldDescriptorProto, customFields []*gp.F
 				var idToken string
 				if authTokenLocation != "" {
 					if repeated {
-						idToken = fmt.Sprintf("new grpc.Metadata({ 'Authorization': `Bearer ${store.getState().%s` })", authTokenLocation)
+						idToken = fmt.Sprintf("new grpc.Metadata({ 'Authorization': `Bearer ${store.getState().%s}` })", authTokenLocation)
 					} else {
 						idToken = fmt.Sprintf("var idToken = store.getState().%s;", authTokenLocation)
 					}

@@ -55,8 +55,9 @@ func CreateAggregateTypesFile(msgFiles []*gp.FileDescriptorProto, statePkg strin
 
 	for _, file := range msgFiles {
 		if !contains(packageNames, file.GetPackage()) {
+			underscorePackage := strings.Replace(file.GetPackage(), ".", "_", -1)
 			packageNames = append(packageNames, file.GetPackage())
-			typeEntities = append(typeEntities, &TypeEntity{Package: file.GetPackage()})
+			typeEntities = append(typeEntities, &TypeEntity{Package: underscorePackage})
 		}
 	}
 
@@ -104,13 +105,14 @@ func CreateAggregateServicesFile(serviceFiles []*gp.FileDescriptorProto, protocT
 			exports := []string{}
 			for i := f; i < len(serviceFiles); i++ {
 				if serviceFiles[i].GetPackage() == file.GetPackage() {
+					slashPackage := strings.Replace(file.GetPackage(), ".", "/", -1) + "/"
 					filePathOriginal := GetFilePath(serviceFiles[i].GetName())
 					index := strings.LastIndex(filePathOriginal, "/") + 1
 					filePath := filePathOriginal[index:]
 					name := strings.Replace(strings.ToLower(filePathOriginal), "/", "_", -1)
 					exports = append(exports, name)
 					serviceEntities = append(serviceEntities, &ServiceEntity{
-						Location: protocTsPath + filePath,
+						Location: protocTsPath + slashPackage + filePath,
 						Name:     name,
 						Package:  file.GetPackage(),
 					})
