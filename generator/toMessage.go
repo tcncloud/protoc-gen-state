@@ -213,6 +213,8 @@ func generateMappingEntities(typeMap map[*gp.DescriptorProto]map[*gp.FieldDescri
 			// typename := strings.TrimPrefix(field_type, "."+descMap[desc].GetPackage())
 			if strings.HasPrefix(typename, ".google.protobuf") {
 				typename = typename[16:] // hacky
+			} else if strings.HasPrefix(typename, ".commons") {
+				typename = typename[8:]
 			}
 
 			// number of dots in package
