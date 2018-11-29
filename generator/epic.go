@@ -247,8 +247,8 @@ func CreateEpicFile(stateFields []*gp.FieldDescriptorProto, customFields []*gp.F
 
 				epicEntities = append(epicEntities, &EpicEntity{
 					Name:           CrudName(c, repeated) + strings.Title(*field.JsonName),
-					InputType:      fmt.Sprintf("ProtocTypes%s", meth.GetInputType()),
-					OutputType:     fmt.Sprintf("ProtocTypes%s", meth.GetOutputType()),
+					InputType:      fmt.Sprintf("ProtocTypes.%s", CreatePackageAndTypeString(meth.GetInputType())),
+					OutputType:     fmt.Sprintf("ProtocTypes.%s", CreatePackageAndTypeString(meth.GetOutputType())),
 					FullMethodName: fmt.Sprintf("ProtocServices.%s", crudAnnotation),
 					Debounce:       debounce,
 					Timeout:        timeout,
