@@ -30,22 +30,78 @@
 package generator
 
 import (
+  "fmt"
+
 	gp "github.com/golang/protobuf/protoc-gen-go/descriptor"
 )
 
 
 type ImprovedFieldDescriptor struct {
-  field       *gp.FieldDescriptorProto
-  packageName string
-  file        *gp.FileDescriptorProto
-  message     *gp.DescriptorProto
+  field                 *gp.FieldDescriptorProto
+  parentMessagesString  string // all the message names leading up to this message name. Empty most of the time
+  packageName           string
+  file                  *gp.FileDescriptorProto
+  message               *ImprovedMessageDescriptor
 }
 
 
 type ImprovedMessageDescriptor struct {
-  message        *gp.DescriptorProto
-  parentMessage  *gp.DescriptorProto
-  childMessages  []*gp.DescriptorProto //getNestedMessages
-  packageName string
-  file        *gp.FileDescriptorProto
+  message         *gp.DescriptorProto
+  fields          []*ImprovedFieldDescriptor
+  parentMessage   *ImprovedMessageDescriptor
+  childMessages   []*ImprovedMessageDescriptor //getNestedMessages
+  packageName     string
+  file            *gp.FileDescriptorProto
+}
+
+
+func FieldDescriptorToImproved(field *gp.FieldDescriptorProto, files []*gp.FileDescriptorProto) *ImprovedFieldDescriptor {
+  var parentMsg *gp.DescriptorProto
+  var foundFile *gp.FileDescriptorProto
+
+  for _, file := range files {
+    packageName := file.GetPackage()
+    for _, message := range file.GetMessageType() {
+      msgName := fmt.Sprintf(".%s.%s", packageName, message.GetName())
+
+      if msgName == field.GetTypeName() {
+        // found the parent message
+        parentMsg = message
+        foundFile = file
+        break;
+      }
+
+      // check nested types too
+      nested := message.GetNestedType()
+      win, desc := checkNestedType(msgName, nested, field.GetTypeName())
+      if win {
+        // found the parent message
+        parentMsg = desc
+        foundFile = file
+        break;
+      }
+    }
+  }
+
+  parentMessagesString := "" // all the message names leading up to this message name. Empty most of the time
+
+
+  return &ImprovedFieldDescriptor{
+    field: field,
+    packageName: foundFile.GetPackage(),
+    file: foundFile,
+    parentMessagesString: parentMessagesString,
+    message: MessageDescriptorToImproved(parentMsg),
+  }
+}
+
+func MessageDescriptorToImproved(message *gp.DescriptorProto) *ImprovedMessageDescriptor {
+  return &ImprovedMessageDescriptor{
+    message : message,
+    fields : nil,
+    parentMessage: nil,
+    childMessages: nil,
+    packageName: "",
+    file: nil,
+  }
 }
