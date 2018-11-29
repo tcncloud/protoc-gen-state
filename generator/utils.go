@@ -58,15 +58,6 @@ const (
 	CUSTOM   Crud = 5
 )
 
-func ReplaceEntry(in string, name string) string {
-	if strings.HasSuffix(in, "Entry") {
-		return in[:(len(in) - len("Entry"))]
-	}
-	index := strings.LastIndex(in, ".")
-	return in[:index] + name
-	// return in
-}
-
 func CreatePackageAndTypeString(in string) string {
 	// remove the first character if it's a period
 	if in[0] == '.' {
@@ -214,13 +205,33 @@ func FindDescriptor(protos []*gp.FileDescriptorProto, fullMessageName string) (*
 			}
 
 			// check nested types too
-			for _, nest := range message.GetNestedType() {
-				nestedName := fmt.Sprintf(".%s.%s.%s", packageName, message.GetName(), nest.GetName())
-				if nestedName == fullMessageName {
-					return nest, file, nil
-				}
+			nested := message.GetNestedType()
+			win, desc := checkNestedType(msgName, nested, fullMessageName)
+			if win {
+				return desc, file, nil
 			}
 		}
 	}
 	return nil, nil, fmt.Errorf("Unable to locate message: \"%s\". Perhaps the file wasn't listed as a dependency?", fullMessageName)
+}
+
+func checkNestedType(prefix string, nested []*gp.DescriptorProto, goal string) (bool, *gp.DescriptorProto) {
+	for _, n := range nested {
+		// full name of the object
+		nestedName := fmt.Sprintf("%s.%s", prefix, n.GetName())
+		// check for the match
+		if nestedName == goal {
+			return true, n
+		}
+		// if it has nested types, recursively call this function with the updated name
+		if len(n.GetNestedType()) != 0 {
+			// return checkNestedType(nestedName+"."+n.GetName(), n.GetNestedType(), goal)
+			win, desc := checkNestedType(nestedName, n.GetNestedType(), goal)
+			if win {
+				return true, desc
+			}
+		}
+	}
+	// break case
+	return false, nil
 }
