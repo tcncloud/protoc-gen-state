@@ -174,7 +174,7 @@ func FindImprovedPathName(start *ImprovedMessageDescriptor) string {
 	result := ""
 	current := start
 	for current.parentMessage != nil {
-		result += "." + current.parentMessage.message.GetName()
+		result += current.parentMessage.message.GetName() + "."
 		current = current.parentMessage
 	}
 	return result

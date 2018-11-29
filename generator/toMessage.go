@@ -178,10 +178,12 @@ func generateMappingEntities(typeMap map[*gp.DescriptorProto]map[*gp.FieldDescri
 	// TODO handle case with empty map in template
 	for desc, sub := range typeMap {
 		improvedDescriptor := FindImprovedFromDescriptor(improvedDescriptors, desc)
+		improvedPathName := FindImprovedPathName(improvedDescriptor)
+		improvedPathUnderscore := strings.Replace(improvedPathName, ".", "_", -1)
 		// packageNameUnderscore := strings.Replace(MessageDescriptorToImproved(desc, protos).packageName, ".", "_", -1)
 		packageNameUnderscore := strings.Replace(improvedDescriptor.packageName, ".", "_", -1)
 		// packageNameUnderscore := strings.Replace(descMap[desc].GetPackage(), ".", "_", -1)
-		fullNameUnderscore := fmt.Sprintf("%s_%s", packageNameUnderscore, desc.GetName())
+		fullNameUnderscore := fmt.Sprintf("%s_%s%s", packageNameUnderscore, improvedPathUnderscore, desc.GetName())
 		mapName := fullNameUnderscore + "_map"
 
 		typeLines := []*TypeLine{}
@@ -233,7 +235,7 @@ func generateMappingEntities(typeMap map[*gp.DescriptorProto]map[*gp.FieldDescri
 		mappingEntities = append(mappingEntities, &MappingEntity{
 			MapName:   mapName,
 			FileName:  fileName,
-			TypeName:  FindImprovedPathName(improvedDescriptor) + desc.GetName(),
+			TypeName:  improvedPathName + desc.GetName(),
 			TypeLines: typeLines,
 		})
 	}
