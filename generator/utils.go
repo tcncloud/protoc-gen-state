@@ -212,7 +212,7 @@ func FindDescriptor(protos []*gp.FileDescriptorProto, fullMessageName string) (*
 			}
 		}
 	}
-	return nil, nil, fmt.Errorf("Unable to locate message: \"%s\". Perhaps the file wasn't listed as a dependency?", fullMessageName)
+	return nil, nil, "", fmt.Errorf("Unable to locate message: \"%s\". Perhaps the file wasn't listed as a dependency?", fullMessageName)
 }
 
 func checkNestedType(prefix string, nested []*gp.DescriptorProto, goal string) (bool, *gp.DescriptorProto, string) {
@@ -233,5 +233,5 @@ func checkNestedType(prefix string, nested []*gp.DescriptorProto, goal string) (
 		}
 	}
 	// break case
-	return false, nil
+	return false, nil, ""
 }
