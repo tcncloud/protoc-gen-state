@@ -195,40 +195,40 @@ func FindMethodDescriptor(serviceFiles []*gp.FileDescriptorProto, fullMethodName
 	return nil, fmt.Errorf("Unable to locate method: \"%s\". Missing Method Declaration in Service.", fullMethodName)
 }
 
-func FindDescriptor(protos []*gp.FileDescriptorProto, fullMessageName string) (*gp.DescriptorProto, *gp.FileDescriptorProto, error) {
+func FindDescriptor(protos []*gp.FileDescriptorProto, fullMessageName string) (*gp.DescriptorProto, *gp.FileDescriptorProto, string, error) {
 	for _, file := range protos {
 		packageName := file.GetPackage()
 		for _, message := range file.GetMessageType() {
 			msgName := fmt.Sprintf(".%s.%s", packageName, message.GetName())
 			if msgName == fullMessageName {
-				return message, file, nil
+				return message, file, "", nil
 			}
 
 			// check nested types too
 			nested := message.GetNestedType()
-			win, desc := checkNestedType(msgName, nested, fullMessageName)
+			win, desc, depth := checkNestedType(msgName, nested, fullMessageName)
 			if win {
-				return desc, file, nil
+				return desc, file, depth, nil
 			}
 		}
 	}
 	return nil, nil, fmt.Errorf("Unable to locate message: \"%s\". Perhaps the file wasn't listed as a dependency?", fullMessageName)
 }
 
-func checkNestedType(prefix string, nested []*gp.DescriptorProto, goal string) (bool, *gp.DescriptorProto) {
+func checkNestedType(prefix string, nested []*gp.DescriptorProto, goal string) (bool, *gp.DescriptorProto, string) {
 	for _, n := range nested {
 		// full name of the object
 		nestedName := fmt.Sprintf("%s.%s", prefix, n.GetName())
 		// check for the match
 		if nestedName == goal {
-			return true, n
+			return true, n, prefix
 		}
 		// if it has nested types, recursively call this function with the updated name
 		if len(n.GetNestedType()) != 0 {
 			// return checkNestedType(nestedName+"."+n.GetName(), n.GetNestedType(), goal)
-			win, desc := checkNestedType(nestedName, n.GetNestedType(), goal)
+			win, desc, depth := checkNestedType(nestedName, n.GetNestedType(), goal)
 			if win {
-				return true, desc
+				return true, desc, depth
 			}
 		}
 	}
