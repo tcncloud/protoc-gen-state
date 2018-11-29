@@ -40,12 +40,12 @@ type ImprovedFieldDescriptor struct {
 	parentMessagesString string // all the message names leading up to this message name. Empty most of the time
 	packageName          string
 	file                 *gp.FileDescriptorProto
-	message              *ImprovedMessageDescriptor
+	message              *gp.DescriptorProto
 }
 
 type ImprovedMessageDescriptor struct {
 	message       *gp.DescriptorProto
-	fields        []*ImprovedFieldDescriptor
+	fields        []*gp.FieldDescriptorProto
 	parentMessage *ImprovedMessageDescriptor
 	packageName   string
 	file          *gp.FileDescriptorProto
@@ -86,50 +86,46 @@ func FieldDescriptorToImproved(field *gp.FieldDescriptorProto, files []*gp.FileD
 		packageName:          foundFile.GetPackage(),
 		file:                 foundFile,
 		parentMessagesString: parentMessagesString,
-		message:              MessageDescriptorToImproved(parentMsg, files),
+		message:              parentMsg,
 	}
 }
 
 func MessageDescriptorToImproved(message_in *gp.DescriptorProto, files []*gp.FileDescriptorProto) *ImprovedMessageDescriptor {
-	// fields := []*ImprovedFieldDescriptor{}
-	// for i := 0; i < len(message_in.GetField()); i++ {
-	// 	fields = append(fields, FieldDescriptorToImproved(message_in.GetField()[i], files))
-	// }
+	var foundFile *gp.FileDescriptorProto
+	var foundParentMessage *ImprovedMessageDescriptor
 
-	// var foundFile *gp.FileDescriptorProto
-	// var foundParentMessage *gp.DescriptorProto
+	for _, file := range files {
+		for _, currMessage := range file.GetMessageType() {
+			if currMessage.GetName() == message_in.GetName() {
+				foundParentMessage = nil
+				foundFile = file
+				break
+			}
 
-	// for _, file := range files {
-	// 	for _, currMessage := range file.GetMessageType() {
-	// 		if currMessage.GetName() == message_in.GetName() {
-	// 			foundParentMessage = nil
-	// 			foundFile = file
-	// 			break
-	// 		}
+			// check nested messages for our message
+			found, parent := FindParentMessage(currMessage, message_in)
+			if found {
+				// found the parent message
+				foundParentMessage = MessageDescriptorToImproved(parent, files)
+				foundFile = file
+				break
+			}
+		}
+	}
 
-	// 		// check nested messages for our message
-	// 		found, parent := FindParentMessage(currMessage, message_in)
-	// 		if found {
-	// 			// found the parent message
-	// 			foundParentMessage = parent
-	// 			foundFile = file
-	// 			break
-	// 		}
-	// 	}
-	// }
-
-	// return &ImprovedMessageDescriptor{
-	// 	message:       message_in,
-	// 	fields:        fields,
-	// 	parentMessage: MessageDescriptorToImproved(foundParentMessage, files),
-	// 	packageName:   foundFile.GetPackage(),
-	// 	file:          foundFile,
-	// }
 	return &ImprovedMessageDescriptor{
 		message:       message_in,
-		fields:        nil,
-		parentMessage: nil,
-		packageName:   "package.name",
-		file:          nil,
+    fields:        message_in.GetField(),
+		parentMessage: foundParentMessage,
+    packageName:   files[0].GetPackage(),
+		// packageName:   foundFile.GetPackage(),
+		file:          foundFile,
 	}
+	// return &ImprovedMessageDescriptor{
+	// 	message:       message_in,
+	// 	fields:        nil,
+	// 	parentMessage: nil,
+	// 	packageName:   "package.name",
+	// 	file:          nil,
+	// }
 }

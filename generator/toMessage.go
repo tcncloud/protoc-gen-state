@@ -248,15 +248,9 @@ func createImprovedDescriptors(protos []*gp.FileDescriptorProto) []*ImprovedMess
 }
 
 func createNestedImprovedDescriptor(message *gp.DescriptorProto, prev *ImprovedMessageDescriptor, file *gp.FileDescriptorProto, fullList []*ImprovedMessageDescriptor, protos []*gp.FileDescriptorProto) []*ImprovedMessageDescriptor {
-	// make our descriptor and add it to the array
-	fields := []*ImprovedFieldDescriptor{} // field descriptors
-	for _, f := range message.GetField() {
-		fields = append(fields, FieldDescriptorToImproved(f, protos))
-	}
-
 	improvedMessage := &ImprovedMessageDescriptor{
 		message:       message,
-		fields:        fields,
+		fields:        message.GetField(),
 		parentMessage: prev,
 		packageName:   file.GetPackage(),
 		file:          file,
