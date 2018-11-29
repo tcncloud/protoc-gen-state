@@ -129,3 +129,53 @@ func MessageDescriptorToImproved(message_in *gp.DescriptorProto, files []*gp.Fil
 	// 	file:          nil,
 	// }
 }
+
+func CreateImprovedDescriptors(protos []*gp.FileDescriptorProto) []*ImprovedMessageDescriptor {
+	output := []*ImprovedMessageDescriptor{}
+	for _, file := range protos { // loop through files
+		for _, message := range file.GetMessageType() { // loop through messages
+			output = createNestedImprovedDescriptor(message, nil, file, output, protos)
+		}
+	}
+	return output
+}
+
+func createNestedImprovedDescriptor(message *gp.DescriptorProto, prev *ImprovedMessageDescriptor, file *gp.FileDescriptorProto, fullList []*ImprovedMessageDescriptor, protos []*gp.FileDescriptorProto) []*ImprovedMessageDescriptor {
+	improvedMessage := &ImprovedMessageDescriptor{
+		message:       message,
+		fields:        message.GetField(),
+		parentMessage: prev,
+		packageName:   file.GetPackage(),
+		file:          file,
+	}
+
+	fullList = append(fullList, improvedMessage)
+
+	// recursively call this function
+	if len(message.GetNestedType()) != 0 { // if we have nested types
+		for _, nested := range message.GetNestedType() { // recursively get those types
+			fullList = createNestedImprovedDescriptor(nested, improvedMessage, file, fullList, protos)
+		}
+	}
+
+	return fullList
+}
+
+func FindImprovedFromDescriptor(improved []*ImprovedMessageDescriptor, desc *gp.DescriptorProto) *ImprovedMessageDescriptor {
+	for _, i := range improved {
+		if i.message == desc {
+			return i
+		}
+	}
+	return nil
+}
+
+func FindImprovedPathName(start *ImprovedMessageDescriptor) string {
+	result := ""
+	current := start
+	for current.parentMessage != nil {
+		result += "." + current.parentMessage.message.GetName()
+		current = current.parentMessage
+	}
+	return result
+}
