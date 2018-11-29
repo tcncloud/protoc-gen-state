@@ -75,7 +75,7 @@ func CreateStateFile(stateFields []*gp.FieldDescriptorProto) (*File, error) {
 	for _, entity := range stateFields {
 		stateEntities = append(stateEntities, &StateEntity{
 			FieldName:    entity.GetJsonName(),
-			FullTypeName: entity.GetTypeName(),
+			FullTypeName: CreatePackageAndTypeString(entity.GetTypeName()),
 			Repeated:     entity.GetLabel() == 3,
 		})
 	}
