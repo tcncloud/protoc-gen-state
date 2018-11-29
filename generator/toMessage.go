@@ -177,8 +177,10 @@ func generateMappingEntities(typeMap map[*gp.DescriptorProto]map[*gp.FieldDescri
 	mappingEntities := []*MappingEntity{}
 	// TODO handle case with empty map in template
 	for desc, sub := range typeMap {
+		improvedDescriptor := FindImprovedFromDescriptor(improvedDescriptors, desc)
 		// packageNameUnderscore := strings.Replace(MessageDescriptorToImproved(desc, protos).packageName, ".", "_", -1)
-		packageNameUnderscore := strings.Replace(descMap[desc].GetPackage(), ".", "_", -1)
+		packageNameUnderscore := strings.Replace(improvedDescriptor.packageName, ".", "_", -1)
+		// packageNameUnderscore := strings.Replace(descMap[desc].GetPackage(), ".", "_", -1)
 		fullNameUnderscore := fmt.Sprintf("%s_%s", packageNameUnderscore, desc.GetName())
 		mapName := fullNameUnderscore + "_map"
 
@@ -205,13 +207,13 @@ func generateMappingEntities(typeMap map[*gp.DescriptorProto]map[*gp.FieldDescri
 			}
 
 			// typename := strings.TrimPrefix(field_type, "."+MessageDescriptorToImproved(desc, protos).packageName)
-			typename := strings.TrimPrefix(field_type, "."+descMap[desc].GetPackage())
+			typename := strings.TrimPrefix(field_type, "."+improvedDescriptor.packageName)
+			// typename := strings.TrimPrefix(field_type, "."+descMap[desc].GetPackage())
 			if strings.HasPrefix(typename, ".google.protobuf") {
 				typename = typename[16:] // hacky
+			} else if strings.HasPrefix(typename, ".commons") {
+				typename = typename[8:]
 			}
-			// else if strings.HasPrefix(typename, ".commons") {
-			// 	typename = typename[8:]
-			// }
 
 			// number of dots in package
 			typeLines = append(typeLines, &TypeLine{
@@ -223,55 +225,19 @@ func generateMappingEntities(typeMap map[*gp.DescriptorProto]map[*gp.FieldDescri
 		}
 
 		// file := MessageDescriptorToImproved(desc, protos).file
-		file := descMap[desc]
+		file := improvedDescriptor.file
+		// file := descMap[desc]
 		fileName := strings.Replace(file.GetName(), "/", "_", -1)
 		fileName = fileName[:len(fileName)-6] // remove .proto
 
 		mappingEntities = append(mappingEntities, &MappingEntity{
 			MapName:   mapName,
 			FileName:  fileName,
-			TypeName:  desc.GetName(),
+			TypeName:  FindImprovedPathName(improvedDescriptor) + desc.GetName(),
 			TypeLines: typeLines,
 		})
 	}
 	return mappingEntities, nil
-}
-
-func createImprovedDescriptors(protos []*gp.FileDescriptorProto) []*ImprovedMessageDescriptor {
-	output := []*ImprovedMessageDescriptor{}
-	for _, file := range protos { // loop through files
-		for _, message := range file.GetMessageType() { // loop through messages
-			output = createNestedImprovedDescriptor(message, nil, file, output, protos)
-		}
-	}
-	return output
-}
-
-func createNestedImprovedDescriptor(message *gp.DescriptorProto, prev *ImprovedMessageDescriptor, file *gp.FileDescriptorProto, fullList []*ImprovedMessageDescriptor, protos []*gp.FileDescriptorProto) []*ImprovedMessageDescriptor {
-	// make our descriptor and add it to the array
-	fields := []*ImprovedFieldDescriptor{} // field descriptors
-	for _, f := range message.GetField() {
-		fields = append(fields, FieldDescriptorToImproved(f, protos))
-	}
-
-	improvedMessage := &ImprovedMessageDescriptor{
-		message:       message,
-		fields:        fields,
-		parentMessage: prev,
-		packageName:   file.GetPackage(),
-		file:          file,
-	}
-
-	fullList = append(fullList, improvedMessage)
-
-	// recursively call this function
-	if len(message.GetNestedType()) != 0 { // if we have nested types
-		for _, nested := range message.GetNestedType() { // recursively get those types
-			fullList = createNestedImprovedDescriptor(nested, improvedMessage, file, fullList, protos)
-		}
-	}
-
-	return fullList
 }
 
 func CreateToMessageFile(servFiles []*gp.FileDescriptorProto, protos []*gp.FileDescriptorProto, protocTsPath string) (*File, error) {
@@ -279,7 +245,7 @@ func CreateToMessageFile(servFiles []*gp.FileDescriptorProto, protos []*gp.FileD
 	// build the template entities
 	// import entities
 
-	improvedDescriptors := createImprovedDescriptors(protos)
+	improvedDescriptors := CreateImprovedDescriptors(protos)
 
 	// TODO: first part finished, should have a type map set up now
 	typeMap, descMap, fileSlice, err := createTypeMapAndImportSlice(servFiles, protos)
