@@ -52,7 +52,7 @@ func createTypeMapAndImportSlice(servFiles []*gp.FileDescriptorProto, allFiles [
 				// get the input to the rpc
 				inputType := method.GetInputType()
 				// get the descriptor for that input type
-				desc, file, err := FindDescriptor(allFiles, inputType)
+				desc, file, _, err := FindDescriptor(allFiles, inputType)
 				if err != nil {
 					return typeMap, descMap, fileSlice, err
 				}
@@ -97,7 +97,7 @@ func setNestedTypes(message *gp.DescriptorProto, msgFile *gp.FileDescriptorProto
 			}
 
 			// get descriptor from the type name
-			desc, file, err := FindDescriptor(files, field.GetTypeName())
+			desc, file, _, err := FindDescriptor(files, field.GetTypeName())
 			if err != nil {
 				return nil, nil, nil, err
 			}
@@ -187,7 +187,7 @@ func generateMappingEntities(typeMap map[*gp.DescriptorProto]map[*gp.FieldDescri
 			// get file that defines the message type
 
 			field_type := field.GetTypeName()
-			_, fileDesc, err := FindDescriptor(protos, field_type)
+			_, fileDesc, _, err := FindDescriptor(protos, field_type)
 			if err != nil {
 				return nil, err
 			}
@@ -218,6 +218,7 @@ func generateMappingEntities(typeMap map[*gp.DescriptorProto]map[*gp.FieldDescri
 				// TypeName: field_type[strings.LastIndex(field_type, ".")+1:],
 			})
 		}
+
 		file := descMap[desc]
 		fileName := strings.Replace(file.GetName(), "/", "_", -1)
 		fileName = fileName[:len(fileName)-6] // remove .proto
@@ -232,7 +233,47 @@ func generateMappingEntities(typeMap map[*gp.DescriptorProto]map[*gp.FieldDescri
 	return mappingEntities, nil
 }
 
+func createImprovedDescriptors(protos []*gp.FileDescriptorProto) ([]*ImprovedMessageDescriptor, error) {
+	output := []*ImprovedMessageDescriptor{}
+	for _, file := range protos { // loop through files
+		for _, message := range file.GetMessageType() { // loop through messages
+			output = createNestedImprovedDescriptor(message, nil, file, output, protos)
+		}
+	}
+	return output, nil
+}
+
+func createNestedImprovedDescriptor(message *gp.DescriptorProto, prev *ImprovedMessageDescriptor, file *gp.FileDescriptorProto, fullList []*ImprovedMessageDescriptor, protos []*gp.FileDescriptorProto) []*ImprovedMessageDescriptor {
+	// make our descriptor and add it to the array
+	fields := []*ImprovedFieldDescriptor{} // field descriptors
+	for _, f := range message.GetField() {
+		fields = append(fields, FieldDescriptorToImproved(f, protos))
+	}
+
+	improvedMessage := &ImprovedMessageDescriptor{
+		message:       message,
+		fields:        fields,
+		parentMessage: prev,
+		packageName:   file.GetPackage(),
+		file:          file,
+	}
+
+	fullList = append(fullList, improvedMessage)
+
+	// recursively call this function
+	if len(message.GetNestedType()) != 0 { // if we have nested types
+		for _, nested := range message.GetNestedType() { // recursively get those types
+			fullList = createNestedImprovedDescriptor(nested, improvedMessage, file, fullList, protos)
+		}
+	}
+
+	return fullList
+}
+
 func CreateToMessageFile(servFiles []*gp.FileDescriptorProto, protos []*gp.FileDescriptorProto, protocTsPath string) (*File, error) {
+	// set up graph (array of ImprovedDescriptor)
+	// build the template entities
+	// import entities
 
 	// TODO: first part finished, should have a type map set up now
 	typeMap, descMap, fileSlice, err := createTypeMapAndImportSlice(servFiles, protos)
