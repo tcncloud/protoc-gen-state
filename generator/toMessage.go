@@ -164,7 +164,7 @@ type TypeLine struct {
 	TypeName string
 }
 
-func generateMappingEntities(typeMap map[*gp.DescriptorProto]map[*gp.FieldDescriptorProto]*gp.DescriptorProto, descMap map[*gp.DescriptorProto]*gp.FileDescriptorProto, improvedDescriptors []*ImprovedMessageDescriptor, protos []*gp.FileDescriptorProto) ([]*MappingEntity, error) {
+func generateMappingEntities(typeMap map[*gp.DescriptorProto]map[*gp.FieldDescriptorProto]*gp.DescriptorProto, descMap map[*gp.DescriptorProto]*gp.FileDescriptorProto, improvedDescriptors []*ImprovedMessageDescriptor, protos []*gp.FileDescriptorProto, fileSlice []*gp.FileDescriptorProto) ([]*MappingEntity, []*gp.FileDescriptorProto, error) {
 
 	isMap := func(field *gp.FieldDescriptorProto, desc *gp.DescriptorProto) bool {
 		opts := desc.GetOptions()
@@ -194,7 +194,11 @@ func generateMappingEntities(typeMap map[*gp.DescriptorProto]map[*gp.FieldDescri
 			field_type := field.GetTypeName()
 			_, fileDesc, _, err := FindDescriptor(protos, field_type)
 			if err != nil {
-				return nil, err
+				return nil, nil, err
+			}
+			// add to import slice
+			if !containsFile(fileSlice, fileDesc) {
+				fileSlice = append(fileSlice, fileDesc)
 			}
 			filename := strings.Replace(fileDesc.GetName(), "/", "_", -1)
 			filename = filename[:len(filename)-6] // remove .proto
@@ -214,7 +218,7 @@ func generateMappingEntities(typeMap map[*gp.DescriptorProto]map[*gp.FieldDescri
 			if strings.HasPrefix(typename, ".google.protobuf") {
 				typename = typename[16:] // hacky
 			} else if strings.HasPrefix(typename, ".commons") {
-				typename = typename[8:]
+				typename = typename[8:] // even hackier
 			}
 
 			// number of dots in package
@@ -239,7 +243,7 @@ func generateMappingEntities(typeMap map[*gp.DescriptorProto]map[*gp.FieldDescri
 			TypeLines: typeLines,
 		})
 	}
-	return mappingEntities, nil
+	return mappingEntities, fileSlice, nil
 }
 
 func CreateToMessageFile(servFiles []*gp.FileDescriptorProto, protos []*gp.FileDescriptorProto, protocTsPath string) (*File, error) {
@@ -255,14 +259,14 @@ func CreateToMessageFile(servFiles []*gp.FileDescriptorProto, protos []*gp.FileD
 		return nil, fmt.Errorf("Error when building typeMap and fileSlice: %v\n%s\n%s", err, typeMap, fileSlice) // TODO debugging
 	}
 
-	// map fileSlice to import entities
-	importEntities := generateImportEntities(fileSlice, protocTsPath) /*[]*ImportEntity{}*/
-
 	// use the typeMap to create entities for the main template
-	mappingEntities, err := generateMappingEntities(typeMap, descMap, improvedDescriptors, protos) /*[]*MappingEntity{}*/
+	mappingEntities, fileSlice, err := generateMappingEntities(typeMap, descMap, improvedDescriptors, protos, fileSlice) /*[]*MappingEntity{}*/
 	if err != nil {
 		return nil, err
 	}
+
+	// map fileSlice to import entities
+	importEntities := generateImportEntities(fileSlice, protocTsPath) /*[]*ImportEntity{}*/
 
 	var output bytes.Buffer
 
