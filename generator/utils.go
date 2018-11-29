@@ -237,7 +237,6 @@ func checkNestedType(prefix string, nested []*gp.DescriptorProto, goal string) (
 }
 
 func FindParentMessage(possible_parent *gp.DescriptorProto, possible_child *gp.DescriptorProto) (bool, *gp.DescriptorProto) {
-	var prevMessage *gp.DescriptorProto
 	nested := possible_parent.GetNestedType()
 
 	for _, n := range nested {

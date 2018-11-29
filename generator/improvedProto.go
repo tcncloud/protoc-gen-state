@@ -124,6 +124,5 @@ func MessageDescriptorToImproved(message_in *gp.DescriptorProto, files []*gp.Fil
 		parentMessage: MessageDescriptorToImproved(foundParentMessage, files),
 		packageName:   foundFile.GetPackage(),
 		file:          foundFile,
-		message:       MessageDescriptorToImproved(parentMsg),
 	}
 }
