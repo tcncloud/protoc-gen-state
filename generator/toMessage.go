@@ -58,6 +58,10 @@ func createTypeMapAndImportSlice(servFiles []*gp.FileDescriptorProto, allFiles [
 				}
 				// add to the descriptor : file map
 				descMap[desc] = file
+				// add to fileSlice
+				if !containsFile(fileSlice, file) {
+					fileSlice = append(fileSlice, file)
+				}
 				// set the nested time in the big map
 				typeMap, descMap, fileSlice, err = setNestedTypes(desc, servFile, allFiles, typeMap, descMap, fileSlice)
 				if err != nil {
@@ -123,6 +127,7 @@ func generateImportEntities(fileSlice []*gp.FileDescriptorProto, protocTsPath st
 		filepath := GetFilePath(f.GetName())
 		index := strings.LastIndex(filepath, "/") + 1
 		fname := strings.Replace(f.GetName(), "/", "_", -1)
+		packageSlashes := strings.Replace(f.GetPackage(), ".", "/", -1)
 		if f.GetName()[:15] == "google/protobuf" {
 			importEntities = append(importEntities, &ImportEntity{
 				FileName:   fmt.Sprintf("google-protobuf/%s_pb", f.GetName()[:len(f.GetName())-6]),
@@ -130,7 +135,7 @@ func generateImportEntities(fileSlice []*gp.FileDescriptorProto, protocTsPath st
 			})
 		} else {
 			importEntities = append(importEntities, &ImportEntity{
-				FileName:   protocTsPath + filepath[index:],
+				FileName:   protocTsPath + packageSlashes + "/" + filepath[index:],
 				ModuleName: fname[:len(fname)-6],
 			})
 		}
