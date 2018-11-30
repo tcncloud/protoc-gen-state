@@ -160,8 +160,9 @@ func CreateAggregateByPackage(msgFiles []*gp.FileDescriptorProto, protocTsPath s
 			for _, f := range msgFiles {
 				if f.GetPackage() == file.GetPackage() {
 					fp := GetFilePath(f.GetName())
+					packageUnderscore := strings.Replace(file.GetPackage(), ".", "/", -1)
 					index := strings.LastIndex(fp, "/") + 1
-					result += fmt.Sprintf("export * from \"%s%s\";\n", protocTsPath, fp[index:])
+					result += fmt.Sprintf("export * from \"%s%s/%s\";\n", protocTsPath, packageUnderscore, fp[index:])
 				}
 			}
 

@@ -114,13 +114,13 @@ func CreateAggregateServicesFile(serviceFiles []*gp.FileDescriptorProto, protocT
 					serviceEntities = append(serviceEntities, &ServiceEntity{
 						Location: protocTsPath + slashPackage + filePath,
 						Name:     name,
-						Package:  file.GetPackage(),
+						Package:  strings.Replace(file.GetPackage(), ".", "_", -1),
 					})
 				}
 			}
 
 			exportEntities = append(exportEntities, &ServiceExport{
-				Package: file.GetPackage(),
+				Package: strings.Replace(file.GetPackage(), ".", "_", -1),
 				Exports: exports,
 			})
 		}
