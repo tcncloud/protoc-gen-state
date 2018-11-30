@@ -43,6 +43,7 @@ protos:
 	protoc -I. -I./e2e/protos -I./state/options.proto \
 		--plugin=./protoc-gen-state \
 		--state_out=$(GENERATED) ./e2e/protos/basic.proto
+	cp protoc-gen-state e2e
 
 deps:
 	go get -u github.com/golang/protobuf/protoc-gen-go
