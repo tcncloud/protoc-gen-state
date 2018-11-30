@@ -58,7 +58,7 @@ module.exports = (env) => {
             { loader: 'babel-loader' },
             { loader: 'ts-loader',
               options: {
-                configFile: "tsconfig.gen-state.json",
+                configFile: "tsconfig.json",
                 // Uncomment these if you want to skip transpiling for some demonic reason
                 // transpileOnly: true,
                 // happyPackMode: true

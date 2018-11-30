@@ -226,7 +226,7 @@ type ActionEntity struct {
 	Repeat     bool
 }
 
-func CreateActionFile(stateFields []*gp.FieldDescriptorProto, customFields []*gp.FieldDescriptorProto, serviceFiles []*gp.FileDescriptorProto) (*File, error) {
+func CreateActionFile(stateFields []*gp.FieldDescriptorProto, customFields []*gp.FieldDescriptorProto, serviceFiles []*gp.FileDescriptorProto, debug bool) (*File, error) {
 	getEntities := []*ActionEntity{}
 	listEntities := []*ActionEntity{}
 	resetEntities := []*ActionEntity{}

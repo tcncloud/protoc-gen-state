@@ -68,7 +68,7 @@ type StateEntity struct {
 	Repeated     bool
 }
 
-func CreateStateFile(stateFields []*gp.FieldDescriptorProto) (*File, error) {
+func CreateStateFile(stateFields []*gp.FieldDescriptorProto, debug bool) (*File, error) {
 	stateEntities := []*StateEntity{}
 
 	// transform stateFields into our StateEntity implementation so template can read values

@@ -156,6 +156,7 @@ type MappingEntity struct {
 	FileName  string
 	TypeName  string
 	TypeLines []*TypeLine
+  Debug     bool
 }
 
 type TypeLine struct {
@@ -164,7 +165,7 @@ type TypeLine struct {
 	TypeName string
 }
 
-func generateMappingEntities(typeMap map[*gp.DescriptorProto]map[*gp.FieldDescriptorProto]*gp.DescriptorProto, descMap map[*gp.DescriptorProto]*gp.FileDescriptorProto, improvedDescriptors []*ImprovedMessageDescriptor, protos []*gp.FileDescriptorProto, fileSlice []*gp.FileDescriptorProto) ([]*MappingEntity, []*gp.FileDescriptorProto, error) {
+func generateMappingEntities(typeMap map[*gp.DescriptorProto]map[*gp.FieldDescriptorProto]*gp.DescriptorProto, descMap map[*gp.DescriptorProto]*gp.FileDescriptorProto, improvedDescriptors []*ImprovedMessageDescriptor, protos []*gp.FileDescriptorProto, fileSlice []*gp.FileDescriptorProto, debug bool) ([]*MappingEntity, []*gp.FileDescriptorProto, error) {
 
 	isComplex := func(fields []*gp.FieldDescriptorProto) bool {
 		for _, field := range fields {
@@ -262,12 +263,95 @@ func generateMappingEntities(typeMap map[*gp.DescriptorProto]map[*gp.FieldDescri
 			FileName:  fileName,
 			TypeName:  tName,
 			TypeLines: typeLines,
+      Debug:     debug,
 		})
 	}
 	return mappingEntities, fileSlice, nil
 }
 
-func CreateToMessageFile(servFiles []*gp.FileDescriptorProto, protos []*gp.FileDescriptorProto, protocTsPath string) (*File, error) {
+const toMessageTemplate = `
+
+function getNestedMessageConstructor(messageType, fieldName) {
+  return messageMap.has(messageType) && messageMap.get(messageType).get(fieldName);
+}
+
+export function toMessage(obj: any, messageClass: any) {
+  if (!obj) {
+    return new messageClass();
+  }
+  {{if .}}console.groupCollapsed('toMessage');
+  console.log('obj:', obj);
+  console.log('messageClass:', messageClass);{{end}}
+  const message = new messageClass();
+
+  Object.keys(obj).forEach(key => {
+    {{if .}}console.groupCollapsed('field:', key);{{end}}
+    let ele = obj[key];
+    const upperCaseKey = key.charAt(0).toUpperCase() + key.substr(1);
+    const setterName = "set" + upperCaseKey;
+    const getterName = "get" + upperCaseKey;
+    {{if .}}console.log('ele:', ele);
+    console.log('typeof ele:', typeof ele);
+    console.log('setterName:', setterName);
+    console.log('getterName:', getterName);{{end}}
+
+    if (message[setterName]) {
+      var nestedMessageContructor = getNestedMessageConstructor(messageClass, key);
+      if (nestedMessageContructor) {
+        if (key.length > 4 && key.slice(key.length - 4) === 'List' && Array.isArray(ele)) { // check if field is repeated
+          {{if .}}console.log('REPEATED field');{{end}}
+          ele = ele.map(subEle => toMessage(subEle, nestedMessageContructor));
+        } else {
+          {{if .}}console.log('regular field');{{end}}
+          ele = toMessage(ele, nestedMessageContructor);
+        }
+      }
+
+      message[setterName](ele);
+    } else if (message[getterName] && key.slice(key.length - 3) === 'Map') { // check if field is a map
+      {{if .}}console.log('MAP field');{{end}}
+      // if the map field is missing, nothing needs to be done.
+      if (ele !== undefined && ele !== null) {
+        if (Array.isArray(ele)) {
+          if (ele.length) {
+            var mapObj = message[getterName]();
+            var mappedFieldValueConstructor = getNestedMessageConstructor(messageClass, key);
+            if (mappedFieldValueConstructor) {
+              {{if .}}console.groupCollapsed('keys & values, unserialized');{{end}}
+              ele = ele.map(([key, value]) => {
+                {{if .}}console.log('key:', key);
+                console.log('value:', value);{{end}}
+                return [key, mappedFieldValueConstructor(value)];
+              });
+              {{if .}}console.groupEnd();{{end}}
+            }
+            {{if .}}console.groupCollapsed('keys & values, serialized');{{end}}
+            ele.forEach(([key, value]) => {
+              {{if .}}console.log('key:', key);
+              console.log('value:', value);{{end}}
+              mapObj.set(key, value);
+            });
+            {{if .}}console.groupEnd();{{end}}
+          }
+        } else {
+          {{if .}}console.groupEnd();
+          console.groupEnd();{{end}}
+          throw new Error("Protoc-gen-state: Expected field " + key + " to be an array of tuples.");
+        }
+      }
+    } else {
+      {{if .}}console.groupEnd();
+      console.groupEnd();{{end}}
+      throw new Error("No corresponding gRPC setter method for given key: " + key);
+    }
+    {{if .}}console.groupEnd();{{end}}
+  });
+  {{if .}}console.groupEnd();{{end}}
+
+  return message;
+}`
+
+func CreateToMessageFile(servFiles []*gp.FileDescriptorProto, protos []*gp.FileDescriptorProto, protocTsPath string, debug bool) (*File, error) {
 	improvedDescriptors := CreateImprovedDescriptors(protos)
 
 	// TODO: first part finished, should have a type map set up now
@@ -277,7 +361,7 @@ func CreateToMessageFile(servFiles []*gp.FileDescriptorProto, protos []*gp.FileD
 	}
 
 	// use the typeMap to create entities for the main template
-	mappingEntities, fileSlice, err := generateMappingEntities(typeMap, descMap, improvedDescriptors, protos, fileSlice) /*[]*MappingEntity{}*/
+	mappingEntities, fileSlice, err := generateMappingEntities(typeMap, descMap, improvedDescriptors, protos, fileSlice, debug) /*[]*MappingEntity{}*/
 	if err != nil {
 		return nil, err
 	}
@@ -294,66 +378,12 @@ func CreateToMessageFile(servFiles []*gp.FileDescriptorProto, protos []*gp.FileD
 	body := template.Must(template.New("body").Parse(mappingTemplate))
 	body.Execute(&output, mappingEntities)
 
+  toMessageOutput := template.Must(template.New("toMessageOutput").Parse(toMessageTemplate))
+  toMessageOutput.Execute(&output, debug)
+
 	return &File{
 		Name:    "to_message_pb.ts",
-		Content: output.String() + toMessageFunction,
+		Content: output.String(),
 	}, nil
 }
 
-const toMessageFunction = `
-
-function getNestedMessageConstructor(messageType, fieldName) {
-	return messageMap.has(messageType) && messageMap.get(messageType).get(fieldName);
-}
-
-export function toMessage(obj: any, messageClass: any) {
-	if (!obj) {
-		return new messageClass();
-	}
-
-	const message = new messageClass();
-
-	Object.keys(obj).forEach(key => {
-		let ele = obj[key];
-		const upperCaseKey = key.charAt(0).toUpperCase() + key.substr(1);
-		const setterName = "set" + upperCaseKey;
-		const getterName = "get" + upperCaseKey;
-
-		if (message[setterName]) {
-			var nestedMessageContructor = getNestedMessageConstructor(messageClass, key);
-			if (nestedMessageContructor) {
-				if (key.length > 4 && key.slice(key.length - 4) === 'List' && Array.isArray(ele)) { // check if field is repeated
-					ele = ele.map(subEle => toMessage(subEle, nestedMessageContructor));
-				} else {
-					ele = toMessage(ele, nestedMessageContructor);
-				}
-			}
-
-			message[setterName](ele);
-		} else if (message[getterName] && key.slice(key.length - 3) === 'Map') { // check if field is a map
-			// if the map field is missing, nothing needs to be done.
-			if (ele !== undefined && ele !== null) {
-				if (Array.isArray(ele)) {
-					if (ele.length) {
-						var mapObj = message[getterName]();
-						var mappedFieldValueConstructor = getNestedMessageConstructor(messageClass, key);
-						if (mappedFieldValueConstructor) {
-							ele = ele.map(([key, value]) => {
-								return [key, mappedFieldValueConstructor(value)];
-							});
-						}
-						ele.forEach(([key, value]) => {
-							mapObj.set(key, value);
-						});
-					}
-				} else {
-					throw new Error("Protoc-gen-state: Expected field " + key + " to be an array of tuples.");
-				}
-			}
-		} else {
-			throw new Error("No corresponding gRPC setter method for given key: " + key);
-		}
-	});
-
-	return message;
-}`

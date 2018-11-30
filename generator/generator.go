@@ -139,21 +139,21 @@ func Generate(filepaths []string, protos []*gp.FileDescriptorProto) ([]*File, er
 	out = append(out, CreateAggregateByPackage(messageFiles, protocTsPath, stateFile.GetPackage())...)
 
 	// create state file
-	statePb, err := CreateStateFile(stateFields)
+	statePb, err := CreateStateFile(stateFields, debug)
 	if err != nil {
 		return nil, fmt.Errorf("Error generating state_pb file: %v", err)
 	}
 	out = append(out, statePb)
 
 	// create action file
-	actionPb, err := CreateActionFile(stateFields, customFields, serviceFiles)
+	actionPb, err := CreateActionFile(stateFields, customFields, serviceFiles, debug)
 	if err != nil {
 		return nil, fmt.Errorf("Error generating actions_pb file: %v", err)
 	}
 	out = append(out, actionPb)
 
 	// create reducer file
-	reducerPb, err := CreateReducerFile(stateFields)
+	reducerPb, err := CreateReducerFile(stateFields, debug)
 	if err != nil {
 		return nil, fmt.Errorf("Error generating reducer_pb file: %v", err)
 	}
@@ -167,7 +167,7 @@ func Generate(filepaths []string, protos []*gp.FileDescriptorProto) ([]*File, er
 	out = append(out, epicPb)
 
 	// create toMessage file
-	toMessagePb, err := CreateToMessageFile(serviceFiles, protos, protocTsPath)
+	toMessagePb, err := CreateToMessageFile(serviceFiles, protos, protocTsPath, debug)
 	if err != nil {
 		return nil, fmt.Errorf("Error generating to_message_pb file: %v", err)
 	}

@@ -107,6 +107,7 @@ export const {{$e.Name}}Epic = (action$, store) => action$
 {{end}}
 {{define "grpcUnary"}}   return Observable
 		.defer(() => new Promise((resolve, reject) => {
+      {{if .Debug}}console.log('calling {{.FullMethodName}} with payload: ', action);{{end}}
 			{{.Host}}
 			{{.Auth}}
 			grpc.unary({{.FullMethodName}}, {
@@ -114,7 +115,9 @@ export const {{$e.Name}}Epic = (action$, store) => action$
 				host: host,
 				{{.AuthFollowup}}
 				onEnd: (res: UnaryOutput<{{.OutputType}}>) => {
+          {{if .Debug}}console.log('onEnd {{.FullMethodName}}: ', res.message);{{end}}
 					if(res.status != grpc.Code.OK){
+            {{if .Debug}}console.log('Error in epic -- status: ', res.status, ' message: ', res.statusMessage);{{end}}
 						const err: NodeJS.ErrnoException = createErrorObject(res.status, res.statusMessage);
 						reject(err);
 					}
@@ -127,15 +130,19 @@ export const {{$e.Name}}Epic = (action$, store) => action$
 {{define "grpcStream"}}   {{.Host}}
 		return Observable
 			.defer(() => new Promise((resolve, reject) => {
+        {{if .Debug}}console.log('calling {{.FullMethodName}} with payload: ', action);{{end}}
 				var arr: {{.OutputType}}.AsObject[] = [];
 				const client = grpc.client({{.FullMethodName}}, {
 					host: host,
 				});
 				client.onMessage((message: {{.OutputType}}) => {
+          {{if .Debug}}console.log('in {{.FullMethodName}} streaming message: ', message.toObject());{{end}}
 					arr.push(message.toObject());
 				});
-				client.onEnd((code: grpc.Code, msg: string) => {
+        {{if .Debug}}client.onEnd((code: grpc.Code, msg: string, trailers: grpc.Metadata) => {
+          console.log('in {{.FullMethodName}} streaming onEnd: ', code, msg, trailers, action);{{else}}client.onEnd((code: grpc.Code, msg: string) => { {{end}}
 					if (code != grpc.Code.OK) {
+            {{if .Debug}}console.log('Error in streaming epic -- code: ', code, ' message: ', msg);{{end}}
 						reject(createErrorObject(code, msg));
 					}
 					resolve(arr);
@@ -161,6 +168,7 @@ type EpicEntity struct {
 	AuthFollowup   string
 	Host           string
 	Updater        bool
+  Debug          bool
 }
 
 func CreateEpicFile(stateFields []*gp.FieldDescriptorProto, customFields []*gp.FieldDescriptorProto, serviceFiles []*gp.FileDescriptorProto, defaultTimeout int64, defaultRetries int64, authTokenLocation string, hostnameLocation string, hostname string, portin int64, debounce int64, debug bool) (*File, error) {
@@ -262,6 +270,7 @@ func CreateEpicFile(stateFields []*gp.FieldDescriptorProto, customFields []*gp.F
 					AuthFollowup:   authFollowup,
 					Host:           host,
 					Updater:        updater,
+          Debug:          debug,
 				})
 			}
 		}
@@ -330,6 +339,7 @@ func CreateEpicFile(stateFields []*gp.FieldDescriptorProto, customFields []*gp.F
 				Auth:           idToken,
 				AuthFollowup:   authFollowup,
 				Host:           host,
+        Debug:          debug,
 			})
 		}
 	}
