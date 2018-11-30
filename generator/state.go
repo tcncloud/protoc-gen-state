@@ -45,8 +45,8 @@ export interface ProtocState { {{range $i, $entity := .}}
   {{$entity.FieldName}}: {
     isLoading: boolean;
     error: { code: string; message: string; };
-    {{if $entity.Repeated}}value: ProtocTypes{{$entity.FullTypeName}}.AsObject[];
-    {{else}}value: ProtocTypes{{$entity.FullTypeName}}.AsObject | null;{{end}}
+    {{if $entity.Repeated}}value: ProtocTypes.{{$entity.FullTypeName}}.AsObject[];
+    {{else}}value: ProtocTypes.{{$entity.FullTypeName}}.AsObject | null;{{end}}
   },
   {{end}}
 }
