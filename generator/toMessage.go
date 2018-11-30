@@ -166,10 +166,11 @@ type TypeLine struct {
 
 func generateMappingEntities(typeMap map[*gp.DescriptorProto]map[*gp.FieldDescriptorProto]*gp.DescriptorProto, descMap map[*gp.DescriptorProto]*gp.FileDescriptorProto, improvedDescriptors []*ImprovedMessageDescriptor, protos []*gp.FileDescriptorProto, fileSlice []*gp.FileDescriptorProto) ([]*MappingEntity, []*gp.FileDescriptorProto, error) {
 
-	isMap := func(field *gp.FieldDescriptorProto, desc *gp.DescriptorProto) bool {
-		opts := desc.GetOptions()
-		if field.GetType() == gp.FieldDescriptorProto_TYPE_MESSAGE && opts != nil && *opts.MapEntry {
-			return true
+	isComplex := func(fields []*gp.FieldDescriptorProto) bool {
+		for _, field := range fields {
+			if field.GetType() == gp.FieldDescriptorProto_TYPE_GROUP || field.GetType() == gp.FieldDescriptorProto_TYPE_MESSAGE {
+				return true
+			}
 		}
 		return false
 	}
@@ -183,7 +184,7 @@ func generateMappingEntities(typeMap map[*gp.DescriptorProto]map[*gp.FieldDescri
 		packageNameUnderscore := strings.Replace(improvedDescriptor.packageName, ".", "_", -1)
 		fullNameUnderscore := fmt.Sprintf("%s_%s%s", packageNameUnderscore, improvedPathUnderscore, desc.GetName())
 
-		// for maps out here we need to trim the word entry
+		// disgusting
 		if desc.GetOptions().GetMapEntry() {
 			continue
 			// fullNameUnderscore = fullNameUnderscore[:len(fullNameUnderscore)-5]
@@ -192,7 +193,7 @@ func generateMappingEntities(typeMap map[*gp.DescriptorProto]map[*gp.FieldDescri
 		mapName := fullNameUnderscore + "_map"
 
 		typeLines := []*TypeLine{}
-		for field, descriptor := range sub {
+		for field, _ := range sub {
 			repeated := field.GetLabel() == 3
 			// get file that defines the message type
 
@@ -202,26 +203,12 @@ func generateMappingEntities(typeMap map[*gp.DescriptorProto]map[*gp.FieldDescri
 				return nil, nil, err
 			}
 
-			// for some reason we need to skip if we find a map
-			if foundDesc.GetOptions().GetMapEntry() {
-				continue
-			}
-
 			// add to import slice
 			if !containsFile(fileSlice, fileDesc) {
 				fileSlice = append(fileSlice, fileDesc)
 			}
 			filename := strings.Replace(fileDesc.GetName(), "/", "_", -1)
 			filename = filename[:len(filename)-6] // remove .proto
-
-			var name string
-			if isMap(field, descriptor) {
-				name = strcase.ToLowerCamel(field.GetName()) + "Map"
-			} else if repeated {
-				name = strcase.ToLowerCamel(field.GetName()) + "List"
-			} else {
-				name = strcase.ToLowerCamel(field.GetName())
-			}
 
 			typename := strings.TrimPrefix(field_type, "."+improvedDescriptor.packageName)
 			if strings.HasPrefix(typename, ".google.protobuf") {
@@ -232,6 +219,25 @@ func generateMappingEntities(typeMap map[*gp.DescriptorProto]map[*gp.FieldDescri
 				typename = typename[11:]
 			} else if strings.HasPrefix(typename, ".matrix.eps") {
 				typename = typename[11:]
+			}
+
+			var name string
+			if foundDesc.GetOptions().GetMapEntry() && isComplex(foundDesc.GetField()) {
+				name = strcase.ToLowerCamel(field.GetName()) + "Map"
+				// begin the hacky sack
+				if strings.Contains(typename, "Map.") && strings.HasSuffix(typename, "Entry") {
+					ind := strings.LastIndex(typename, "Map.")
+					typename = typename[:ind]
+				} else if strings.HasSuffix(typename, "Entry") {
+					ind := strings.LastIndex(typename, ".")
+					typename = typename[:ind]
+				}
+			} else if foundDesc.GetOptions().GetMapEntry() {
+				continue // basic map, basic types
+			} else if repeated {
+				name = strcase.ToLowerCamel(field.GetName()) + "List"
+			} else {
+				name = strcase.ToLowerCamel(field.GetName())
 			}
 
 			// number of dots in package
