@@ -81,26 +81,26 @@ export const {{$e.Name}}Epic = (action$, store) => action$
 	})
 	.flatMap((action) => {
 {{if $e.Repeat}} {{template "grpcStream" $e}} {{ else }} {{template "grpcUnary" $e}} {{end}}
-			.retry({{$e.Retries}})
-			.timeout({{$e.Timeout}}){{if $e.Updater}}
-			.map(obj => ({ ...obj } as { prev: {{$e.OutputType}}.AsObject, updated: {{$e.OutputType}}.AsObject } ))
-			.map(lib => {
-				if(action.resolve){
-					action.resolve(lib.prev, lib.updated);
-				}
-				return protocActions.{{$e.Name}}Success(lib);
-			}){{else}}
-			.map(resObj => {
-				if(action.resolve){
-					action.resolve(resObj as {{$e.OutputType}}.AsObject{{if $e.Repeat}}[]{{end}});
-				}
-				return protocActions.{{$e.Name}}Success(resObj as {{$e.OutputType}}.AsObject{{if $e.Repeat}}[]{{end}});
-			}){{end}}
-			.catch(error => {
-				const err: NodeJS.ErrnoException = createErrorObject(error.code, error.message);
-				if(action.reject){ action.reject(err); }
-				return Observable.of(protocActions.{{$e.Name}}Failure(err));
-			})
+		.retry({{$e.Retries}})
+		.timeout({{$e.Timeout}}){{if $e.Updater}}
+		.map(obj => ({ ...obj } as { prev: {{$e.OutputType}}.AsObject, updated: {{$e.OutputType}}.AsObject } ))
+		.map(lib => {
+			if(action.resolve){
+				action.resolve(lib.prev, lib.updated);
+			}
+			return protocActions.{{$e.Name}}Success(lib);
+		}){{else}}
+		.map(resObj => {
+			if(action.resolve){
+				action.resolve(resObj as {{$e.OutputType}}.AsObject{{if $e.Repeat}}[]{{end}});
+			}
+			return protocActions.{{$e.Name}}Success(resObj as {{$e.OutputType}}.AsObject{{if $e.Repeat}}[]{{end}});
+		}){{end}}
+		.catch(error => {
+			const err: NodeJS.ErrnoException = createErrorObject(error.code, error.message);
+			if(action.reject){ action.reject(err); }
+			return Observable.of(protocActions.{{$e.Name}}Failure(err));
+		})
 	})
 	.takeUntil(action$.filter(isActionOf(protocActions.{{$e.Name}}Cancel)))
 	.repeat();

@@ -199,6 +199,9 @@ func generateMappingEntities(typeMap map[*gp.DescriptorProto]map[*gp.FieldDescri
 			if foundDesc.GetOptions().GetMapEntry() {
 				continue
 			}
+			if foundDesc.GetName() == "FieldsEntry" {
+				return nil, nil, fmt.Errorf("wtf\n%s\n%s", foundDesc.GetOptions().String(), foundDesc.String())
+			}
 
 			// add to import slice
 			if !containsFile(fileSlice, fileDesc) {
@@ -221,6 +224,10 @@ func generateMappingEntities(typeMap map[*gp.DescriptorProto]map[*gp.FieldDescri
 				typename = typename[16:] // hacky
 			} else if strings.HasPrefix(typename, ".commons") {
 				typename = typename[8:] // even hackier
+			} else if strings.HasPrefix(typename, ".matrix.lms") {
+				typename = typename[11:]
+			} else if strings.HasPrefix(typename, ".matrix.eps") {
+				typename = typename[11:]
 			}
 
 			// number of dots in package

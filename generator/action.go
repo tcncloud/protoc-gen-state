@@ -87,11 +87,11 @@ export const update{{$e.JsonName | title}}RequestPromise = createAction('PROTOC_
 	return ({{if $e.Repeat}}
 		prev: {{$e.InputType}},
 		updated: {{$e.InputType}},
-		resolve: (prev: {{$e.InputType}}, updated: {{$e.InputType}}) => void,
+		resolve: (prev: {{$e.OutputType}}, updated: {{$e.OutputType}}) => void,
 		reject: (error: NodeJS.ErrnoException) => void,
 	) => res({ prev, updated, resolve, reject }){{else}}
 		{{$e.JsonName}}: {{$e.InputType}},
-		resolve: (payload: {{$e.InputType}}) => void,
+		resolve: (payload: {{$e.OutputType}}) => void,
 		reject: (error: NodeJS.ErrnoException) => void,
 	) => res({ {{$e.JsonName}}, resolve, reject }){{end}}
 });
