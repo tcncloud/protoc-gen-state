@@ -313,8 +313,8 @@ func CreateEpicFile(stateFields []*gp.FieldDescriptorProto, customFields []*gp.F
 			// TODO uses repeated from the field name, should use the output type
 			epicEntities = append(epicEntities, &EpicEntity{
 				Name:           "custom" + strings.Title(*field.JsonName),
-				InputType:      fmt.Sprintf("ProtocTypes%s", meth.GetInputType()),
-				OutputType:     fmt.Sprintf("ProtocTypes%s", meth.GetOutputType()),
+				InputType:      fmt.Sprintf("ProtocTypes.%s", CreatePackageAndTypeString(meth.GetInputType())),
+				OutputType:     fmt.Sprintf("ProtocTypes.%s", CreatePackageAndTypeString(meth.GetOutputType())),
 				FullMethodName: fmt.Sprintf("ProtocServices.%s", crudAnnotation),
 				Debounce:       debounce,
 				Timeout:        timeout,
