@@ -249,7 +249,7 @@ func CreateEpicFile(stateFields []*gp.FieldDescriptorProto, customFields []*gp.F
 					Name:           CrudName(c, repeated) + strings.Title(*field.JsonName),
 					InputType:      fmt.Sprintf("ProtocTypes.%s", CreatePackageAndTypeString(meth.GetInputType())),
 					OutputType:     fmt.Sprintf("ProtocTypes.%s", CreatePackageAndTypeString(meth.GetOutputType())),
-					FullMethodName: fmt.Sprintf("ProtocServices.%s", crudAnnotation),
+					FullMethodName: fmt.Sprintf("ProtocServices.%s", FullMethodNameFormat(crudAnnotation)),
 					Debounce:       debounce,
 					Timeout:        timeout,
 					Retries:        retries,
@@ -315,7 +315,7 @@ func CreateEpicFile(stateFields []*gp.FieldDescriptorProto, customFields []*gp.F
 				Name:           "custom" + strings.Title(*field.JsonName),
 				InputType:      fmt.Sprintf("ProtocTypes.%s", CreatePackageAndTypeString(meth.GetInputType())),
 				OutputType:     fmt.Sprintf("ProtocTypes.%s", CreatePackageAndTypeString(meth.GetOutputType())),
-				FullMethodName: fmt.Sprintf("ProtocServices.%s", crudAnnotation),
+				FullMethodName: fmt.Sprintf("ProtocServices.%s", FullMethodNameFormat(crudAnnotation)),
 				Debounce:       debounce,
 				Timeout:        timeout,
 				Retries:        retries,
@@ -337,4 +337,10 @@ func CreateEpicFile(stateFields []*gp.FieldDescriptorProto, customFields []*gp.F
 		Name:    "epics_pb.ts",
 		Content: output.String(),
 	}, nil
+}
+
+func FullMethodNameFormat(name string) string {
+	index := strings.LastIndex(name, ".")        // first
+	index = strings.LastIndex(name[:index], ".") // second
+	return strings.Replace(name, name[:index], strings.Replace(name[:index], ".", "_", -1), 1)
 }
