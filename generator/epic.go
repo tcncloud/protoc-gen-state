@@ -112,6 +112,7 @@ export const {{$e.Name}}Epic = (action$, store) => action$
 			grpc.unary({{.FullMethodName}}, {
 				request: action.request,
 				host: host,
+				{{.AuthFollowup}}
 				onEnd: (res: UnaryOutput<{{.OutputType}}>) => {
 					if(res.status != grpc.Code.OK){
 						const err: NodeJS.ErrnoException = createErrorObject(res.status, res.statusMessage);
@@ -157,6 +158,7 @@ type EpicEntity struct {
 	Retries        int64
 	Repeat         bool
 	Auth           string
+	AuthFollowup   string
 	Host           string
 	Updater        bool
 }
@@ -223,11 +225,13 @@ func CreateEpicFile(stateFields []*gp.FieldDescriptorProto, customFields []*gp.F
 			if meth != nil {
 				// set up auth string for repeated values (streaming epics)
 				var idToken string
+				authFollowup := ""
 				if authTokenLocation != "" {
 					if repeated {
 						idToken = fmt.Sprintf("new grpc.Metadata({ 'Authorization': `Bearer ${store.getState().%s}` })", authTokenLocation)
 					} else {
 						idToken = fmt.Sprintf("var idToken = store.getState().%s;", authTokenLocation)
+						authFollowup = "metadata: new grpc.Metadata({ 'Authorization': `Bearer ${idToken}` }),"
 					}
 				}
 				// only returns arrays on these
@@ -255,6 +259,7 @@ func CreateEpicFile(stateFields []*gp.FieldDescriptorProto, customFields []*gp.F
 					Retries:        retries,
 					Repeat:         repeatEntity,
 					Auth:           idToken,
+					AuthFollowup:   authFollowup,
 					Host:           host,
 					Updater:        updater,
 				})
@@ -302,11 +307,13 @@ func CreateEpicFile(stateFields []*gp.FieldDescriptorProto, customFields []*gp.F
 		if meth != nil {
 			// set up auth string for repeated values (streaming epics)
 			var idToken string
+			authFollowup := ""
 			if authTokenLocation != "" {
 				if repeated {
 					idToken = fmt.Sprintf("new grpc.Metadata({ 'Authorization': `Bearer ${store.getState().%s` })", authTokenLocation)
 				} else {
 					idToken = fmt.Sprintf("var idToken = store.getState().%s;", authTokenLocation)
+					authFollowup = "metadata: new grpc.Metadata({ 'Authorization': `Bearer ${idToken}` }),"
 				}
 			}
 
@@ -321,6 +328,7 @@ func CreateEpicFile(stateFields []*gp.FieldDescriptorProto, customFields []*gp.F
 				Retries:        retries,
 				Repeat:         repeated,
 				Auth:           idToken,
+				AuthFollowup:   authFollowup,
 				Host:           host,
 			})
 		}
