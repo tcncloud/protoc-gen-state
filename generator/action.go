@@ -87,7 +87,7 @@ export const update{{$e.JsonName | title}}RequestPromise = createAction('PROTOC_
 	return ({{if $e.Repeat}}
 		prev: {{$e.InputType}},
 		updated: {{$e.InputType}},
-		resolve: (prev: {{$e.OutputType}}, updated: {{$e.OutputType}}) => void,
+		resolve: (prev: {{$e.InputType}}, updated: {{$e.InputType}}) => void,
 		reject: (error: NodeJS.ErrnoException) => void,
 	) => res({ prev, updated, resolve, reject }){{else}}
 		{{$e.JsonName}}: {{$e.InputType}},
@@ -101,7 +101,7 @@ export const update{{$e.JsonName | title}}Success = createAction('PROTOC_UPDATE_
 	return ({{$e.JsonName}}: { prev: {{$e.InputType}}, updated: {{$e.InputType}} }) => resolve({{$e.JsonName}})
 }){{else}}
 export const update{{$e.JsonName | title}}Success = createAction('PROTOC_UPDATE_{{$e.JsonName | caps}}_SUCCESS', (resolve) => {
-	return ({{$e.JsonName}}: {{$e.InputType}}) => resolve({{$e.JsonName}})
+	return ({{$e.JsonName}}: {{$e.OutputType}}) => resolve({{$e.JsonName}})
 }){{end}}
 
 export const update{{$e.JsonName | title}}Failure = createAction('PROTOC_UPDATE_{{$e.JsonName | caps}}_FAILURE', (resolve) => {

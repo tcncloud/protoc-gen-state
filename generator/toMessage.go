@@ -182,6 +182,13 @@ func generateMappingEntities(typeMap map[*gp.DescriptorProto]map[*gp.FieldDescri
 		improvedPathUnderscore := strings.Replace(improvedPathName, ".", "_", -1)
 		packageNameUnderscore := strings.Replace(improvedDescriptor.packageName, ".", "_", -1)
 		fullNameUnderscore := fmt.Sprintf("%s_%s%s", packageNameUnderscore, improvedPathUnderscore, desc.GetName())
+
+		// for maps out here we need to trim the word entry
+		if desc.GetOptions().GetMapEntry() {
+			continue
+			// fullNameUnderscore = fullNameUnderscore[:len(fullNameUnderscore)-5]
+		}
+
 		mapName := fullNameUnderscore + "_map"
 
 		typeLines := []*TypeLine{}
@@ -198,9 +205,6 @@ func generateMappingEntities(typeMap map[*gp.DescriptorProto]map[*gp.FieldDescri
 			// for some reason we need to skip if we find a map
 			if foundDesc.GetOptions().GetMapEntry() {
 				continue
-			}
-			if foundDesc.GetName() == "FieldsEntry" {
-				return nil, nil, fmt.Errorf("wtf\n%s\n%s", foundDesc.GetOptions().String(), foundDesc.String())
 			}
 
 			// add to import slice
@@ -243,10 +247,14 @@ func generateMappingEntities(typeMap map[*gp.DescriptorProto]map[*gp.FieldDescri
 		fileName := strings.Replace(file.GetName(), "/", "_", -1)
 		fileName = fileName[:len(fileName)-6] // remove .proto
 
+		tName := improvedPathName + desc.GetName() // nice hax
+		if desc.GetOptions().GetMapEntry() {
+			tName = tName[:len(tName)-5]
+		}
 		mappingEntities = append(mappingEntities, &MappingEntity{
 			MapName:   mapName,
 			FileName:  fileName,
-			TypeName:  improvedPathName + desc.GetName(),
+			TypeName:  tName,
 			TypeLines: typeLines,
 		})
 	}
