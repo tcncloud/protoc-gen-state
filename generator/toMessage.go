@@ -180,9 +180,7 @@ func generateMappingEntities(typeMap map[*gp.DescriptorProto]map[*gp.FieldDescri
 		improvedDescriptor := FindImprovedFromDescriptor(improvedDescriptors, desc)
 		improvedPathName := FindImprovedPathName(improvedDescriptor)
 		improvedPathUnderscore := strings.Replace(improvedPathName, ".", "_", -1)
-		// packageNameUnderscore := strings.Replace(MessageDescriptorToImproved(desc, protos).packageName, ".", "_", -1)
 		packageNameUnderscore := strings.Replace(improvedDescriptor.packageName, ".", "_", -1)
-		// packageNameUnderscore := strings.Replace(descMap[desc].GetPackage(), ".", "_", -1)
 		fullNameUnderscore := fmt.Sprintf("%s_%s%s", packageNameUnderscore, improvedPathUnderscore, desc.GetName())
 		mapName := fullNameUnderscore + "_map"
 
@@ -192,10 +190,16 @@ func generateMappingEntities(typeMap map[*gp.DescriptorProto]map[*gp.FieldDescri
 			// get file that defines the message type
 
 			field_type := field.GetTypeName()
-			_, fileDesc, _, err := FindDescriptor(protos, field_type)
+			foundDesc, fileDesc, _, err := FindDescriptor(protos, field_type)
 			if err != nil {
 				return nil, nil, err
 			}
+
+			// for some reason we need to skip if we find a map
+			if foundDesc.GetOptions().GetMapEntry() {
+				continue
+			}
+
 			// add to import slice
 			if !containsFile(fileSlice, fileDesc) {
 				fileSlice = append(fileSlice, fileDesc)
@@ -212,9 +216,7 @@ func generateMappingEntities(typeMap map[*gp.DescriptorProto]map[*gp.FieldDescri
 				name = strcase.ToLowerCamel(field.GetName())
 			}
 
-			// typename := strings.TrimPrefix(field_type, "."+MessageDescriptorToImproved(desc, protos).packageName)
 			typename := strings.TrimPrefix(field_type, "."+improvedDescriptor.packageName)
-			// typename := strings.TrimPrefix(field_type, "."+descMap[desc].GetPackage())
 			if strings.HasPrefix(typename, ".google.protobuf") {
 				typename = typename[16:] // hacky
 			} else if strings.HasPrefix(typename, ".commons") {
@@ -230,9 +232,7 @@ func generateMappingEntities(typeMap map[*gp.DescriptorProto]map[*gp.FieldDescri
 			})
 		}
 
-		// file := MessageDescriptorToImproved(desc, protos).file
 		file := improvedDescriptor.file
-		// file := descMap[desc]
 		fileName := strings.Replace(file.GetName(), "/", "_", -1)
 		fileName = fileName[:len(fileName)-6] // remove .proto
 
@@ -247,10 +247,6 @@ func generateMappingEntities(typeMap map[*gp.DescriptorProto]map[*gp.FieldDescri
 }
 
 func CreateToMessageFile(servFiles []*gp.FileDescriptorProto, protos []*gp.FileDescriptorProto, protocTsPath string) (*File, error) {
-	// set up graph (array of ImprovedDescriptor)
-	// build the template entities
-	// import entities
-
 	improvedDescriptors := CreateImprovedDescriptors(protos)
 
 	// TODO: first part finished, should have a type map set up now
