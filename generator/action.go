@@ -267,8 +267,8 @@ func CreateActionFile(stateFields []*gp.FieldDescriptorProto, customFields []*gp
 				// found it so add it to the action entity for this crud value (c)
 				action := &ActionEntity{
 					JsonName:   *field.JsonName,
-					InputType:  fmt.Sprintf("ProtocTypes%s.AsObject", meth.GetInputType()),
-					OutputType: fmt.Sprintf("ProtocTypes%s.AsObject", meth.GetOutputType()),
+					InputType:  fmt.Sprintf("ProtocTypes.%s.AsObject", CreatePackageAndTypeString(meth.GetInputType())),
+					OutputType: fmt.Sprintf("ProtocTypes.%s.AsObject", CreatePackageAndTypeString(meth.GetOutputType())),
 					Repeat:     repeated,
 				}
 				switch c {
