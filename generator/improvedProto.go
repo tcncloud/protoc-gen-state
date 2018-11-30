@@ -115,11 +115,11 @@ func MessageDescriptorToImproved(message_in *gp.DescriptorProto, files []*gp.Fil
 
 	return &ImprovedMessageDescriptor{
 		message:       message_in,
-    fields:        message_in.GetField(),
+		fields:        message_in.GetField(),
 		parentMessage: foundParentMessage,
-    packageName:   files[0].GetPackage(),
+		packageName:   files[0].GetPackage(),
 		// packageName:   foundFile.GetPackage(),
-		file:          foundFile,
+		file: foundFile,
 	}
 	// return &ImprovedMessageDescriptor{
 	// 	message:       message_in,

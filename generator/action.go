@@ -330,8 +330,8 @@ func CreateActionFile(stateFields []*gp.FieldDescriptorProto, customFields []*gp
 			// TODO this uses repeated from the field value but should use repeated from the output type
 			customEntities = append(customEntities, &ActionEntity{
 				JsonName:   *field.JsonName,
-				InputType:  fmt.Sprintf("ProtocTypes%s.AsObject", meth.GetInputType()),
-				OutputType: fmt.Sprintf("ProtocTypes%s.AsObject", meth.GetOutputType()),
+				InputType:  fmt.Sprintf("ProtocTypes.%s.AsObject", CreatePackageAndTypeString(meth.GetInputType())),
+				OutputType: fmt.Sprintf("ProtocTypes.%s.AsObject", CreatePackageAndTypeString(meth.GetOutputType())),
 				Repeat:     repeated,
 			})
 		}
