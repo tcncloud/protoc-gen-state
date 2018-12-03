@@ -276,6 +276,12 @@ function getNestedMessageConstructor(messageType, fieldName) {
 }
 
 export function toMessage(obj: any, messageClass: any) {
+  {{if .}}try {
+    var tmp = new messageClass();
+  }catch {
+    console.log('FAILED IN TOMESSAGE. obj: ', obj, ' messageClass: ', messageClass)
+  } {{end}}
+
   if (!obj) {
     return new messageClass();
   }
