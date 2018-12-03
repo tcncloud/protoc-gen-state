@@ -54,6 +54,9 @@ import * as protocActions from './actions_pb';
 import * as ProtocTypes from './protoc_types_pb';
 import * as ProtocServices from './protoc_services_pb';
 
+{{if .Debug}}console.log('ProtocTypes in state/epic: ', ProtocTypes);{{end}}
+{{if .Debug}}console.log('ProtocServices in state/epic: ', ProtocServices);{{end}}
+
 function createErrorObject(code: number|string|undefined, message: string): NodeJS.ErrnoException {
 	var err: NodeJS.ErrnoException = new Error();
 	err.message = message;
