@@ -24,6 +24,10 @@ message IntFieldOptions {
   optional int64 custom = 6;
 }
 
+extend google.protobuf.MessageOptions {
+  optional string msg = 550000;
+}
+
 extend google.protobuf.FieldOptions {
   optional int64 timeout                  = 550001;
   optional int64 retries                  = 550002;

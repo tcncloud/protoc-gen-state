@@ -33,6 +33,7 @@ import (
 	"errors"
 	"fmt"
 	gp "github.com/golang/protobuf/protoc-gen-go/descriptor"
+	"github.com/tcncloud/protoc-gen-state/state"
 )
 
 type File struct {
@@ -46,9 +47,9 @@ func Generate(filepaths []string, protos []*gp.FileDescriptorProto) ([]*File, er
 	var customMessage *gp.DescriptorProto
 
 	// throw an error if len(filepaths) > 1
-	if len(filepaths) > 1 {
-		return nil, errors.New("Multiple file inputs detected. This plugin is designed to generate redux state from a single proto file")
-	}
+	// if len(filepaths) > 1 {
+	// 	return nil, errors.New("Multiple file inputs detected. This plugin is designed to generate redux state from a single proto file")
+	// }
 
 	// find the file descriptor and package name for the state message
 	// var statePackageName string
@@ -72,13 +73,25 @@ func Generate(filepaths []string, protos []*gp.FileDescriptorProto) ([]*File, er
 
 	// enforce that the messages provided are the allowed messages
 	// TODO look into removing ExternalLink message
-	allowedNames := []string{"ReduxState", "CustomActions", "ExternalLink"}
+	// allowedNames := []string{"ReduxState", "CustomActions", "ExternalLink"}
+	// for _, m := range stateFile.GetMessageType() {
+	// 	if !contains(allowedNames, m.GetName()) {
+	// 		return nil, errors.New("Bad message name encountered: " + m.GetName() + ". Only ReduxState, CustomActions, and ExternalLink messages allowed in state message.")
+	// 	} else if m.GetName() == "ReduxState" {
+	// 		stateMessage = m
+	// 	} else if m.GetName() == "CustomActions" {
+	// 		customMessage = m
+	// 	}
+	// }
+	// TODO INSTEAD
 	for _, m := range stateFile.GetMessageType() {
-		if !contains(allowedNames, m.GetName()) {
-			return nil, errors.New("Bad message name encountered: " + m.GetName() + ". Only ReduxState, CustomActions, and ExternalLink messages allowed in state message.")
-		} else if m.GetName() == "ReduxState" {
+		str, err := GetMessageAnnotationString(m, state.E_Msg)
+		if err != nil {
+			return nil, fmt.Errorf("Error getting message annotation: %s", err)
+		}
+		if str == "state" {
 			stateMessage = m
-		} else if m.GetName() == "CustomActions" {
+		} else if str == "custom" {
 			customMessage = m
 		}
 	}
@@ -123,11 +136,12 @@ func Generate(filepaths []string, protos []*gp.FileDescriptorProto) ([]*File, er
 		}
 	}
 
-	// populate the stateFields by looking at the ReduxState message
+	// populate the stateFields by looking at the State message
 	for _, field := range stateMessage.GetField() {
 		stateFields = append(stateFields, field)
 	}
 	// populate the customFields by looking at the CustomActions message
+	// TODO: find the message
 	for _, field := range customMessage.GetField() {
 		customFields = append(customFields, field)
 	}

@@ -195,3 +195,17 @@ func GetAnnotation(meth state.StringFieldOptions, crud Crud, repeated bool) stri
 		return ""
 	}
 }
+
+func GetMessageAnnotationString(desc *gp.DescriptorProto, extName *proto.ExtensionDesc) (string, error) {
+	if desc == nil || desc.GetOptions() == nil {
+		return "", nil
+	}
+	if proto.HasExtension(desc.GetOptions(), extName) {
+		pkg, err := proto.GetExtension(desc.GetOptions(), extName)
+		if err != nil {
+			return "", errors.New("Failed to get extension")
+		}
+		return *pkg.(*string), nil
+	}
+	return "", nil
+}
