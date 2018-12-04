@@ -16,6 +16,7 @@ option (protoc_ts_path) = "../basic/e2e/protos/";
 /* option (auth_token_location) = "config.token"; */
 
 message ReduxState {
+  option (state_options).type = REDUX_STATE;
   //// Used for unit tests, do not remove ////
   repeated readinglist.Book library = 1 [
     (method).create = "readinglist.ReadingList.CreateBook",
@@ -40,6 +41,7 @@ message ReduxState {
 }
 
 message CustomActions {
+  option (state_options).type = CUSTOM_ACTION;
   //// Used for unit tests ////
   readinglist.Book error_book = 1 [
     (method).custom = "readinglist.ReadingList.ErrorOut",

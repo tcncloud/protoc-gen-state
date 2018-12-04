@@ -24,6 +24,22 @@ message IntFieldOptions {
   optional int64 custom = 6;
 }
 
+
+extend google.protobuf.MessageOptions { 
+  optional StateMessageOptions state_options = 550020;
+}
+
+message StateMessageOptions {
+  required StateMessageType type = 1;
+}
+
+
+enum StateMessageType {
+  REDUX_STATE = 0;
+  CUSTOM_ACTION = 1;
+  EXTERNAL_LINK = 2;
+}
+
 extend google.protobuf.FieldOptions {
   optional int64 timeout                  = 550001;
   optional int64 retries                  = 550002;

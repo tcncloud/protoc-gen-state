@@ -32,11 +32,13 @@ package generator
 import (
 	"bytes"
 	"fmt"
+
 	// descriptor "github.com/golang/protobuf/descriptor"
-	gp "github.com/golang/protobuf/protoc-gen-go/descriptor"
-	strcase "github.com/iancoleman/strcase"
 	"strings"
 	"text/template"
+
+	gp "github.com/golang/protobuf/protoc-gen-go/descriptor"
+	strcase "github.com/iancoleman/strcase"
 )
 
 /// note: adapted from a 400 line c++ file. sorry in advance
@@ -127,7 +129,7 @@ func generateImportEntities(fileSlice []*gp.FileDescriptorProto, protocTsPath st
 		filepath := GetFilePath(f.GetName())
 		index := strings.LastIndex(filepath, "/") + 1
 		fname := strings.Replace(f.GetName(), "/", "_", -1)
-		packageSlashes := strings.Replace(f.GetPackage(), ".", "/", -1)
+		// packageSlashes := strings.Replace(f.GetPackage(), ".", "/", -1)
 		if f.GetName()[:15] == "google/protobuf" {
 			importEntities = append(importEntities, &ImportEntity{
 				FileName:   fmt.Sprintf("google-protobuf/%s_pb", f.GetName()[:len(f.GetName())-6]),
@@ -135,7 +137,8 @@ func generateImportEntities(fileSlice []*gp.FileDescriptorProto, protocTsPath st
 			})
 		} else {
 			importEntities = append(importEntities, &ImportEntity{
-				FileName:   protocTsPath + packageSlashes + "/" + filepath[index:],
+				//FileName:   protocTsPath + packageSlashes + "/" + filepath[index:],
+				FileName:   protocTsPath + "/" + filepath[index:],
 				ModuleName: fname[:len(fname)-6],
 			})
 		}
@@ -156,7 +159,7 @@ type MappingEntity struct {
 	FileName  string
 	TypeName  string
 	TypeLines []*TypeLine
-  Debug     bool
+	Debug     bool
 }
 
 type TypeLine struct {
@@ -263,7 +266,7 @@ func generateMappingEntities(typeMap map[*gp.DescriptorProto]map[*gp.FieldDescri
 			FileName:  fileName,
 			TypeName:  tName,
 			TypeLines: typeLines,
-      Debug:     debug,
+			Debug:     debug,
 		})
 	}
 	return mappingEntities, fileSlice, nil
@@ -384,12 +387,11 @@ func CreateToMessageFile(servFiles []*gp.FileDescriptorProto, protos []*gp.FileD
 	body := template.Must(template.New("body").Parse(mappingTemplate))
 	body.Execute(&output, mappingEntities)
 
-  toMessageOutput := template.Must(template.New("toMessageOutput").Parse(toMessageTemplate))
-  toMessageOutput.Execute(&output, debug)
+	toMessageOutput := template.Must(template.New("toMessageOutput").Parse(toMessageTemplate))
+	toMessageOutput.Execute(&output, debug)
 
 	return &File{
 		Name:    "to_message_pb.ts",
 		Content: output.String(),
 	}, nil
 }
-

@@ -33,8 +33,11 @@ import (
 	"fmt"
 	"regexp"
 
-	gp "github.com/golang/protobuf/protoc-gen-go/descriptor"
+	"github.com/sirupsen/logrus"
+
 	"strings"
+
+	gp "github.com/golang/protobuf/protoc-gen-go/descriptor"
 )
 
 type SideEffect int
@@ -162,7 +165,11 @@ func CreateAggregateByPackage(msgFiles []*gp.FileDescriptorProto, protocTsPath s
 					fp := GetFilePath(f.GetName())
 					packageUnderscore := strings.Replace(file.GetPackage(), ".", "/", -1)
 					index := strings.LastIndex(fp, "/") + 1
-					result += fmt.Sprintf("export * from \"%s%s/%s\";\n", protocTsPath, packageUnderscore, fp[index:])
+
+					logrus.Infof(">>>>>>>> protocTsPath:%s packageUnderscore:%s fp?:%s\n", protocTsPath, packageUnderscore, fp[index:])
+					// logrus.Infof(">>>>>>>> export * from \"%s%s/%s\";\n", protocTsPath, packageUnderscore, fp[index:])
+					//result += fmt.Sprintf("export * from \"%s%s/%s\";\n", protocTsPath, packageUnderscore, fp[index:])
+					result += fmt.Sprintf("export * from \"%s/%s\";\n", protocTsPath, fp[index:])
 				}
 			}
 

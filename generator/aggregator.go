@@ -35,10 +35,12 @@ import (
 	"text/template"
 
 	gp "github.com/golang/protobuf/protoc-gen-go/descriptor"
+	"github.com/sirupsen/logrus"
 )
 
 const typeAggregate = `/* THIS FILE IS GENERATED FROM THE TOOL PROTOC-GEN-STATE  */
 /* ANYTHING YOU EDIT WILL BE OVERWRITTEN IN FUTURE BUILDS */
+/* typeAggregate */
 
 {{range $i, $e := .}}
 import * as {{$e.Package}} from "./{{$e.Package}}_aggregate";{{end}}
@@ -60,6 +62,9 @@ func CreateAggregateTypesFile(msgFiles []*gp.FileDescriptorProto, statePkg strin
 			typeEntities = append(typeEntities, &TypeEntity{Package: underscorePackage})
 		}
 	}
+	for _, t := range typeEntities {
+		logrus.Info(">>>>> " + t.Package)
+	}
 
 	tmpl := template.Must(template.New("types").Parse(typeAggregate))
 	var output bytes.Buffer
@@ -73,6 +78,7 @@ func CreateAggregateTypesFile(msgFiles []*gp.FileDescriptorProto, statePkg strin
 
 const serviceAggregate = `/* THIS FILE IS GENERATED FROM THE TOOL PROTOC-GEN-STATE  */
 /* ANYTHING YOU EDIT WILL BE OVERWRITTEN IN FUTURE BUILDS */
+/* serviceAggregate */
 
 {{range $i, $e := .}}
 import * as {{$e.Name}}_service_in from "{{$e.Location}}_service";{{end}}`
@@ -105,14 +111,15 @@ func CreateAggregateServicesFile(serviceFiles []*gp.FileDescriptorProto, protocT
 			exports := []string{}
 			for i := f; i < len(serviceFiles); i++ {
 				if serviceFiles[i].GetPackage() == file.GetPackage() {
-					slashPackage := strings.Replace(file.GetPackage(), ".", "/", -1) + "/"
+					// slashPackage := strings.Replace(file.GetPackage(), ".", "/", -1) + "/"
 					filePathOriginal := GetFilePath(serviceFiles[i].GetName())
 					index := strings.LastIndex(filePathOriginal, "/") + 1
 					filePath := filePathOriginal[index:]
 					name := strings.Replace(strings.ToLower(filePathOriginal), "/", "_", -1)
 					exports = append(exports, name)
 					serviceEntities = append(serviceEntities, &ServiceEntity{
-						Location: protocTsPath + slashPackage + filePath,
+						//Location: protocTsPath + slashPackage + filePath,
+						Location: protocTsPath + filePath,
 						Name:     name,
 						Package:  strings.Replace(file.GetPackage(), ".", "_", -1),
 					})

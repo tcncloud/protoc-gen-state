@@ -32,6 +32,10 @@ package generator
 import (
 	"errors"
 	"fmt"
+
+	"github.com/golang/protobuf/proto"
+	"github.com/tcncloud/protoc-gen-state/state"
+
 	gp "github.com/golang/protobuf/protoc-gen-go/descriptor"
 )
 
@@ -60,26 +64,36 @@ func Generate(filepaths []string, protos []*gp.FileDescriptorProto) ([]*File, er
 		}
 	}
 
-	messageCount := len(stateFile.GetMessageType())
-	// at least one message must be defined or we can't generate anything
-	if messageCount == 0 {
-		return nil, errors.New("No messages defined in state proto: " + stateFile.GetName() + ". Please include a ReduxState or CustomActions message.")
-	}
-	// there are only 3 message allowed in the state message
-	if messageCount > 3 {
-		return nil, errors.New("Too many messages defined in state proto: " + stateFile.GetName() + ". Only ReduxState, CustomActions, and ExternalLink messages allowed.")
-	}
+	// messageCount := len(stateFile.GetMessageType())
+	// // at least one message must be defined or we can't generate anything
+	// if messageCount == 0 {
+	// 	return nil, errors.New("No messages defined in state proto: " + stateFile.GetName() + ". Please include a ReduxState or CustomActions message.")
+	// }
+	// // there are only 3 message allowed in the state message
+	// if messageCount > 3 {
+	// 	return nil, errors.New("Too many messages defined in state proto: " + stateFile.GetName() + ". Only ReduxState, CustomActions, and ExternalLink messages allowed.")
+	// }
 
-	// enforce that the messages provided are the allowed messages
-	// TODO look into removing ExternalLink message
-	allowedNames := []string{"ReduxState", "CustomActions", "ExternalLink"}
+	// // enforce that the messages provided are the allowed messages
+	// // TODO look into removing ExternalLink message
+	// allowedNames := []string{"ReduxState", "CustomActions", "ExternalLink"}
 	for _, m := range stateFile.GetMessageType() {
-		if !contains(allowedNames, m.GetName()) {
-			return nil, errors.New("Bad message name encountered: " + m.GetName() + ". Only ReduxState, CustomActions, and ExternalLink messages allowed in state message.")
-		} else if m.GetName() == "ReduxState" {
-			stateMessage = m
-		} else if m.GetName() == "CustomActions" {
-			customMessage = m
+		if proto.HasExtension(m.GetOptions(), state.E_StateOptions) {
+			ext, err := proto.GetExtension(m.GetOptions(), state.E_StateOptions)
+			if err == nil {
+				stateOptions := ext.(*state.StateMessageOptions)
+				if stateOptions.GetType() == state.StateMessageType_REDUX_STATE {
+					stateMessage = m
+				} else if stateOptions.GetType() == state.StateMessageType_CUSTOM_ACTION {
+					customMessage = m
+				} else if stateOptions.GetType() == state.StateMessageType_EXTERNAL_LINK {
+					// ???
+				} else {
+					// TODO ... this should never happen!
+				}
+			} else {
+				// TODO .... do something here, this error should never happen
+			}
 		}
 	}
 

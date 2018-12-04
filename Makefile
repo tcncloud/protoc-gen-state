@@ -35,15 +35,19 @@ build: gen protos
 
 test: test-go clean-go test-js clean-js
 
-gen:
+gen: state/options.pb.go
 	go build .
 
-protos:
+protos: state/options.pb.go
 	mkdir -p $(GENERATED)
 	protoc -I. -I./e2e/protos -I./state/options.proto \
 		--plugin=./protoc-gen-state \
 		--state_out=$(GENERATED) ./e2e/protos/basic.proto
 	cp protoc-gen-state e2e
+
+
+state/options.pb.go : state/options.proto
+	protoc --go_out=paths=source_relative:. $<
 
 deps:
 	go get -u github.com/golang/protobuf/protoc-gen-go
