@@ -279,18 +279,10 @@ function getNestedMessageConstructor(messageType, fieldName) {
 }
 
 export function toMessage(obj: any, messageClass: any) {
-  {{if .}}try {
-    var tmp = new messageClass();
-  }catch {
-    console.log('FAILED IN TOMESSAGE. obj: ', obj, ' messageClass: ', messageClass)
-  } {{end}}
-
   if (!obj) {
     return new messageClass();
   }
   {{if .}}console.groupCollapsed('toMessage');
-  console.log('obj:', obj);
-  console.log('messageClass:', messageClass);{{end}}
   const message = new messageClass();
 
   Object.keys(obj).forEach(key => {
