@@ -129,7 +129,7 @@ func generateImportEntities(fileSlice []*gp.FileDescriptorProto, protocTsPath st
 		filepath := GetFilePath(f.GetName())
 		index := strings.LastIndex(filepath, "/") + 1
 		fname := strings.Replace(f.GetName(), "/", "_", -1)
-		// packageSlashes := strings.Replace(f.GetPackage(), ".", "/", -1)
+		packageSlashes := strings.Replace(f.GetPackage(), ".", "/", -1)
 		if f.GetName()[:15] == "google/protobuf" {
 			importEntities = append(importEntities, &ImportEntity{
 				FileName:   fmt.Sprintf("google-protobuf/%s_pb", f.GetName()[:len(f.GetName())-6]),
@@ -137,8 +137,8 @@ func generateImportEntities(fileSlice []*gp.FileDescriptorProto, protocTsPath st
 			})
 		} else {
 			importEntities = append(importEntities, &ImportEntity{
-				//FileName:   protocTsPath + packageSlashes + "/" + filepath[index:],
-				FileName:   protocTsPath + "/" + filepath[index:],
+				FileName: protocTsPath + packageSlashes + "/" + filepath[index:],
+				// FileName:   protocTsPath + "/" + filepath[index:],
 				ModuleName: fname[:len(fname)-6],
 			})
 		}

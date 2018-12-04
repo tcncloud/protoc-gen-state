@@ -169,7 +169,7 @@ func CreateAggregateByPackage(msgFiles []*gp.FileDescriptorProto, protocTsPath s
 					logrus.Infof(">>>>>>>> protocTsPath:%s packageUnderscore:%s fp?:%s\n", protocTsPath, packageUnderscore, fp[index:])
 					// logrus.Infof(">>>>>>>> export * from \"%s%s/%s\";\n", protocTsPath, packageUnderscore, fp[index:])
 					//result += fmt.Sprintf("export * from \"%s%s/%s\";\n", protocTsPath, packageUnderscore, fp[index:])
-					result += fmt.Sprintf("export * from \"%s/%s\";\n", protocTsPath, fp[index:])
+					result += fmt.Sprintf("//generator/utils.go:CreateAggregateByPackage\nexport * from \"%s%s/%s\";\n", protocTsPath, packageUnderscore, fp[index:])
 				}
 			}
 
