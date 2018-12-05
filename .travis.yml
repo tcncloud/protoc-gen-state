@@ -17,9 +17,9 @@ before_script:
 before_deploy:
 - rm protoc-gen-state
 - export VER=`echo $TRAVIS_TAG|tr -d v`
-- GOOS=darwin GOARCH=amd64 go build ./ && zip rotoc-gen-state-$VER-darwin-x86_64.zip protoc-gen-state state/options.proto
-- GOOS=linux GOARCH=amd64 go build ./ && zip rotoc-gen-state-$VER-linux-x86_64.zip protoc-gen-state state/options.proto
-- GOOS=windows GOARCH=amd64 go build ./ && zip rotoc-gen-state-$VER-windows-x86_64.zip protoc-gen-state state/options.proto
+- GOOS=darwin GOARCH=amd64 go build ./ && zip rotoc-gen-state-$VER-darwin-x86_64.zip protoc-gen-state state/options.proto && sha256sum protoc-gen-state-$VER-darwin-x86_64.zip > protoc-gen-state-$VER-darwin-x86_64.sum
+- GOOS=linux GOARCH=amd64 go build ./ && zip rotoc-gen-state-$VER-linux-x86_64.zip protoc-gen-state state/options.proto && sha256sum protoc-gen-state-$VER-linux-x86_64.zip > protoc-gen-state-$VER-linux-x86_64.sum
+- GOOS=windows GOARCH=amd64 go build ./ && zip rotoc-gen-state-$VER-windows-x86_64.zip protoc-gen-state state/options.proto && sha256sum protoc-gen-state-$VER-windowes-x86_64.zip > protoc-gen-state-$VER-windowes-x86_64.sum
 deploy:
   provider: releases
   api_key:
@@ -27,6 +27,7 @@ deploy:
   file_glob: true
   file:
     - protoc-gen-state-*.zip
+    - protoc-gen-state-*.sum
   skip_cleanup: true
   on:
     tags: true
