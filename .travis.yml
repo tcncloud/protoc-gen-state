@@ -13,15 +13,13 @@ before_script:
 - go get -u github.com/onsi/ginkgo/ginkgo
 - go get -u github.com/onsi/gomega/...
 - export GO111MODULE=on
+
 before_deploy:
 - rm protoc-gen-state
 - export VER=`echo $TRAVIS_TAG|tr -d v`
-- GOOS=darwin GOARCH=amd64 go build ./ && zip protoc-gen-state state/options.proto
-  protoc-gen-state-$VER-$GOOS-x86_64.zip
-- GOOS=linux GOARCH=amd64 go build ./ && zip protoc-gen-state state/options.proto
-  protoc-gen-state-$VER-$GOOS-x86_64.zip
-- GOOS=windows GOARCH=amd64 go build ./ && zip protoc-gen-state state/options.proto
-  protoc-gen-state-$VER-$GOOS-x86_64.zip
+- GOOS=darwin GOARCH=amd64 go build ./ && zip protoc-gen-state state/options.proto protoc-gen-state-$VER-$GOOS-x86_64.zip
+- GOOS=linux GOARCH=amd64 go build ./ && zip protoc-gen-state state/options.proto protoc-gen-state-$VER-$GOOS-x86_64.zip
+- GOOS=windows GOARCH=amd64 go build ./ && zip protoc-gen-state state/options.proto protoc-gen-state-$VER-$GOOS-x86_64.zip
 deploy:
   provider: releases
   api_key:
