@@ -15,3 +15,20 @@ before_script:
 - export GO111MODULE=on
 
 
+before_deploy:
+  - rm protoc-gen-state
+  - export VER=`echo $TRAVIS_TAG|tr -d v`
+  - GOOS=darwin GOARCH=amd64 go build ./ && zip protoc-gen-state state/options.proto protoc-gen-state-$VER-$GOOS-x86_64.zip
+  - GOOS=linux GOARCH=amd64 go build ./ && zip protoc-gen-state state/options.proto protoc-gen-state-$VER-$GOOS-x86_64.zip
+  - GOOS=windows GOARCH=amd64 go build ./ && zip protoc-gen-state state/options.proto protoc-gen-state-$VER-$GOOS-x86_64.zip
+deploy:
+  skip_cleanup: true
+  provider: releases
+  api_key:
+    secure: "idk"
+  file_glob: true
+  file:
+    - protoc-gen-state-*.zip
+  on:
+  tags: true
+
