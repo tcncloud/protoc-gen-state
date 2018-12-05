@@ -20,7 +20,6 @@ before_deploy:
 - GOOS=darwin GOARCH=amd64 go build ./ && zip rotoc-gen-state-$VER-darwin-x86_64.zip protoc-gen-state state/options.proto
 - GOOS=linux GOARCH=amd64 go build ./ && zip rotoc-gen-state-$VER-linux-x86_64.zip protoc-gen-state state/options.proto
 - GOOS=windows GOARCH=amd64 go build ./ && zip rotoc-gen-state-$VER-windows-x86_64.zip protoc-gen-state state/options.proto
-- ls -la
 deploy:
   provider: releases
   api_key:
@@ -30,5 +29,4 @@ deploy:
     - protoc-gen-state-*.zip
   skip_cleanup: true
   on:
-    repo: tcncloud/protoc-gen-state
     tags: true
