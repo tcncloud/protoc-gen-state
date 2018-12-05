@@ -13,22 +13,21 @@ before_script:
 - go get -u github.com/onsi/ginkgo/ginkgo
 - go get -u github.com/onsi/gomega/...
 - export GO111MODULE=on
-
-
 before_deploy:
-  - rm protoc-gen-state
-  - export VER=`echo $TRAVIS_TAG|tr -d v`
-  - GOOS=darwin GOARCH=amd64 go build ./ && zip protoc-gen-state state/options.proto protoc-gen-state-$VER-$GOOS-x86_64.zip
-  - GOOS=linux GOARCH=amd64 go build ./ && zip protoc-gen-state state/options.proto protoc-gen-state-$VER-$GOOS-x86_64.zip
-  - GOOS=windows GOARCH=amd64 go build ./ && zip protoc-gen-state state/options.proto protoc-gen-state-$VER-$GOOS-x86_64.zip
+- rm protoc-gen-state
+- export VER=`echo $TRAVIS_TAG|tr -d v`
+- GOOS=darwin GOARCH=amd64 go build ./ && zip protoc-gen-state state/options.proto
+  protoc-gen-state-$VER-$GOOS-x86_64.zip
+- GOOS=linux GOARCH=amd64 go build ./ && zip protoc-gen-state state/options.proto
+  protoc-gen-state-$VER-$GOOS-x86_64.zip
+- GOOS=windows GOARCH=amd64 go build ./ && zip protoc-gen-state state/options.proto
+  protoc-gen-state-$VER-$GOOS-x86_64.zip
 deploy:
-  skip_cleanup: true
   provider: releases
   api_key:
-    secure: "idk"
-  file_glob: true
-  file:
-    - protoc-gen-state-*.zip
+    secure: U7lFeXaWvvF5Ehz54ZyOta9m8cDZ7pYxFhnj/9qNfcnu58v4YIoEUbBb84Zkjsx9kW9Qb9lQ3nGs3I4nIi5OM+f10C4XlSDAVXWurQDCBY/OfvnvZrlhtcJPZzwn3R6dyLhz1mBU4VEahSb7WqOKsJ3JD/zaH5f8dOPenG2HAgjfsvuAxjk7qUQsp7g0auemeigG0WeREIw1vj2ziGconLXecsA/0YBOWuxuq7JryRHAqIC78AI/r2/ZsNWL27/M++7x1auR1uJ5weHdLfE1bYbCZWI1XrAgh7d02V6mT10dbVfESyV7N400ULz4DXSEZL3Z8f0T2LMcNcaAnXrqp4ifiVtejKAjbCFeIvWvPv2usMgtfPYLr0DOuxuLkk8mdE+6mK0nhGmaHaIUm4lEqiKTBWhzrR4sNxsUCb1uGe9ke2nkG2SnhkXGRPTnPV2MlwWrHtqKVX2PMw6BMDJcyD7MAf2KN2V6sF3C4tgN0C0OYpv5y6A7TQaFZs0VFJVEVCVJH7ahC341K++mYN1B7jSDE1ez6loXWzBJoyjzR7Cfbt5K6Ey9emY8k9upoIaVfKedhlBJbj+FnEZnmExsn2fb/uIInpLIk6pKOaHaReZbgY7OGzGC+pcACQS8iVxriB3OpdPibLIRTGjIEaJtqQ+qU3h3L566D8USFwF/mnQ=
+  file: 'protoc-gen-state-*.zip'
+  skip_cleanup: true
   on:
-  tags: true
-
+    repo: tcncloud/protoc-gen-state
+    tags: true
