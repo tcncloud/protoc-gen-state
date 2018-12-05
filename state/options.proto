@@ -25,7 +25,17 @@ message IntFieldOptions {
 }
 
 extend google.protobuf.MessageOptions {
-  optional string msg = 550000;
+  optional StateMessageOptions state_options = 550020;
+}
+
+message StateMessageOptions {
+  required StateMessageType type = 1;
+}
+
+enum StateMessageType {
+  REDUX_STATE = 0;
+  CUSTOM_ACTION = 1;
+  EXTERNAL_LINK = 2;
 }
 
 extend google.protobuf.FieldOptions {

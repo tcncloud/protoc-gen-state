@@ -35,10 +35,12 @@ import (
 	"text/template"
 
 	gp "github.com/golang/protobuf/protoc-gen-go/descriptor"
+	"github.com/sirupsen/logrus"
 )
 
 const typeAggregate = `/* THIS FILE IS GENERATED FROM THE TOOL PROTOC-GEN-STATE  */
 /* ANYTHING YOU EDIT WILL BE OVERWRITTEN IN FUTURE BUILDS */
+/* typeAggregate */
 
 {{range $i, $e := .}}
 import * as {{$e.Package}} from "./{{$e.Package}}_aggregate";{{end}}
@@ -60,6 +62,9 @@ func CreateAggregateTypesFile(msgFiles []*gp.FileDescriptorProto, statePkg strin
 			typeEntities = append(typeEntities, &TypeEntity{Package: underscorePackage})
 		}
 	}
+	for _, t := range typeEntities {
+		logrus.Info(">>>>> " + t.Package)
+	}
 
 	tmpl := template.Must(template.New("types").Parse(typeAggregate))
 	var output bytes.Buffer
@@ -73,6 +78,7 @@ func CreateAggregateTypesFile(msgFiles []*gp.FileDescriptorProto, statePkg strin
 
 const serviceAggregate = `/* THIS FILE IS GENERATED FROM THE TOOL PROTOC-GEN-STATE  */
 /* ANYTHING YOU EDIT WILL BE OVERWRITTEN IN FUTURE BUILDS */
+/* serviceAggregate */
 
 {{range $i, $e := .}}
 import * as {{$e.Name}}_service_in from "{{$e.Location}}_service";{{end}}`
@@ -113,8 +119,9 @@ func CreateAggregateServicesFile(serviceFiles []*gp.FileDescriptorProto, protocT
 					exports = append(exports, name)
 					serviceEntities = append(serviceEntities, &ServiceEntity{
 						Location: protocTsPath + slashPackage + filePath,
-						Name:     name,
-						Package:  strings.Replace(file.GetPackage(), ".", "_", -1),
+						// Location: protocTsPath + filePath,
+						Name:    name,
+						Package: strings.Replace(file.GetPackage(), ".", "_", -1),
 					})
 				}
 			}

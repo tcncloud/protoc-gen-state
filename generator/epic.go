@@ -54,6 +54,9 @@ import * as protocActions from './actions_pb';
 import * as ProtocTypes from './protoc_types_pb';
 import * as ProtocServices from './protoc_services_pb';
 
+console.log('ProtocTypes in state/epic: ', ProtocTypes);
+console.log('ProtocServices in state/epic: ', ProtocServices);
+
 function createErrorObject(code: number|string|undefined, message: string): NodeJS.ErrnoException {
 	var err: NodeJS.ErrnoException = new Error();
 	err.message = message;
@@ -73,7 +76,7 @@ export const {{$e.Name}}Epic = (action$, store) => action$
 		if(action.payload && action.payload.resolve && action.payload.reject){
 			return {
 				...action.payload,
-				request: toMessage(action.payload.library, {{$e.InputType}})
+				request: toMessage(action.payload.{{$e.JsonName}}, {{$e.InputType}})
 			}
 		} else {
 			return { request: toMessage(action.payload, {{$e.InputType}}) }
@@ -160,6 +163,7 @@ type EpicEntity struct {
 	InputType      string
 	OutputType     string
 	FullMethodName string
+	JsonName       string
 	Debounce       int64
 	Timeout        int64
 	Retries        int64
@@ -168,7 +172,7 @@ type EpicEntity struct {
 	AuthFollowup   string
 	Host           string
 	Updater        bool
-  Debug          bool
+	Debug          bool
 }
 
 func CreateEpicFile(stateFields []*gp.FieldDescriptorProto, customFields []*gp.FieldDescriptorProto, serviceFiles []*gp.FileDescriptorProto, defaultTimeout int64, defaultRetries int64, authTokenLocation string, hostnameLocation string, hostname string, portin int64, debounce int64, debug bool) (*File, error) {
@@ -262,6 +266,7 @@ func CreateEpicFile(stateFields []*gp.FieldDescriptorProto, customFields []*gp.F
 					InputType:      fmt.Sprintf("ProtocTypes.%s", CreatePackageAndTypeString(meth.GetInputType())),
 					OutputType:     fmt.Sprintf("ProtocTypes.%s", CreatePackageAndTypeString(meth.GetOutputType())),
 					FullMethodName: fmt.Sprintf("ProtocServices.%s", FullMethodNameFormat(crudAnnotation)),
+					JsonName:       *field.JsonName,
 					Debounce:       debounce,
 					Timeout:        timeout,
 					Retries:        retries,
@@ -270,7 +275,7 @@ func CreateEpicFile(stateFields []*gp.FieldDescriptorProto, customFields []*gp.F
 					AuthFollowup:   authFollowup,
 					Host:           host,
 					Updater:        updater,
-          Debug:          debug,
+					Debug:          debug,
 				})
 			}
 		}
@@ -332,6 +337,7 @@ func CreateEpicFile(stateFields []*gp.FieldDescriptorProto, customFields []*gp.F
 				InputType:      fmt.Sprintf("ProtocTypes.%s", CreatePackageAndTypeString(meth.GetInputType())),
 				OutputType:     fmt.Sprintf("ProtocTypes.%s", CreatePackageAndTypeString(meth.GetOutputType())),
 				FullMethodName: fmt.Sprintf("ProtocServices.%s", FullMethodNameFormat(crudAnnotation)),
+				JsonName:       *field.JsonName,
 				Debounce:       debounce,
 				Timeout:        timeout,
 				Retries:        retries,
@@ -339,7 +345,7 @@ func CreateEpicFile(stateFields []*gp.FieldDescriptorProto, customFields []*gp.F
 				Auth:           idToken,
 				AuthFollowup:   authFollowup,
 				Host:           host,
-        Debug:          debug,
+				Debug:          debug,
 			})
 		}
 	}
