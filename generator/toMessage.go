@@ -282,7 +282,7 @@ export function toMessage(obj: any, messageClass: any) {
   if (!obj) {
     return new messageClass();
   }
-  {{if .}}console.groupCollapsed('toMessage');
+  {{if .}}console.groupCollapsed('toMessage');{{end}}
   const message = new messageClass();
 
   Object.keys(obj).forEach(key => {
@@ -350,7 +350,8 @@ export function toMessage(obj: any, messageClass: any) {
   {{if .}}console.groupEnd();{{end}}
 
   return message;
-}`
+}
+`
 
 func CreateToMessageFile(servFiles []*gp.FileDescriptorProto, protos []*gp.FileDescriptorProto, protocTsPath string, debug bool) (*File, error) {
 	improvedDescriptors := CreateImprovedDescriptors(protos)
