@@ -43,78 +43,6 @@ import (
 
 /// note: adapted from a 400 line c++ file. sorry in advance
 
-func createTypeMapAndImportSlice(servFiles []*gp.FileDescriptorProto, allFiles []*gp.FileDescriptorProto) (map[*gp.DescriptorProto]map[*gp.FieldDescriptorProto]*gp.DescriptorProto, map[*gp.DescriptorProto]*gp.FileDescriptorProto, []*gp.FileDescriptorProto, error) {
-	typeMap := make(map[*gp.DescriptorProto]map[*gp.FieldDescriptorProto]*gp.DescriptorProto)
-	descMap := make(map[*gp.DescriptorProto]*gp.FileDescriptorProto)
-	fileSlice := []*gp.FileDescriptorProto{}
-
-	for _, servFile := range servFiles {
-		for _, service := range servFile.GetService() {
-			for _, method := range service.GetMethod() {
-				// get the input to the rpc
-				inputType := method.GetInputType()
-				// get the descriptor for that input type
-				desc, file, _, err := FindDescriptor(allFiles, inputType)
-				if err != nil {
-					return typeMap, descMap, fileSlice, err
-				}
-				// add to the descriptor : file map
-				descMap[desc] = file
-				// add to fileSlice
-				if !containsFile(fileSlice, file) {
-					fileSlice = append(fileSlice, file)
-				}
-				// set the nested time in the big map
-				typeMap, descMap, fileSlice, err = setNestedTypes(desc, servFile, allFiles, typeMap, descMap, fileSlice)
-				if err != nil {
-					return typeMap, descMap, fileSlice, err
-				}
-			}
-		}
-	}
-	return typeMap, descMap, fileSlice, nil
-}
-
-// creates the map of descriptor: map[field]descriptor
-func setNestedTypes(message *gp.DescriptorProto, msgFile *gp.FileDescriptorProto, files []*gp.FileDescriptorProto, typeMap map[*gp.DescriptorProto]map[*gp.FieldDescriptorProto]*gp.DescriptorProto, descMap map[*gp.DescriptorProto]*gp.FileDescriptorProto, fileSlice []*gp.FileDescriptorProto) (map[*gp.DescriptorProto]map[*gp.FieldDescriptorProto]*gp.DescriptorProto, map[*gp.DescriptorProto]*gp.FileDescriptorProto, []*gp.FileDescriptorProto, error) {
-
-	// check if it's already done
-	if _, ok := typeMap[message]; ok {
-		return typeMap, descMap, fileSlice, nil
-	}
-
-	if !containsFile(fileSlice, msgFile) {
-		fileSlice = append(fileSlice, msgFile)
-	}
-
-	map_exists := false
-	for _, field := range message.GetField() {
-		field_type := field.GetType()
-
-		if field_type == gp.FieldDescriptorProto_TYPE_GROUP || field_type == gp.FieldDescriptorProto_TYPE_MESSAGE {
-			if !map_exists {
-				field_to_type := make(map[*gp.FieldDescriptorProto]*gp.DescriptorProto, 0)
-				typeMap[message] = field_to_type
-				map_exists = true
-			}
-
-			// get descriptor from the type name
-			desc, file, _, err := FindDescriptor(files, field.GetTypeName())
-			if err != nil {
-				return nil, nil, nil, err
-			}
-			typeMap[message][field] = desc
-			descMap[desc] = file
-			typeMap, descMap, fileSlice, err := setNestedTypes(desc, file, files, typeMap, descMap, fileSlice)
-			if err != nil {
-				return typeMap, descMap, fileSlice, err
-			}
-		}
-	}
-
-	return typeMap, descMap, fileSlice, nil
-}
-
 const importTemplate = `{{range $i, $e := .}}
 import {{$e.ModuleName}} from '{{$e.FileName}}';{{end}}`
 
@@ -137,8 +65,7 @@ func generateImportEntities(fileSlice []*gp.FileDescriptorProto, protocTsPath st
 			})
 		} else {
 			importEntities = append(importEntities, &ImportEntity{
-				FileName: protocTsPath + packageSlashes + "/" + filepath[index:],
-				// FileName:   protocTsPath + "/" + filepath[index:],
+				FileName:   protocTsPath + packageSlashes + "/" + filepath[index:],
 				ModuleName: fname[:len(fname)-6],
 			})
 		}
@@ -150,7 +77,7 @@ const mappingTemplate = `
 const messageMap = new Map();
 {{range $i, $e := .}}
 const {{$e.MapName}} = new Map();{{range $x, $t := $e.TypeLines }}
-{{$e.MapName}}.set('{{$t.Name}}', {{$t.FileName}}{{$t.TypeName}});{{end}}
+{{$e.MapName}}.set('{{$t.NestedName}}', {{$t.NestedFileName}}{{$t.NestedTypeName}});{{end}}
 messageMap.set({{$e.FileName}}.{{$e.TypeName}}, {{$e.MapName}});
 {{end}}`
 
@@ -163,12 +90,12 @@ type MappingEntity struct {
 }
 
 type TypeLine struct {
-	Name     string
-	FileName string
-	TypeName string
+	NestedName     string
+	NestedFileName string
+	NestedTypeName string
 }
 
-func generateMappingEntities(typeMap map[*gp.DescriptorProto]map[*gp.FieldDescriptorProto]*gp.DescriptorProto, descMap map[*gp.DescriptorProto]*gp.FileDescriptorProto, improvedDescriptors []*ImprovedMessageDescriptor, protos []*gp.FileDescriptorProto, fileSlice []*gp.FileDescriptorProto, debug bool) ([]*MappingEntity, []*gp.FileDescriptorProto, error) {
+func generateMappingEntities(protos []*gp.FileDescriptorProto, improvedDescriptors []*ImprovedMessageDescriptor, debug bool) ([]*MappingEntity, []*gp.FileDescriptorProto, error) {
 
 	isComplex := func(fields []*gp.FieldDescriptorProto) bool {
 		for _, field := range fields {
@@ -180,41 +107,40 @@ func generateMappingEntities(typeMap map[*gp.DescriptorProto]map[*gp.FieldDescri
 	}
 
 	mappingEntities := []*MappingEntity{}
-	// TODO handle case with empty map in template
-	for desc, sub := range typeMap {
-		improvedDescriptor := FindImprovedFromDescriptor(improvedDescriptors, desc)
-		improvedPathName := FindImprovedPathName(improvedDescriptor)
+	importFiles := []*gp.FileDescriptorProto{}
+
+	for _, desc := range improvedDescriptors {
+		improvedPathName := FindImprovedPathName(desc)
 		improvedPathUnderscore := strings.Replace(improvedPathName, ".", "_", -1)
-		packageNameUnderscore := strings.Replace(improvedDescriptor.packageName, ".", "_", -1)
-		fullNameUnderscore := fmt.Sprintf("%s_%s%s", packageNameUnderscore, improvedPathUnderscore, desc.GetName())
-
-		// disgusting
-		if desc.GetOptions().GetMapEntry() {
-			continue
-			// fullNameUnderscore = fullNameUnderscore[:len(fullNameUnderscore)-5]
-		}
-
+		packageNameUnderscore := strings.Replace(desc.packageName, ".", "_", -1)
+		fullNameUnderscore := fmt.Sprintf("%s_%s%s", packageNameUnderscore, improvedPathUnderscore, desc.message.GetName())
 		mapName := fullNameUnderscore + "_map"
 
+		// skip map entries I guess
+		if desc.message.GetOptions().GetMapEntry() {
+			continue
+		}
+
 		typeLines := []*TypeLine{}
-		for field, _ := range sub {
+		for field, _ := range desc.message {
 			repeated := field.GetLabel() == 3
+			fileDesc := desc.file
 			// get file that defines the message type
 
 			field_type := field.GetTypeName()
-			foundDesc, fileDesc, _, err := FindDescriptor(protos, field_type)
+			foundDesc, _, _, err := FindDescriptor(protos, field_type)
 			if err != nil {
 				return nil, nil, err
 			}
 
 			// add to import slice
-			if !containsFile(fileSlice, fileDesc) {
-				fileSlice = append(fileSlice, fileDesc)
+			if !containsFile(importFiles, fileDesc) {
+				importFiles = append(importFiles, fileDesc)
 			}
 			filename := strings.Replace(fileDesc.GetName(), "/", "_", -1)
 			filename = filename[:len(filename)-6] // remove .proto
 
-			typename := strings.TrimPrefix(field_type, "."+improvedDescriptor.packageName)
+			typename := strings.TrimPrefix(field_type, "."+desc.packageName)
 			if strings.HasPrefix(typename, ".google.protobuf") {
 				typename = typename[16:] // hacky
 			} else if strings.HasPrefix(typename, ".commons") {
@@ -228,7 +154,7 @@ func generateMappingEntities(typeMap map[*gp.DescriptorProto]map[*gp.FieldDescri
 			var name string
 			if foundDesc.GetOptions().GetMapEntry() && isComplex(foundDesc.GetField()) {
 				name = strcase.ToLowerCamel(field.GetName()) + "Map"
-				// begin the hacky sack
+				// golang hacks to ignore the suffix Map or Entry
 				if strings.Contains(typename, "Map.") && strings.HasSuffix(typename, "Entry") {
 					ind := strings.LastIndex(typename, "Map.")
 					typename = typename[:ind]
@@ -244,12 +170,10 @@ func generateMappingEntities(typeMap map[*gp.DescriptorProto]map[*gp.FieldDescri
 				name = strcase.ToLowerCamel(field.GetName())
 			}
 
-			// number of dots in package
 			typeLines = append(typeLines, &TypeLine{
-				Name:     name,
-				FileName: filename,
-				TypeName: typename,
-				// TypeName: field_type[strings.LastIndex(field_type, ".")+1:],
+				NestedName:     name,
+				NestedFileName: filename,
+				NestedTypeName: typename,
 			})
 		}
 
@@ -269,7 +193,7 @@ func generateMappingEntities(typeMap map[*gp.DescriptorProto]map[*gp.FieldDescri
 			Debug:     debug,
 		})
 	}
-	return mappingEntities, fileSlice, nil
+	return mappingEntities, importFiles, nil
 }
 
 const toMessageTemplate = `
@@ -356,30 +280,27 @@ export function toMessage(obj: any, messageClass: any) {
 func CreateToMessageFile(servFiles []*gp.FileDescriptorProto, protos []*gp.FileDescriptorProto, protocTsPath string, debug bool) (*File, error) {
 	improvedDescriptors := CreateImprovedDescriptors(protos)
 
-	// TODO: first part finished, should have a type map set up now
-	typeMap, descMap, fileSlice, err := createTypeMapAndImportSlice(servFiles, protos)
-	if err != nil {
-		return nil, fmt.Errorf("Error when building typeMap and fileSlice: %v\n%s\n%s", err, typeMap, fileSlice) // TODO debugging
-	}
-
+	// use the improvedDescriptors
 	// use the typeMap to create entities for the main template
-	mappingEntities, fileSlice, err := generateMappingEntities(typeMap, descMap, improvedDescriptors, protos, fileSlice, debug) /*[]*MappingEntity{}*/
+	mappingEntities, importFiles, err := generateMappingEntities(protos, improvedDescriptors, debug)
 	if err != nil {
 		return nil, err
 	}
 
-	// map fileSlice to import entities
-	importEntities := generateImportEntities(fileSlice, protocTsPath) /*[]*ImportEntity{}*/
+	// map importFiles slice to import entities
+	importEntities := generateImportEntities(importFiles, protocTsPath)
 
 	var output bytes.Buffer
 
-	// generate import statements
+	// generate import statements for javascript
 	imports := template.Must(template.New("imports").Parse(importTemplate))
 	imports.Execute(&output, importEntities)
 
+	// generate map structures for javascript
 	body := template.Must(template.New("body").Parse(mappingTemplate))
 	body.Execute(&output, mappingEntities)
 
+	// javascript helper functions
 	toMessageOutput := template.Must(template.New("toMessageOutput").Parse(toMessageTemplate))
 	toMessageOutput.Execute(&output, debug)
 

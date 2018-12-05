@@ -152,9 +152,9 @@ export const {{$e.Name}}Epic = (action$, store) => action$
 				});
 				client.start({{.Auth}});
 				client.send(action.request);
-			})){{end}}`
+			})){{end}}
 
-const epicExportTemplate = `export const protocEpics = combineEpics({{range $i, $e := .}}
+export const protocEpics = combineEpics({{range $i, $e := .}}
 	{{$e.Name}}Epic,{{end}}
 )`
 
@@ -351,11 +351,9 @@ func CreateEpicFile(stateFields []*gp.FieldDescriptorProto, customFields []*gp.F
 	}
 
 	tmpl := template.Must(template.New("epic").Parse(epicTemplate))
-	exTmpl := template.Must(template.New("epic-exports").Parse(epicExportTemplate))
 
 	var output bytes.Buffer
 	tmpl.Execute(&output, epicEntities)
-	exTmpl.Execute(&output, epicEntities)
 
 	return &File{
 		Name:    "epics_pb.ts",
