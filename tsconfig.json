@@ -38,7 +38,7 @@
         "node_modules/*"
       ],
       "proto/*": [
-        "e2e/generated/*"
+        "e2e/protos/*"
       ],
       "@App/*": [
         "e2e/*"
@@ -47,7 +47,7 @@
   },
   "include": [
     "e2e/src/**/*",
-    "e2e/generated/**/*"
+    "e2e/protos/**/*"
   ],
   "exclude": [
     "build",

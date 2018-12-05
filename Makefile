@@ -59,7 +59,7 @@ clean-go:
 
 clean-js:
 	rm -rf node_modules/
-	rm -rf e2e/generated/
+	yarn run clean
 
 test-go:
 	ginkgo .
