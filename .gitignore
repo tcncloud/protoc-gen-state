@@ -6,3 +6,10 @@ e2e/generated
 
 node_modules/
 OldGenerated
+
+
+
+e2e/protos/readinglist/*.ts
+e2e/protos/readinglist/*.js
+e2e/protos/BasicState
+

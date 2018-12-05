@@ -5,7 +5,7 @@
   "license": "MIT",
   "scripts": {
     "start": "run-s build run",
-    "build-ts": "protoc --plugin=\"protoc-gen-ts=node_modules/.bin/protoc-gen-ts\" --js_out=\"import_style=commonjs,binary:.\" --ts_out=\".\" e2e/protos/readinglist/readinglist.proto",
+    "build-ts": "protoc --plugin=\"protoc-gen-ts=node_modules/.bin/protoc-gen-ts\" --js_out=\"import_style=commonjs,binary:.\" --ts_out=\"service=true:.\" e2e/protos/readinglist/readinglist.proto",
     "clean-ts": "rm -rf e2e/protos/readinglist/{*.ts,*.js}",
     "clean-state": "rm -rf e2e/protos/BasicState",
     "clean": "yarn run clean-ts && yarn run clean-state",
