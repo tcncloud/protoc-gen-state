@@ -20,6 +20,7 @@ before_deploy:
 - GOOS=darwin GOARCH=amd64 go build ./ && zip rotoc-gen-state-$VER-darwin-x86_64.zip protoc-gen-state state/options.proto && sha256sum protoc-gen-state-$VER-darwin-x86_64.zip > protoc-gen-state-$VER-darwin-x86_64.sum
 - GOOS=linux GOARCH=amd64 go build ./ && zip rotoc-gen-state-$VER-linux-x86_64.zip protoc-gen-state state/options.proto && sha256sum protoc-gen-state-$VER-linux-x86_64.zip > protoc-gen-state-$VER-linux-x86_64.sum
 - GOOS=windows GOARCH=amd64 go build ./ && zip rotoc-gen-state-$VER-windows-x86_64.zip protoc-gen-state state/options.proto && sha256sum protoc-gen-state-$VER-windowes-x86_64.zip > protoc-gen-state-$VER-windowes-x86_64.sum
+- ls -l
 deploy:
   provider: releases
   api_key:
