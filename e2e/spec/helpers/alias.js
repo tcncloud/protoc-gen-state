@@ -1,7 +1,7 @@
 const moduleAlias = require('module-alias');
 
 moduleAlias.addAliases({
-  'proto': '../generated/',
+  'proto': '../protos/',
   '@App': 'neo/'
 });
 
