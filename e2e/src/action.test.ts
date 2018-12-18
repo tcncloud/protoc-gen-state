@@ -77,16 +77,11 @@ describe('Action Type Tests', () => {
     it('should follow the same format for all the type strings', () => {
       let payload : string = "BookOfTheMonth"
       let cruds : string[] = ["create", "update", "delete", "get"]
-      let effects : string[] = ["Request", "RequestPromise", "Success", "Failure", "Cancel"]
+      let effects : string[] = ["Request", "Success", "Failure", "Cancel"]
       for(var cIndex : number = 0; cIndex < cruds.length; cIndex++){
         for(var eIndex : number = 0; eIndex < effects.length; eIndex++){
-          if(eIndex == 1){ // add underscore for promise
-            expect(ProtocActions[cruds[cIndex]+payload+effects[eIndex]]().type)
-              .toBe("PROTOC_" + cruds[cIndex].toUpperCase() + "_" + payload.toUpperCase() + "_REQUEST_PROMISE")
-          } else {
-            expect(ProtocActions[cruds[cIndex]+payload+effects[eIndex]]().type)
-              .toBe("PROTOC_" + cruds[cIndex].toUpperCase() + "_" + payload.toUpperCase() + "_" + effects[eIndex].toUpperCase())
-          }
+          expect(ProtocActions[cruds[cIndex]+payload+effects[eIndex]]().type)
+            .toBe("PROTOC_" + cruds[cIndex].toUpperCase() + "_" + payload.toUpperCase() + "_" + effects[eIndex].toUpperCase())
         }
       }
     })
@@ -95,16 +90,11 @@ describe('Action Type Tests', () => {
     it('should follow the same format for all the type strings', () => {
       let payload : string = "Library"
       let cruds : string[] = ["create", "update", "delete", "list"]
-      let effects : string[] = ["Request", "RequestPromise", "Success", "Failure", "Cancel"]
+      let effects : string[] = ["Request", "Success", "Failure", "Cancel"]
       for(var cIndex : number = 0; cIndex < cruds.length; cIndex++){
         for(var eIndex : number = 0; eIndex < effects.length; eIndex++){
-          if(eIndex == 1){ // add underscore for promise TODO: might fail in tsc
-            expect(ProtocActions[cruds[cIndex]+payload+effects[eIndex]]().type)
-              .toBe("PROTOC_" + cruds[cIndex].toUpperCase() + "_" + payload.toUpperCase() + "_REQUEST_PROMISE")
-          } else {
-            expect(ProtocActions[cruds[cIndex]+payload+effects[eIndex]]().type)
-              .toBe("PROTOC_" + cruds[cIndex].toUpperCase() + "_" + payload.toUpperCase() + "_" + effects[eIndex].toUpperCase())
-          }
+          expect(ProtocActions[cruds[cIndex]+payload+effects[eIndex]]().type)
+            .toBe("PROTOC_" + cruds[cIndex].toUpperCase() + "_" + payload.toUpperCase() + "_" + effects[eIndex].toUpperCase())
         }
       }
     })
@@ -133,6 +123,7 @@ describe('Action Payload Tests', () => {
       it('should return the book as the payload', () => {
         let result = ProtocActions.createBookOfTheMonthRequest(bookObj);
         expect(result.payload).toEqual(bookObj);
+        expect(result.meta).toEqual({ resolve: undefined, reject: undefined });
       })
     })
     describe('Single Entity Request Promise', () => {
@@ -140,7 +131,8 @@ describe('Action Payload Tests', () => {
         let resolve = function(){};
         let reject = function(){};
         let result = ProtocActions.createBookOfTheMonthRequestPromise(bookObj, resolve, reject);
-        expect(result.payload).toEqual({ bookOfTheMonth: bookObj, resolve, reject });
+        expect(result.payload).toEqual(bookObj);
+        expect(result.meta).toEqual({ resolve, reject });
       })
     })
     describe('Single Entity Success', () => {
@@ -165,6 +157,7 @@ describe('Action Payload Tests', () => {
       it('should return the book as the payload', () => {
         let result = ProtocActions.createLibraryRequest(bookObj);
         expect(result.payload).toEqual(bookObj);
+        expect(result.meta).toEqual({ resolve: undefined, reject: undefined });
       })
     })
     describe('Repeated Entity Request Promise', () => {
@@ -172,7 +165,8 @@ describe('Action Payload Tests', () => {
         let resolve = function(){};
         let reject = function(){};
         let result = ProtocActions.createLibraryRequestPromise(bookObj, resolve, reject);
-        expect(result.payload).toEqual({ library: bookObj, resolve, reject });
+        expect(result.payload).toEqual(bookObj);
+        expect(result.meta).toEqual({ resolve, reject });
       })
     })
     describe('Repeated Entity Success', () => {
@@ -200,6 +194,7 @@ describe('Action Payload Tests', () => {
       it('should return the book as the payload', () => {
         let result = ProtocActions.getBookOfTheMonthRequest(bookObj);
         expect(result.payload).toEqual(bookObj);
+        expect(result.meta).toEqual({ resolve: undefined, reject: undefined });
       })
     })
     describe('Single Entity Request Promise', () => {
@@ -207,7 +202,8 @@ describe('Action Payload Tests', () => {
         let resolve = function(){};
         let reject = function(){};
         let result = ProtocActions.getBookOfTheMonthRequestPromise(bookObj, resolve, reject);
-        expect(result.payload).toEqual({ bookOfTheMonth: bookObj, resolve, reject });
+        expect(result.payload).toEqual(bookObj);
+        expect(result.meta).toEqual({ resolve, reject });
       })
     })
     describe('Single Entity Success', () => {
@@ -232,6 +228,7 @@ describe('Action Payload Tests', () => {
       it('should return the book as the payload', () => {
         let result = ProtocActions.listLibraryRequest(bookObj);
         expect(result.payload).toEqual(bookObj);
+        expect(result.meta).toEqual({ resolve: undefined, reject: undefined });
       })
     })
     describe('Repeated Entity Request Promise', () => {
@@ -239,7 +236,8 @@ describe('Action Payload Tests', () => {
         let resolve = function(){};
         let reject = function(){};
         let result = ProtocActions.listLibraryRequestPromise(bookObj, resolve, reject);
-        expect(result.payload).toEqual({ library: bookObj, resolve, reject });
+        expect(result.payload).toEqual(bookObj);
+        expect(result.meta).toEqual({ resolve, reject });
       })
     })
     describe('Repeated Entity Success', () => {
@@ -272,6 +270,7 @@ describe('Action Payload Tests', () => {
       it('should return the book as the payload', () => {
         let result = ProtocActions.updateBookOfTheMonthRequest(bookObj);
         expect(result.payload).toEqual(bookObj);
+        expect(result.meta).toEqual({ resolve: undefined, reject: undefined });
       })
     })
     describe('Single Entity Request Promise', () => {
@@ -279,7 +278,8 @@ describe('Action Payload Tests', () => {
         let resolve = function(){};
         let reject = function(){};
         let result = ProtocActions.updateBookOfTheMonthRequestPromise(bookObj, resolve, reject);
-        expect(result.payload).toEqual({ bookOfTheMonth: bookObj, resolve, reject });
+        expect(result.payload).toEqual(bookObj);
+        expect(result.meta).toEqual({ resolve, reject });
       })
     })
     describe('Single Entity Success', () => {
@@ -304,6 +304,7 @@ describe('Action Payload Tests', () => {
       it('should return the book as the payload', () => {
         let result = ProtocActions.updateLibraryRequest(bookObj, newBookObj);
         expect(result.payload).toEqual({ prev: bookObj, updated: newBookObj });
+        expect(result.meta).toEqual({ resolve: undefined, reject: undefined });
       })
     })
     describe('Repeated Entity Request Promise', () => {
@@ -311,12 +312,12 @@ describe('Action Payload Tests', () => {
         let resolve = function(){};
         let reject = function(){};
         let result = ProtocActions.updateLibraryRequestPromise(bookObj, newBookObj, resolve, reject);
-        expect(result.payload).toEqual({ prev: bookObj, updated: newBookObj, resolve, reject });
+        expect(result.payload).toEqual({ prev: bookObj, updated: newBookObj });
+        expect(result.meta).toEqual({ resolve, reject });
       })
     })
     describe('Repeated Entity Success', () => {
-      it('should return the book as the payload', () => {
-        let result = ProtocActions.updateLibrarySuccess({ prev: bookObj, updated: newBookObj });
+      it('should return the book as the payload', () => { let result = ProtocActions.updateLibrarySuccess({ prev: bookObj, updated: newBookObj });
         expect(result.payload).toEqual({ prev: bookObj, updated: newBookObj });
       })
     })
@@ -339,6 +340,7 @@ describe('Action Payload Tests', () => {
       it('should return the book as the payload', () => {
         let result = ProtocActions.deleteBookOfTheMonthRequest(bookObj);
         expect(result.payload).toEqual(bookObj);
+        expect(result.meta).toEqual({ resolve: undefined, reject: undefined });
       })
     })
     describe('Single Entity Request Promise', () => {
@@ -346,7 +348,8 @@ describe('Action Payload Tests', () => {
         let resolve = function(){};
         let reject = function(){};
         let result = ProtocActions.deleteBookOfTheMonthRequestPromise(bookObj, resolve, reject);
-        expect(result.payload).toEqual({ bookOfTheMonth: bookObj, resolve, reject });
+        expect(result.payload).toEqual(bookObj);
+        expect(result.meta).toEqual({ resolve, reject });
       })
     })
     describe('Single Entity Success', () => {
@@ -371,6 +374,7 @@ describe('Action Payload Tests', () => {
       it('should return the book as the payload', () => {
         let result = ProtocActions.deleteLibraryRequest(bookObj);
         expect(result.payload).toEqual(bookObj);
+        expect(result.meta).toEqual({ resolve: undefined, reject: undefined });
       })
     })
     describe('Repeated Entity Request Promise', () => {
@@ -378,7 +382,8 @@ describe('Action Payload Tests', () => {
         let resolve = function(){};
         let reject = function(){};
         let result = ProtocActions.deleteLibraryRequestPromise(bookObj, resolve, reject);
-        expect(result.payload).toEqual({ library: bookObj, resolve, reject });
+        expect(result.payload).toEqual(bookObj);
+        expect(result.meta).toEqual({ resolve, reject });
       })
     })
     describe('Repeated Entity Success', () => {
@@ -429,16 +434,11 @@ describe('Custom Action Tests', () => {
     it('should follow the same format for all the type strings', () => {
       let payload : string = "ErrorBook"
       let cruds : string[] = ["custom"]
-      let effects : string[] = ["Request", "RequestPromise", "Success", "Failure", "Cancel"]
+      let effects : string[] = ["Request", "Success", "Failure", "Cancel"]
       for(var cIndex : number = 0; cIndex < cruds.length; cIndex++){
         for(var eIndex : number = 0; eIndex < effects.length; eIndex++){
-          if(eIndex == 1){ // add underscore for promise
-            expect(ProtocActions[cruds[cIndex]+payload+effects[eIndex]]().type)
-              .toBe("PROTOC_" + cruds[cIndex].toUpperCase() + "_" + payload.toUpperCase() + "_REQUEST_PROMISE")
-          } else {
-            expect(ProtocActions[cruds[cIndex]+payload+effects[eIndex]]().type)
-              .toBe("PROTOC_" + cruds[cIndex].toUpperCase() + "_" + payload.toUpperCase() + "_" + effects[eIndex].toUpperCase())
-          }
+          expect(ProtocActions[cruds[cIndex]+payload+effects[eIndex]]().type)
+            .toBe("PROTOC_" + cruds[cIndex].toUpperCase() + "_" + payload.toUpperCase() + "_" + effects[eIndex].toUpperCase())
         }
       }
     })
@@ -460,12 +460,14 @@ describe('Custom Action Tests', () => {
     it('should return the book as the payload', () => {
       let result = ProtocActions.customErrorBookRequest(bookObj);
       expect(result.payload).toEqual(bookObj);
+      expect(result.meta).toEqual({ resolve: undefined, reject: undefined });
     })
     it('should return the book as the payload', () => {
       let resolve = function(){};
       let reject = function(){};
       let result = ProtocActions.customErrorBookRequestPromise(bookObj, resolve, reject);
-      expect(result.payload).toEqual({ errorBook: bookObj, resolve, reject });
+      expect(result.payload).toEqual(bookObj);
+      expect(result.meta).toEqual({ resolve, reject });
     })
     it('should return the book as the payload', () => {
       let result = ProtocActions.customErrorBookSuccess(bookObj);
