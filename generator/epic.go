@@ -54,6 +54,11 @@ import * as protocActions from './actions_pb';
 import * as ProtocTypes from './protoc_types_pb';
 import * as ProtocServices from './protoc_services_pb';
 
+
+function noop() {
+	return;
+}
+
 function createErrorObject(code: number|string|undefined, message: string): NodeJS.ErrnoException {
 	var err: NodeJS.ErrnoException = new Error();
 	err.message = message;
@@ -64,41 +69,29 @@ function createErrorObject(code: number|string|undefined, message: string): Node
 
 {{range $i, $e := .}}
 export const {{$e.Name}}Epic = (action$, store) => action$
-	.filter(isActionOf([
-		protocActions.{{$e.Name}}Request,
-		protocActions.{{$e.Name}}RequestPromise,
-	]))
+	.filter(isActionOf(protocActions.{{$e.Name}}Request))
 	.debounceTime({{$e.Debounce}})
-	.map((action) => {
-		if(action.payload && action.payload.resolve && action.payload.reject){
-			return {
-				...action.payload,
-				request: toMessage(action.payload.{{$e.JsonName}}, {{$e.InputType}})
-			}
-		} else {
-			return { request: toMessage(action.payload, {{$e.InputType}}) }
-		}
-	})
-	.flatMap((action) => {
+	.map(({ payload, meta: { resolve = noop, reject = noop } }) => ({
+		message: toMessage(payload, {{$e.InputType}}),
+		resolve,
+		reject,
+	}))
+	.flatMap((request) => {
 {{if $e.Repeat}} {{template "grpcStream" $e}} {{ else }} {{template "grpcUnary" $e}} {{end}}
 		.retry({{$e.Retries}})
 		.timeout({{$e.Timeout}}){{if $e.Updater}}
 		.map(obj => ({ ...obj } as { prev: {{$e.OutputType}}.AsObject, updated: {{$e.OutputType}}.AsObject } ))
 		.map(lib => {
-			if(action.resolve){
-				action.resolve(lib.prev, lib.updated);
-			}
+			request.resolve(lib.prev, lib.updated);
 			return protocActions.{{$e.Name}}Success(lib);
 		}){{else}}
-		.map(resObj => {
-			if(action.resolve){
-				action.resolve(resObj as {{$e.OutputType}}.AsObject{{if $e.Repeat}}[]{{end}});
-			}
-			return protocActions.{{$e.Name}}Success(resObj as {{$e.OutputType}}.AsObject{{if $e.Repeat}}[]{{end}});
+		.map((resObj: {{$e.OutputType}}.AsObject{{if $e.Repeat}}[]{{end}}) => {
+			request.resolve(resObj);
+			return protocActions.{{$e.Name}}Success(resObj);
 		}){{end}}
 		.catch(error => {
 			const err: NodeJS.ErrnoException = createErrorObject(error.code, error.message);
-			if(action.reject){ action.reject(err); }
+			if(request.reject){ request.reject(err); }
 			return Observable.of(protocActions.{{$e.Name}}Failure(err));
 		})
 	})
@@ -107,11 +100,11 @@ export const {{$e.Name}}Epic = (action$, store) => action$
 {{end}}
 {{define "grpcUnary"}}   return Observable
 		.defer(() => new Promise((resolve, reject) => {
-      {{if .Debug}}console.log('calling {{.FullMethodName}} with payload: ', action);{{end}}
+      {{if .Debug}}console.log('calling {{.FullMethodName}} with payload: ', request.message);{{end}}
 			{{.Host}}
 			{{.Auth}}
 			grpc.unary({{.FullMethodName}}, {
-				request: action.request,
+				request: request.message,
 				host: host,
 				{{.AuthFollowup}}
 				onEnd: (res: UnaryOutput<{{.OutputType}}>) => {
@@ -130,7 +123,7 @@ export const {{$e.Name}}Epic = (action$, store) => action$
 {{define "grpcStream"}}   {{.Host}}
 		return Observable
 			.defer(() => new Promise((resolve, reject) => {
-        {{if .Debug}}console.log('calling {{.FullMethodName}} with payload: ', action);{{end}}
+        {{if .Debug}}console.log('calling {{.FullMethodName}} with payload: ', request.message);{{end}}
 				var arr: {{.OutputType}}.AsObject[] = [];
 				const client = grpc.client({{.FullMethodName}}, {
 					host: host,
@@ -140,7 +133,7 @@ export const {{$e.Name}}Epic = (action$, store) => action$
 					arr.push(message.toObject());
 				});
         {{if .Debug}}client.onEnd((code: grpc.Code, msg: string, trailers: grpc.Metadata) => {
-          console.log('in {{.FullMethodName}} streaming onEnd: ', code, msg, trailers, action);{{else}}client.onEnd((code: grpc.Code, msg: string) => { {{end}}
+          console.log('in {{.FullMethodName}} streaming onEnd: ', code, msg, trailers, request.message);{{else}}client.onEnd((code: grpc.Code, msg: string) => { {{end}}
 					if (code != grpc.Code.OK) {
             {{if .Debug}}console.log('Error in streaming epic -- code: ', code, ' message: ', msg);{{end}}
 						reject(createErrorObject(code, msg));
@@ -148,7 +141,7 @@ export const {{$e.Name}}Epic = (action$, store) => action$
 					resolve(arr);
 				});
 				client.start({{.Auth}});
-				client.send(action.request);
+				client.send(request.message);
 			})){{end}}`
 
 const epicExportTemplate = `export const protocEpics = combineEpics({{range $i, $e := .}}
