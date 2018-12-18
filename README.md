@@ -13,23 +13,22 @@ Run the tests with `yarn test`
 
 Define a [.proto](#example) file with three messages.
  * **ReduxState** - The only required message. Will generate redux state based on the fields.
-   - [Actions](#actions_pb): Will generate actions for each field with the [CLUDG](https://cloud.google.com/apis/design/standard_methods) method prepended and Request, Success, Failure, or Cancel appended. Will also generate an action to reset the state and one that can resolve a promise.
+   - [Actions](#actions_pb): Will generate actions for each field with the [CLUDG](https://cloud.google.com/apis/design/standard_methods) method prepended and Request, Success, Failure, or Cancel appended. Will also generate an action to reset the state that has no payload. A resolve and reject callback can optionally be passed to Request actions and resolved as a promise. (The epics will call the callback before dispatching success/failure actions)
      * [create|update|delete|get|list]**Name**[Request|RequestPromise|Success|Failure|Cancel]
      * reset**Name**
-   - [Reducer](#reducer_pb): Will generate reducer blocks to handle the side-effects of each action accordingly.
-   - [Epics](#epics_pb): Will generate an epic that listens for a Request action, sends an api call, and dispatches a Success or Failure action depending on the result.
+   - [Reducer](#reducer_pb): Will generate reducer blocks to handle the side-effects of each action accordingly. CustomActions will not generate reducer blocks. 
+   - [Epics](#epics_pb): Will generate an epic that listens for a Request action, sends an api call, and dispatches a Success or Failure action depending on the result. If a resolve and reject callback was provided, it will call those before dispatching.
 
  * **CustomActions** - Optional. Will define actions and epics for non-CLUDG generic methods. Should be handled with a custom reducer or simply by calling the RequestPromise action.
    - [Actions](#actions_pb): Only the method annotion `custom` is allowed so it will prepend actions with Custom and append them with Request, Success, Failure, and Cancel the same as the actions above.
      * custom**Name**[Request|RequestPromise|Success|Failure|Cancel]
-
- * **ExternalLink** - Optional. The other message generate actions, so this is used to link an external file without generating anything additional. Useful for linking a service file which doesn't define any messages or linking a file with messages used in other RPCs but don't need to be in redux.
 
 ### Annotations
 Configuration for the plugin is provided by annotations inside the proto file.
 
 | required | level | name | description | default |
 | -------- | ----- | ---- | ----------- | ------- |
+|x| message | state_options | defines a message as REDUX_STATE (generates reducer/epic/action) or CUSTOM_ACTION (generates only epic/actions) | |
 |x| file | hostname | set a static hostname string | |
 |x| file | hostname_location | defines a location in redux to grab a dynamic hostname | |
 |x| file | protoc_ts_path | defines the path to generated typescript files | |
@@ -66,6 +65,8 @@ option (protoc_ts_path) = "../../";                       // path to generated t
 option (root_path) = "@App/src/apps/agent/";              // path to rootAction file
 
 message ReduxState {   // generates the redux state
+  option (state_options).type = REDUX_STATE; // mark as redux state message
+
   api.v0alpha.Organization myOrg = 1 [
     (retries) = 3,
     (method).create = "api.v0alpha.Org.CreateOrganization",
@@ -76,32 +77,29 @@ message ReduxState {   // generates the redux state
 }
 
 message CustomAction {  // generates non-CLUDG actions/epics without a reducer
+  option (state_options).type = CUSTOM_ACTION; // mark as custom message, so no reducer generated
+
   api.v0alpha.Country countryNameChange = 1 [
     (timeout) = 4,
     (method).custom = "api.v0alpha.Org.ChangeNameOfCountry"
   ];
 }
-
-message ExternalLink {
-  // only used to link an external file, but don't want generate anything from it
-  // holdover from the C++ version, as long as the file is included it should be fine
-}
 ```
 
 Which will generate the following actions:
 * createMyOrgRequest
-* createMyOrgRequestPromise
+* createMyOrgRequestPromise // deprecated, use Request with optional resolve/reject callbacks
 * createMyOrgSuccess
 * createMyOrgFailure
 * createMyOrgCancel
 * deleteMyOrgRequest
-* deleteMyOrgRequestPromise
+* deleteMyOrgRequestPromise // deprecated, use Request with optional resolve/reject callbacks
 * deleteMyOrgSuccess
 * deleteMyOrgFailure
 * deleteMyOrgCancel
 * resetMyOrg
 * customCountryNameChangeRequest
-* customCountryNameChangeRequestPromise
+* customCountryNameChangeRequestPromise // deprecated, use Request with optional resolve/reject callbacks
 * customCountryNameChangeSuccess
 * customCountryNameChangeFailure
 * customCountryNameChangeCancel
@@ -161,14 +159,14 @@ Repeated types are not nullable and are defaulted to empty arrays. ([] as Type[]
 ### epics_pb
 Imports the the types (protoc_types_pb), services (protoc_services_pb), and actions (actions_pb). Creates one epic per RPC defined in the protobuf service with the name matching the state message field. They all follow the same general structure:
 
-- Match on {RPC}Request and {RPC}RequestPromise actions
+- Match on {RPC}Request actions
 - Convert action payload to {RPC} input (plain object to protobuf message)
 - Send {RPC}
 - If successful, dispatch {RPC}Success
 - Otherwise, dispatch {RPC}Failure
 - {RPC}Cancel actions will cancel the api call
 
-note: The epics generated for actions that end with "Promise" will call resolve/reject before dispatching Success or Failure actions. The component that dispatched the "Promise" action can handle the resolved Promise as it needs. 
+note: The epics will call the resolve/reject callbacks before dispatching Success or Failure actions (if provided, they are optional) so that promises can be resolved based on them. (Redux actions don't natively "return" anything)
 
 For example, given this proto:
 
@@ -186,11 +184,13 @@ message Bork { ... }
 ```
 // generational proto
 message ReduxState {
+  option (state_options).type = REDUX_STATE;
   my.example.Book myBook = 1 [
     (method).create = "my.example.ExampleService.CreateBook"
   ];
 }
 message CustomActions {
+  option (state_options).type = CUSTOM_ACTION;
   my.example.Bork borkFromBook = 1 [
     (method).custom = "my.example.ExampleService.CreateBorkFromBook"
   ];
@@ -202,7 +202,7 @@ It would generate two epics:
 createMyBookEpic
 customBorkFromBookEpic
 ```
-That listen on Request/RequestPromise actions and dispatch Success/Failure actions depending on the success of the grpc call.
+That listen on Request actions and dispatch Success/Failure actions depending on the success of the grpc call.
 
 ### actions_pb
 
@@ -210,7 +210,7 @@ Imports the types output by ts-protoc-gen. Creates three action creators (Reques
 
 The *Request action creators will take the RPC input message type as a parameter. The *Success action creators will take the RPC output message type as a parameter. The *Failure actions will always pass the error string.
 
-A *RequestPromise action will be generated as well that takes two additional function parameters (resolve, reject). The functions will be called prior to dispatching a *Success or *Failure action from within the epic. This is useful for seeing if a specific request completed from within a component. 
+The *Request action will also have two additional optional parameters (resolve, reject). These callbacks will be called prior to dispatching the *Success or *Failure action from within the epic. This is useful for seeing if a specific request completed from within a component. 
 
 *Request actions for verb "update" on a repeated field will take two parameters, prev and updated. Because protoc-gen-state has no knowledge of primary keys, the previous object is used to find the location of the object in the array within the reducer. 
 
@@ -232,6 +232,8 @@ message BookMetadata { ... }
 
 ```
 message ReduxState {
+  option (state_options).type = REDUX_STATE;
+
   repeated package1.Book library = 1 [
     (method).create = "package1.CreateBook",
     (method).list = "package1.GetAllBook", // if repeated use list, otherwise use get
@@ -240,48 +242,45 @@ message ReduxState {
   ];
 }
 message CustomActions {
+  option (state_options).type = CUSTOM_ACTION;
+
   package1.Book doSomething = 1 [
     (method).custom = "package1.DoSomethingCrazy"
   ];
 }
 ```
 
-It will generate action creators for each of the annotations in the ReduxState message, assuming the RPC methods exist and are imported correctly (it will throw an error not). Redux action creators do not return a value, but the call signatures are provided below.
+It will generate action creators for each of the annotations in the ReduxState message, assuming the RPC methods exist and are imported correctly (it will throw an error if not). Redux action creators do not return a value, but the call signatures are provided below.  
+
+Notice the resolve/reject callbacks are optional.
 
   ```
-  createLibraryRequest(library: package1.Book.AsObject)
-  listLibraryRequest(library: package1.Book.AsObject)
-  updateLibraryRequest(prev: package1.Book.AsObject, updated: package1.Book.AsObject)
-  deleteLibraryRequest(library: package1.BookMetadata.AsObject)
+  createLibraryRequest(
+    library: package1.Book.AsObject, 
+    resolve?: (payload: package1.Book.AsObject) => void, 
+    reject?: (error: NodeJS.ErrnoException) => void
+  );
+  listLibraryRequest(
+    library: package1.Book.AsObject,
+    resolve?: (payload: package1.Book.AsObject[]) => void, 
+    reject?: (error: NodeJS.ErrnoException) => void
+  );
+  updateLibraryRequest(
+    prev: package1.Book.AsObject, 
+    updated: package1.Book.AsObject,
+    resolve?: (prev: package1.Book.AsObject, updated: package1.Book.AsObject) => void,
+    reject?: (error: NodeJS.ErrnoException) => void,
+  );
+  deleteLibraryRequest(
+    library: package1.BookMetadata.AsObject,
+    resolve?: (payload: pacakge1.Book.AsObject) => void,
+    reject?: (error: NodeJS.ErrnoException) => void,
+  );
 
   createLibraryCancel()
   listLibraryCancel()
   updateLibraryCancel()
   deleteLibraryCancel()
-
-  // also generates request actions with promise callbacks
-  // in the future we may wrap this in a promise for easier handling
-  createLibraryRequestPromise(
-      library: package1.Book.AsObject, 
-      resolve: (payload: package1.Book.AsObject) => void,
-      reject: (error: NodeJS.ErrnoException) => void,
-      ) => void;
-  listLibraryRequestPromise(
-    library: package1.Book.AsObject, 
-    resolve: (payload: package1.Book.AsObject[]) => void, // returns an array
-    reject: (error: NodeJS.ErrnoException) => void,
-  ) => void;
-  updateLibraryRequestPromise(
-    prev: package1.Book.AsObject, 
-    updated: package1.Book.AsObject, 
-    resolve: (prev: package1.Book.AsObject, updated: package1.Book.AsObject) => void,
-    reject: (error: NodeJS.ErrnoException) => void,
-  ) => void;
-  deleteLibraryRequestPromise( // takes BookMetadata, returns Book
-    library: package1.BookMetadata.AsObject, 
-    resolve: (payload: package.Book.AsObject) => void,
-    reject: (error: NodeJS.ErrnoException) => void,
-  ) => void;
 
   // also generates action creators for the async results of the api calls.
   // The epics dispatch these and the reducer catches them but they are not generally dispatched directly.
@@ -300,12 +299,15 @@ It will generate action creators for each of the annotations in the ReduxState m
   resetLibrary()
 
   // and the custom actions (custom as in non-CRUD)
-  customDoSomethingRequest(doSomething: package2.BirdInTheHand)
-  customDoSomethingRequestPromise(
+  // worth noting that a "custom" request without the callback parameters will not
+  // give any feedback about whether it succeeded or not (no values in redux)
+  // so these should almost always be passed with the callbacks
+  customDoSomethingRequest(
     doSomething: package2.BirdInTheHand,
-    resolve: (payload: package2.OneInTheBush),
-    reject: (error: NodeJS.ErrnoException)
-  )
+    resolve?: (payload: package2.OneInTheBush),
+    reject?: (error: NodeJS.ErrnoException)
+  );
+  customDoSomethingRequestPromise() // deprecated, same as above
   customDoSomethingSuccess(doSomething: package2.OneInTheBush)
   customDoSomethingFailure(error: NodeJS.ErrnoException)
   customDoSomethingCancel()
