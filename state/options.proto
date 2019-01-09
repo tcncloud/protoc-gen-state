@@ -26,19 +26,19 @@ message IntFieldOptions {
 
 
 extend google.protobuf.MessageOptions { 
-  optional StateMessageOptions state_options = 550020;
+  optional StateMessageOptions state_options = 550006;
 }
 
 message StateMessageOptions {
   required StateMessageType type = 1;
 }
 
-
 enum StateMessageType {
   REDUX_STATE = 0;
   CUSTOM_ACTION = 1;
   EXTERNAL_LINK = 2;
 }
+
 
 extend google.protobuf.FieldOptions {
   optional int64 timeout                  = 550001;
@@ -48,21 +48,31 @@ extend google.protobuf.FieldOptions {
   optional IntFieldOptions method_retries = 550005;
 }
 
-extend google.protobuf.FileOptions {
-  optional int64 default_timeout            = 550006;
-  optional int64 default_retries            = 550007;
+enum OutputTypes {
+  redux3 = 0;
+  redux4 = 1;
+}
+
+message StateFileOptions {
+  optional int64 default_timeout            = 1;
+  optional int64 default_retries            = 2;
   // turn on debug logging
-  optional bool debug                       = 550008;
+  optional bool debug                       = 3;
   // port to be used for api calls in epics
-  optional int64 port                       = 550010;
+  optional int64 port                       = 4;
   // debounce time for api calls in epics
-  optional int64 debounce                   = 550011;
+  optional int64 debounce                   = 5;
   // sets custom import path for proto typescript files
-  optional string protoc_ts_path            = 550012;
+  optional string protoc_ts_path            = 6;
   // static hostname string for api calls
-  optional string hostname                  = 550013;
+  optional string hostname                  = 7;
   // hostname for api calls location in redux
-  optional string hostname_location         = 550014;
+  optional string hostname_location         = 8;
   // add authorization bearer header using the token at this location in redux
-  optional string auth_token_location       = 550015;
+  optional string auth_token_location       = 9;
+  required OutputTypes output_type          = 10;
+}
+
+extend google.protobuf.FileOptions {
+  optional StateFileOptions state_file_options = 550007;
 }

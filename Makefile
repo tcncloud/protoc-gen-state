@@ -40,10 +40,10 @@ gen: state/options.pb.go
 
 protos: state/options.pb.go
 	mkdir -p $(GENERATED)
-	protoc -I. -I./e2e/protos -I./state/options.proto \
+	protoc -I. -I./e2e/redux4/protos -I./state/options.proto \
 		--plugin=./protoc-gen-state \
-		--state_out=$(GENERATED) ./e2e/protos/basic.proto
-	cp protoc-gen-state e2e
+		--state_out=$(GENERATED) ./e2e/redux4/protos/basic.proto
+	cp protoc-gen-state e2e/redux4
 
 
 state/options.pb.go : state/options.proto
@@ -53,13 +53,8 @@ deps:
 	go get -u github.com/golang/protobuf/protoc-gen-go
 	go get -u github.com/iancoleman/strcase
 
-clean-go:
-	# rm -f ./protoc-gen-state
-	rm -rf $(GENERATED)
-
-clean-js:
-	rm -rf node_modules/
-	yarn run clean
+clean:
+	./scripts/clean-project.sh
 
 test-go:
 	ginkgo .

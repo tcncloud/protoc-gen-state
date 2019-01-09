@@ -6,14 +6,16 @@ option go_package="github.com/tcncloud/protoc-gen-state/e2e/redux3/protos;protos
 import "state/options.proto";
 import "e2e/redux3/protos/readinglist/readinglist.proto";
 
-option (debounce) = 510;
-option (debug) = false;
-option (default_retries) = 0;
-option (default_timeout) = 3000;
-option (hostname_location) = "config.host";
-option (port) = 9090;
-option (protoc_ts_path) = "../";
-/* option (auth_token_location) = "config.token"; */
+option (state_file_options) = {
+  debounce: 510,
+  debug: false,
+  default_retries: 0,
+  default_timeout: 3000,
+  hostname_location: "config.host",
+  port: 9090,
+  protoc_ts_path: "../"
+  /* option (auth_token_location) = "config.token"; */
+};
 
 message ReduxState {
   option (state_options).type = REDUX_STATE;
