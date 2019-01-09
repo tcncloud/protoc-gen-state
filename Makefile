@@ -33,7 +33,7 @@ all: deps build test
 
 build: gen protos
 
-test: test-go clean-go test-js clean-js
+test: test-go test-js
 
 gen: state/options.pb.go
 	go build .
