@@ -69,7 +69,7 @@ type ReducerEntity struct {
 	CludgEffectName string
 }
 
-func CreateReducerFile(stateFields []*gp.FieldDescriptorProto, debug bool) (*File, error) {
+func CreateReducerFile(stateFields []*gp.FieldDescriptorProto, outputType state.OutputTypes, debug bool) (*File, error) {
 	reducerEntities := []*ReducerEntity{}
 
 	for _, entity := range stateFields {

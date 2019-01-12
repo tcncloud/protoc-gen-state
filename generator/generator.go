@@ -89,31 +89,34 @@ func Generate(filepaths []string, protos []*gp.FileDescriptorProto) ([]*File, er
 				} else if stateOptions.GetType() == state.StateMessageType_EXTERNAL_LINK {
 					// ???
 				} else {
-					// TODO ... this should never happen!
+          return nil, fmt.Errorf("Encountered a wrong/non-existent State Message Annotation: ", stateOptions.GetType())
 				}
 			} else {
-				// TODO .... do something here, this error should never happen
+        return nil, fmt.Errorf("Error getting extension: ", err)
 			}
 		}
 	}
 
-	// gather the configuration annotations, throw if they're required
-	debounce, err := GetFileExtensionInt(stateFile, "debounce")
-	defaultTimeout, err := GetFileExtensionInt(stateFile, "default_timeout")
-	defaultRetries, err := GetFileExtensionInt(stateFile, "default_retries")
-	port, err := GetFileExtensionInt(stateFile, "port")
-	debug, err := GetFileExtensionBool(stateFile, "debug")
-	protocTsPath, err := GetFileExtensionString(stateFile, "protoc_ts_path")
+  // gather the file level annotations
+  fileOptions, err := GetFileExtensions(stateFile)
+  if err != nil {
+    return nil, fmt.Errorf("Error encountered while parsing file level annotations: %v", err)
+  }
+
+  debounce := fileOptions.GetDebounce()
+  defaultTimeout := fileOptions.GetDefaultTimeout()
+  defaultRetries := fileOptions.GetDefaultRetries()
+  port := fileOptions.GetPort()
+  debug := fileOptions.GetDebug()
+  protocTsPath := fileOptions.GetProtocTsPath()
+  outputType := fileOptions.GetOutputType()
+  hostname := fileOptions.GetHostname()
+  hostnameLocation := fileOptions.GetHostnameLocation()
+  authTokenLocation := fileOptions.GetAuthTokenLocation()
+
 	if protocTsPath[len(protocTsPath)-1] != '/' {
 		// add a slash to the end of the config option if it doesnt exist
 		protocTsPath += "/"
-	}
-	hostname, err := GetFileExtensionString(stateFile, "hostname")
-	hostnameLocation, err := GetFileExtensionString(stateFile, "hostname_location")
-	authTokenLocation, err := GetFileExtensionString(stateFile, "auth_token_location")
-
-	if err != nil {
-		return nil, fmt.Errorf("Error encountered while parsing file level annotations: %v", err)
 	}
 
 	stateFields := []*gp.FieldDescriptorProto{}
@@ -153,49 +156,49 @@ func Generate(filepaths []string, protos []*gp.FileDescriptorProto) ([]*File, er
 	out = append(out, CreateAggregateByPackage(messageFiles, protocTsPath, stateFile.GetPackage())...)
 
 	// create state file
-	statePb, err := CreateStateFile(stateFields, debug)
+	statePb, err := CreateStateFile(stateFields, outputType, debug)
 	if err != nil {
 		return nil, fmt.Errorf("Error generating state_pb file: %v", err)
 	}
 	out = append(out, statePb)
 
 	// create action file
-	actionPb, err := CreateActionFile(stateFields, customFields, serviceFiles, debug)
+	actionPb, err := CreateActionFile(stateFields, outputType, customFields, serviceFiles, debug)
 	if err != nil {
 		return nil, fmt.Errorf("Error generating actions_pb file: %v", err)
 	}
 	out = append(out, actionPb)
 
 	// create reducer file
-	reducerPb, err := CreateReducerFile(stateFields, debug)
+	reducerPb, err := CreateReducerFile(stateFields, outputType, debug)
 	if err != nil {
 		return nil, fmt.Errorf("Error generating reducer_pb file: %v", err)
 	}
 	out = append(out, reducerPb)
 
 	// create epic file
-	epicPb, err := CreateEpicFile(stateFields, customFields, serviceFiles, defaultTimeout, defaultRetries, authTokenLocation, hostnameLocation, hostname, port, debounce, debug)
+	epicPb, err := CreateEpicFile(stateFields, outputType, customFields, serviceFiles, defaultTimeout, defaultRetries, authTokenLocation, hostnameLocation, hostname, port, debounce, debug)
 	if err != nil {
 		return nil, fmt.Errorf("Error generating actions_pb file: %v", err)
 	}
 	out = append(out, epicPb)
 
 	// create toMessage file
-	toMessagePb, err := CreateToMessageFile(serviceFiles, protos, protocTsPath, debug)
+	toMessagePb, err := CreateToMessageFile(serviceFiles, outputType, protos, protocTsPath, debug)
 	if err != nil {
 		return nil, fmt.Errorf("Error generating to_message_pb file: %v", err)
 	}
 	out = append(out, toMessagePb)
 
 	// create message_aggregate file from the messageFiles
-	typesPb, err := CreateAggregateTypesFile(messageFiles, stateFile.GetPackage())
+	typesPb, err := CreateAggregateTypesFile(messageFiles, outputType, stateFile.GetPackage())
 	if err != nil {
 		return nil, fmt.Errorf("Error generating protoc_types_pb file: %v", err)
 	}
 	out = append(out, typesPb)
 
 	// create service_aggregate file from the serviceFiles
-	servicesPb, err := CreateAggregateServicesFile(serviceFiles, protocTsPath, stateFile.GetPackage())
+	servicesPb, err := CreateAggregateServicesFile(serviceFiles, outputType, protocTsPath, stateFile.GetPackage())
 	if err != nil {
 		return nil, fmt.Errorf("Error generating protoc_services_pb file: %v", err)
 	}

@@ -13,7 +13,8 @@ option (state_file_options) = {
   default_timeout: 3000,
   hostname_location: "config.host",
   port: 9090,
-  protoc_ts_path: "../"
+  protoc_ts_path: "../",
+  output_type: 0
     /* option (auth_token_location) = "config.token"; */
 };
 

@@ -37,6 +37,7 @@ import (
 	"strings"
 	"text/template"
 
+  "github.com/tcncloud/protoc-gen-state/state"
 	gp "github.com/golang/protobuf/protoc-gen-go/descriptor"
 	strcase "github.com/iancoleman/strcase"
 )
@@ -353,7 +354,7 @@ export function toMessage(obj: any, messageClass: any) {
 }
 `
 
-func CreateToMessageFile(servFiles []*gp.FileDescriptorProto, protos []*gp.FileDescriptorProto, protocTsPath string, debug bool) (*File, error) {
+func CreateToMessageFile(servFiles []*gp.FileDescriptorProto, outputType state.OutputTypes, protos []*gp.FileDescriptorProto, protocTsPath string, debug bool) (*File, error) {
 	improvedDescriptors := CreateImprovedDescriptors(protos)
 
 	// TODO: first part finished, should have a type map set up now

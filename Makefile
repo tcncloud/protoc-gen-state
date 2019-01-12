@@ -39,12 +39,7 @@ gen: state/options.pb.go
 	go build .
 
 protos: state/options.pb.go
-	mkdir -p $(GENERATED)
-	protoc -I. -I./e2e/redux4/protos -I./state/options.proto \
-		--plugin=./protoc-gen-state \
-		--state_out=$(GENERATED) ./e2e/redux4/protos/basic.proto
-	cp protoc-gen-state e2e/redux4
-
+	./scripts/generate-protoc-for-all-outputs.sh
 
 state/options.pb.go : state/options.proto
 	protoc --go_out=paths=source_relative:. $<

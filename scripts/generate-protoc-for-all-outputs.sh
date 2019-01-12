@@ -13,13 +13,17 @@ generate_ts() { # first parameter should be the name of the output directory
 }
 
 generate_state() { # first parameter should be the name of the output directory
+  # output into the generated dir for our go tests
   mkdir -p "$GENERATED/$1"
-
   protoc -I. -I./e2e/$1/protos -I./state/options.proto \
     --plugin=./protoc-gen-state \
-    --state_out=$GENERATED ./e2e/$1/protos/basic.proto
+    --state_out=$GENERATED/$1 ./e2e/$1/protos/basic.proto
 
-  cp protoc-gen-state e2e/$1
+  # output into the e2e dir for our js tests
+  mkdir -p "e2e/$1/protos/BasicState"
+  protoc -I. -I./e2e/$1/protos -I./state/options.proto \
+    --plugin=./protoc-gen-state \
+    --state_out=./e2e/$1/protos/BasicState ./e2e/$1/protos/basic.proto
 }
 
 
@@ -32,6 +36,6 @@ generate_state() { # first parameter should be the name of the output directory
 for line in $(sed -n -e '/enum OutputTypes {/,/}/ p' state/options.proto | sed '1d;$d' | awk ' { print $1 } ')
 do
   echo "line: $line"
-  # generate_ts "$line"
+  generate_ts "$line"
   generate_state "$line"
 done
