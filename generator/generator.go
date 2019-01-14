@@ -119,6 +119,9 @@ func Generate(filepaths []string, protos []*gp.FileDescriptorProto) ([]*File, er
 		protocTsPath += "/"
 	}
 
+  outputter := &GenericOutputter{}
+  outputter.SetOutputType(outputType)
+
 	stateFields := []*gp.FieldDescriptorProto{}
 	customFields := []*gp.FieldDescriptorProto{}
 	messageFiles := []*gp.FileDescriptorProto{}
@@ -156,7 +159,7 @@ func Generate(filepaths []string, protos []*gp.FileDescriptorProto) ([]*File, er
 	out = append(out, CreateAggregateByPackage(messageFiles, protocTsPath, stateFile.GetPackage())...)
 
 	// create state file
-	statePb, err := CreateStateFile(stateFields, outputType, debug)
+	statePb, err := outputter.CreateStateFile(stateFields, outputType, debug)
 	if err != nil {
 		return nil, fmt.Errorf("Error generating state_pb file: %v", err)
 	}

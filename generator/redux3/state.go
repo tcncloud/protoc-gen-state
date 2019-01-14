@@ -1,6 +1,6 @@
-package generator
+package redux3
 
-const Redux3 = `/* THIS FILE IS GENERATED FROM THE TOOL PROTOC-GEN-STATE  */
+const StateTemplate = `/* THIS FILE IS GENERATED FROM THE TOOL PROTOC-GEN-STATE  */
 /* ANYTHING YOU EDIT WILL BE OVERWRITTEN IN FUTURE BUILDS */
 
 import * as ProtocTypes from './protoc_types_pb';

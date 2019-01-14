@@ -1,6 +1,6 @@
-package generator
+package redux4
 
-const Redux4 = `/* THIS FILE IS GENERATED FROM THE TOOL PROTOC-GEN-STATE  */
+const StateTemplate = `/* THIS FILE IS GENERATED FROM THE TOOL PROTOC-GEN-STATE  */
 /* ANYTHING YOU EDIT WILL BE OVERWRITTEN IN FUTURE BUILDS */
 
 // TODO redux4
