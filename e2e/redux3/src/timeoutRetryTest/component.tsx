@@ -3,7 +3,7 @@ import React from 'react';
 import { connect } from 'react-redux';
 import { bindActionCreators, Dispatch  } from 'redux';
 
-import * as ProtocTypes from 'proto/BasicState/protoc_types_pb';
+import * as ProtocTypes from 'protos/BasicState/protoc_types_pb';
 import { RootState } from '../rootState';
 
 import * as actions from './actions';

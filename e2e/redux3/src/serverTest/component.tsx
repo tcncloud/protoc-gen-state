@@ -1,9 +1,9 @@
 import * as React from "react";
 
 import { grpc } from "grpc-web-client";
-import * as ProtocTypes from 'proto/BasicState/protoc_types_pb';
-import * as ProtocActions from 'proto/BasicState/actions_pb';
-import * as ProtocServices from 'proto/BasicState/protoc_services_pb'
+import * as ProtocTypes from 'protos/BasicState/protoc_types_pb';
+import * as ProtocActions from 'protos/BasicState/actions_pb';
+import * as ProtocServices from 'protos/BasicState/protoc_services_pb'
 console.log('Check services', ProtocServices)
 
 console.log("acionts: ",ProtocActions);

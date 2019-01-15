@@ -1,5 +1,5 @@
 import { createAction } from 'typesafe-actions';
-import * as ProtocTypes from 'proto/BasicState/protoc_types_pb';
+import * as ProtocTypes from 'protos/BasicState/protoc_types_pb';
 
 export const timeoutRequestPromise = createAction('TIMEOUT_REQUEST_PROMISE', (res) => {
   return (

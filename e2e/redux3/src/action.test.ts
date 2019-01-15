@@ -1,7 +1,7 @@
-import { protocReducer } from 'proto/BasicState/reducer_pb';
-import { ProtocState, initialProtocState } from 'proto/BasicState/state_pb';
-import * as ProtocActions from 'proto/BasicState/actions_pb';
-import * as ProtocTypes from 'proto/BasicState/protoc_types_pb';
+import { protocReducer } from 'protos/BasicState/reducer_pb';
+import { ProtocState, initialProtocState } from 'protos/BasicState/state_pb';
+import * as ProtocActions from 'protos/BasicState/actions_pb';
+import * as ProtocTypes from 'protos/BasicState/protoc_types_pb';
 
 describe('Action Existance Tests', () => {
   describe('Single Entity', () => {

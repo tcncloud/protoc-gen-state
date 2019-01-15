@@ -3,10 +3,10 @@ import React from 'react';
 import { connect } from 'react-redux';
 import { bindActionCreators, Dispatch  } from 'redux';
 
-import * as protocActions from 'proto/BasicState/actions_pb';
-import * as ProtocServices from 'proto/BasicState/protoc_services_pb';
-import * as ProtocTypes from 'proto/BasicState/protoc_types_pb';
-import { initialProtocState, ProtocState } from 'proto/BasicState/state_pb';
+import * as protocActions from 'protos/BasicState/actions_pb';
+import * as ProtocServices from 'protos/BasicState/protoc_services_pb';
+import * as ProtocTypes from 'protos/BasicState/protoc_types_pb';
+import { initialProtocState, ProtocState } from 'protos/BasicState/state_pb';
 import { RootState } from '../rootState';
 
 console.log('----------- PROTOC REDUX ------------');

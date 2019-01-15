@@ -5,7 +5,7 @@ import { DogReducer } from './dog/reducer';
 import { GraphReducer } from './graph/reducers';
 import { BookReducer } from './book/reducers';
 import { ConfigReducer } from './config/reducers';
-import { protocReducer } from 'proto/BasicState/reducer_pb';
+import { protocReducer } from 'protos/BasicState/reducer_pb';
 import { RootAction } from './rootAction';
 
 

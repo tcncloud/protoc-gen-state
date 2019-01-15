@@ -4,9 +4,9 @@ import { Dispatch, bindActionCreators  } from 'redux';
 import _ from 'lodash';
 
 import { RootState } from '../rootState';
-import { ProtocState } from 'proto/BasicState/state_pb';
-import * as ProtocActions from 'proto/BasicState/actions_pb';
-import * as ProtocTypes from 'proto/BasicState/protoc_types_pb';
+import { ProtocState } from 'protos/BasicState/state_pb';
+import * as ProtocActions from 'protos/BasicState/actions_pb';
+import * as ProtocTypes from 'protos/BasicState/protoc_types_pb';
 
 
 console.log("PROTOCTYPES: ", ProtocTypes)

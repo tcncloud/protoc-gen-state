@@ -17,9 +17,9 @@ import * as actions from './actions';
 
 import _ from 'lodash';
 
-import * as ProtocServices from 'proto/BasicState/protoc_services_pb';
-import * as ProtocTypes from 'proto/BasicState/protoc_types_pb';
-import { toMessage } from 'proto/BasicState/to_message_pb';
+import * as ProtocServices from 'protos/BasicState/protoc_services_pb';
+import * as ProtocTypes from 'protos/BasicState/protoc_types_pb';
+import { toMessage } from 'protos/BasicState/to_message_pb';
 
 // const host: string = 'http://35.192.235.78:9090';
 const host: string = 'https://localhost:9091';

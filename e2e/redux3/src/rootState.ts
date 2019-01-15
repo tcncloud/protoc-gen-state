@@ -1,7 +1,7 @@
 import { DogState, InitialDogState } from './dog/reducer';
 import { GraphState, InitialGraphState } from './graph/reducers';
 import { BookState, InitialBookState } from './book/reducers';
-import { ProtocState, initialProtocState } from 'proto/BasicState/state_pb';
+import { ProtocState, initialProtocState } from 'protos/BasicState/state_pb';
 import { ConfigState, InitialConfigState } from './config/reducers';
 
 export const InitialState : RootState = {

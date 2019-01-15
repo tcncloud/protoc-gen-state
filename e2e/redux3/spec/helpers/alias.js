@@ -1,8 +1,8 @@
 const moduleAlias = require('module-alias');
 
 moduleAlias.addAliases({
-  'proto': '../protos/',
-  '@App': 'neo/'
+  'protos': '../protos/',
+  '@App': '../'
 });
 
 moduleAlias('package.json');

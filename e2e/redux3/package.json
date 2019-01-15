@@ -1,12 +1,14 @@
 {
-  "name": "e2e",
+  "name": "redux3",
   "version": "1.0.0",
-  "main": "index.js",
-  "license": "MIT",
+  "description": "`yarn test`",
+  "main": "webpack.config.js",
   "scripts": {
-    "start": "run-s build run",
-    "run": "yarn run build && echo 'should start a backend server' && parcel src/index.tsx"
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
   "devDependencies": {
     "@babel/plugin-proposal-class-properties": "^7.2.1",
     "@babel/plugin-syntax-dynamic-import": "^7.2.0",
