@@ -1,13 +1,14 @@
 package generator
 
 import (
-  "github.com/tcncloud/protoc-gen-state/generator/redux3"
-  "github.com/tcncloud/protoc-gen-state/generator/redux4"
+  "github.com/tcncloud/protoc-gen-state/generator/outputs/redux3"
+  "github.com/tcncloud/protoc-gen-state/generator/outputs/redux4"
   "github.com/tcncloud/protoc-gen-state/state"
 	gp "github.com/golang/protobuf/protoc-gen-go/descriptor"
 )
 
 type Outputter interface {
+  SetOutputType(state.OutputTypes)
   CreateStateFile([]*gp.FieldDescriptorProto, state.OutputTypes, bool) (*File, error)
   // CreateEpicFile([]*gp.FieldDescriptorProto, state.OutputTypes, []*gp.FieldDescriptorProto, []*gp.FileDescriptorProto, int64, int64, string, string, string, int64, int64, bool) (*File, error)
 }
@@ -36,3 +37,16 @@ func (this *GenericOutputter) SetOutputType(outputType state.OutputTypes) {
   }
 }
 
+
+// An outputter might need to be customized more than the generic use case.
+type MobxOutputter struct {}
+func (this *MobxOutputter) SetOutputType(outputType state.OutputTypes) {
+  // do something unique
+}
+func (this *MobxOutputter) CreateStateFile(stateFields []*gp.FieldDescriptorProto, outputType state.OutputTypes, debug bool) (*File, error) {
+  // do something unique
+  return &File{
+    Name: "state_pb.ts",
+    Content: "Not implemented",
+  }, nil
+}

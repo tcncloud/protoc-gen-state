@@ -119,8 +119,16 @@ func Generate(filepaths []string, protos []*gp.FileDescriptorProto) ([]*File, er
 		protocTsPath += "/"
 	}
 
-  outputter := &GenericOutputter{}
-  outputter.SetOutputType(outputType)
+
+  var outputter Outputter
+  switch state.OutputTypes_name[int32(outputType)] {
+  case "mobx":
+    outputter = &MobxOutputter{}
+  default:
+    outputter = &GenericOutputter{}
+    outputter.SetOutputType(outputType)
+  }
+
 
 	stateFields := []*gp.FieldDescriptorProto{}
 	customFields := []*gp.FieldDescriptorProto{}

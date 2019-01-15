@@ -23,6 +23,11 @@ usually indicates insufficient test coverage.
       default) transferred to the `protoc-gen-state` team. This means that benefit of the
   contribution must be compared against the cost of maintaining the feature.
 
+##### Adding a new output type
+* Add to the `state/options.proto` enum  with the name of your output type
+* Implement the `Outputter` interface for your new output type. (might be as easy as adding to `GenericOutputter.SetOutputType`
+* Create an e2e example implementing the new output type. Name this directory the same as the field in the `state/options.proto` enum
+
 ## Releasing
   Your changes will be released with the next version release.
 

@@ -51,6 +51,7 @@ extend google.protobuf.FieldOptions {
 enum OutputTypes {
   redux3 = 0;
   redux4 = 1;
+  mobx = 2;
 }
 
 message StateFileOptions {
