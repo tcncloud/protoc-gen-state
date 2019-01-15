@@ -21,5 +21,6 @@ rm -rf protoc-gen-state
 for line in $(sed -n -e '/enum OutputTypes {/,/}/ p' state/options.proto | sed '1d;$d' | awk ' { print $1 } ')
 do
   rm -rf e2e/$line/protos/BasicState
+  rm -rf e2e/$line/build
   rm -rf e2e/$line/protos/readinglist/{*.ts,*.js}
 done

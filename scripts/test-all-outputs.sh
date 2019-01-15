@@ -7,8 +7,6 @@ cd "$(cd "$(dirname "${BASH_SOURCE[0]}")/../" > /dev/null && pwd)" || return
 ginkgo .
 
 # now run js tests
-yarn
-npx tsc -p "./tsconfig.json"
   # This command finds the code block of "enum OutputTypes" in the state/options.proto file e.g.:
     # enum OutputTypes {
     #   redux3 = 0;
@@ -18,5 +16,7 @@ npx tsc -p "./tsconfig.json"
   # then it gets the first word of each field
 for line in $(sed -n -e '/enum OutputTypes {/,/}/ p' state/options.proto | sed '1d;$d' | awk ' { print $1 } ')
 do
-  JASMINE_CONFIG_PATH=e2e/$line/spec/support/jasmine.json node_modules/.bin/ts-node --node_options=--preserve-symlinks --node_options=--max-old-space-size=8192 node_modules/jasmine/bin/jasmine
+  cd e2e/$line
+  yarn run test
+  cd ../../
 done

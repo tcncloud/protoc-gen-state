@@ -1,5 +1,5 @@
 {
-  "spec_dir": "e2e/spec",
+  "spec_dir": "spec",
   "spec_files": [
     "../src/**/*.test.ts"
   ],
