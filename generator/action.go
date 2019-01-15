@@ -38,175 +38,6 @@ import (
 	"text/template"
 )
 
-/// Sacrificed some code duplication for readability/maintainability sake
-
-func createActionImports() string {
-	return `/* THIS FILE IS GENERATED FROM THE TOOL PROTOC-GEN-STATE */
-/* ANYTHING YOU EDIT WILL BE OVERWRITTEN IN FUTURE BUILDS */
-
-import { createAction } from 'typesafe-actions';
-import * as ProtocTypes from './protoc_types_pb';
-
-`
-}
-
-const createTemplate = `{{range $i, $e := .}}
-export const create{{$e.JsonName | title}}Request = createAction('PROTOC_CREATE_{{$e.JsonName | caps}}_REQUEST', (res) => {
-	return (
-		{{$e.JsonName}}: {{$e.InputType}},
-		resolve?: (payload: {{$e.OutputType}}{{if $e.Repeat}}[]{{end}}) => void,
-		reject?: (error: NodeJS.ErrnoException) => void,
-	) => res({{$e.JsonName}}, { resolve, reject });
-});
-
-// deprecated
-export const create{{$e.JsonName | title}}RequestPromise = create{{$e.JsonName | title}}Request;
-
-export const create{{$e.JsonName | title}}Success = createAction('PROTOC_CREATE_{{$e.JsonName | caps}}_SUCCESS', (resolve) => {
-	return ({{$e.JsonName}}: {{$e.OutputType}}) => resolve({{$e.JsonName}})
-});
-
-export const create{{$e.JsonName | title}}Failure = createAction('PROTOC_CREATE_{{$e.JsonName | caps}}_FAILURE', (resolve) => {
-	return (error: NodeJS.ErrnoException) => resolve(error)
-});
-
-export const create{{$e.JsonName | title}}Cancel = createAction('PROTOC_CREATE_{{$e.JsonName | caps}}_CANCEL');{{end}}
-`
-
-const updateTemplate = `{{range $i, $e := .}}
-export const update{{$e.JsonName | title}}Request = createAction('PROTOC_UPDATE_{{$e.JsonName | caps}}_REQUEST', (res) => {
-	return ({{if $e.Repeat}}
-		prev: {{$e.InputType}},
-		updated: {{$e.InputType}},
-		resolve?: (prev: {{$e.InputType}}, updated: {{$e.InputType}}) => void,
-		reject?: (error: NodeJS.ErrnoException) => void,
-	) => res({ prev, updated }, { resolve, reject }){{else}}
-		{{$e.JsonName}}: {{$e.InputType}},
-		resolve?: (payload: {{$e.OutputType}}) => void,
-		reject?: (error: NodeJS.ErrnoException) => void,
-	) => res({{$e.JsonName}}, { resolve, reject }){{end}}
-});
-
-export const update{{$e.JsonName | title}}RequestPromise = update{{$e.JsonName | title}}Request
-
-{{if $e.Repeat}}
-export const update{{$e.JsonName | title}}Success = createAction('PROTOC_UPDATE_{{$e.JsonName | caps}}_SUCCESS', (resolve) => {
-	return ({{$e.JsonName}}: { prev: {{$e.InputType}}, updated: {{$e.InputType}} }) => resolve({{$e.JsonName}})
-}){{else}}
-export const update{{$e.JsonName | title}}Success = createAction('PROTOC_UPDATE_{{$e.JsonName | caps}}_SUCCESS', (resolve) => {
-	return ({{$e.JsonName}}: {{$e.OutputType}}) => resolve({{$e.JsonName}})
-}){{end}}
-
-export const update{{$e.JsonName | title}}Failure = createAction('PROTOC_UPDATE_{{$e.JsonName | caps}}_FAILURE', (resolve) => {
-	return (error: NodeJS.ErrnoException) => resolve(error)
-});
-
-export const update{{$e.JsonName | title}}Cancel = createAction('PROTOC_UPDATE_{{$e.JsonName | caps}}_CANCEL');{{end}}
-`
-
-const getTemplate = `{{range $i, $e := .}}
-export const get{{$e.JsonName | title}}Request = createAction('PROTOC_GET_{{$e.JsonName | caps}}_REQUEST', (res) => {
-	return (
-		{{$e.JsonName}}: {{$e.InputType}},
-		resolve?: (payload: {{$e.OutputType}}) => void,
-		reject?: (error: NodeJS.ErrnoException) => void,
-	) => res({{$e.JsonName}}, { resolve, reject });
-});
-
-// deprecated
-export const get{{$e.JsonName | title}}RequestPromise = get{{$e.JsonName | title}}Request;
-
-export const get{{$e.JsonName | title}}Success = createAction('PROTOC_GET_{{$e.JsonName | caps}}_SUCCESS', (resolve) => {
-	return ({{$e.JsonName}}: {{$e.OutputType}}) => resolve({{$e.JsonName}})
-});
-
-export const get{{$e.JsonName | title}}Failure = createAction('PROTOC_GET_{{$e.JsonName | caps}}_FAILURE', (resolve) => {
-	return (error: NodeJS.ErrnoException) => resolve(error)
-});
-
-export const get{{$e.JsonName | title}}Cancel = createAction('PROTOC_GET_{{$e.JsonName | caps}}_CANCEL');{{end}}
-`
-
-const listTemplate = `{{range $i, $e := .}}
-export const list{{$e.JsonName | title}}Request = createAction('PROTOC_LIST_{{$e.JsonName | caps}}_REQUEST', (res) => {
-	return (
-		{{$e.JsonName}}: {{$e.InputType}},
-		resolve?: (payload: {{$e.OutputType}}[]) => void,
-		reject?: (error: NodeJS.ErrnoException) => void,
-	) => res({{$e.JsonName}}, { resolve, reject });
-});
-
-// deprecated
-export const list{{$e.JsonName | title}}RequestPromise = list{{$e.JsonName | title}}Request;
-
-export const list{{$e.JsonName | title}}Success = createAction('PROTOC_LIST_{{$e.JsonName | caps}}_SUCCESS', (resolve) => {
-	return ({{$e.JsonName}}: {{$e.OutputType}}[]) => resolve({{$e.JsonName}})
-});
-
-export const list{{$e.JsonName | title}}Failure = createAction('PROTOC_LIST_{{$e.JsonName | caps}}_FAILURE', (resolve) => {
-	return (error: NodeJS.ErrnoException) => resolve(error)
-});
-
-export const list{{$e.JsonName | title}}Cancel = createAction('PROTOC_LIST_{{$e.JsonName | caps}}_CANCEL');{{end}}
-`
-
-const deleteTemplate = `{{range $i, $e := .}}
-export const delete{{$e.JsonName | title}}Request = createAction('PROTOC_DELETE_{{$e.JsonName | caps}}_REQUEST', (res) => {
-	return (
-		{{$e.JsonName}}: {{$e.InputType}},
-		resolve?: (payload: {{$e.OutputType}}{{if $e.Repeat}}[]{{end}}) => void,
-		reject?: (error: NodeJS.ErrnoException) => void,
-	) => res({{$e.JsonName}}, { resolve, reject });
-});
-
-// deprecated
-export const delete{{$e.JsonName | title}}RequestPromise = delete{{$e.JsonName | title}}Request;
-
-export const delete{{$e.JsonName | title}}Success = createAction('PROTOC_DELETE_{{$e.JsonName | caps}}_SUCCESS', (resolve) => {
-	return ({{$e.JsonName}}: {{$e.OutputType}}) => resolve({{$e.JsonName}})
-});
-
-export const delete{{$e.JsonName | title}}Failure = createAction('PROTOC_DELETE_{{$e.JsonName | caps}}_FAILURE', (resolve) => {
-	return (error: NodeJS.ErrnoException) => resolve(error)
-});
-
-export const delete{{$e.JsonName | title}}Cancel = createAction('PROTOC_DELETE_{{$e.JsonName | caps}}_CANCEL');{{end}}
-`
-
-const customTemplate = `{{range $i, $e := .}}
-export const custom{{$e.JsonName | title}}Request = createAction('PROTOC_CUSTOM_{{$e.JsonName | caps}}_REQUEST', (res) => {
-	return (
-		{{$e.JsonName}}: {{$e.InputType}},
-		resolve?: (payload: {{$e.OutputType}}{{if $e.Repeat}}[]{{end}}) => void,
-		reject?: (error: NodeJS.ErrnoException) => void,
-	) => res({{$e.JsonName}}, { resolve, reject });
-});
-
-//deprecated
-export const custom{{$e.JsonName | title}}RequestPromise = custom{{$e.JsonName | title}}Request;
-
-export const custom{{$e.JsonName | title}}Success = createAction('PROTOC_CUSTOM_{{$e.JsonName | caps}}_SUCCESS', (resolve) => {
-	return ({{$e.JsonName}}: {{$e.OutputType}}{{if $e.Repeat}}[]{{end}}) => resolve({{$e.JsonName}})
-});
-
-export const custom{{$e.JsonName | title}}Failure = createAction('PROTOC_CUSTOM_{{$e.JsonName | caps}}_FAILURE', (resolve) => {
-	return (error: NodeJS.ErrnoException) => resolve(error)
-});
-
-export const custom{{$e.JsonName | title}}Cancel = createAction('PROTOC_CUSTOM_{{$e.JsonName | caps}}_CANCEL');{{end}}
-`
-
-const resetTemplate = `{{range $i, $e := .}}
-export const reset{{$e.JsonName | title}} = createAction('PROTOC_RESET_{{$e.JsonName | caps}}');{{end}}
-`
-
-const header = `/* THIS FILE IS GENERATED FROM THE TOOL PROTOC-GEN-STATE */
-/* ANYTHING YOU EDIT WILL BE OVERWRITTEN IN FUTURE BUILDS */
-
-import { createAction } from 'typesafe-actions';
-import * as ProtocTypes from './protoc_types_pb';
-
-`
 
 type ActionEntity struct {
 	JsonName   string
@@ -215,7 +46,7 @@ type ActionEntity struct {
 	Repeat     bool
 }
 
-func CreateActionFile(stateFields []*gp.FieldDescriptorProto, outputType state.OutputTypes, customFields []*gp.FieldDescriptorProto, serviceFiles []*gp.FileDescriptorProto, debug bool) (*File, error) {
+func (this *GenericOutputter) CreateActionFile(stateFields []*gp.FieldDescriptorProto, outputType state.OutputTypes, customFields []*gp.FieldDescriptorProto, serviceFiles []*gp.FileDescriptorProto, debug bool) (*File, error) {
 	getEntities := []*ActionEntity{}
 	listEntities := []*ActionEntity{}
 	resetEntities := []*ActionEntity{}
@@ -229,21 +60,21 @@ func CreateActionFile(stateFields []*gp.FieldDescriptorProto, outputType state.O
 		repeated := field.GetLabel() == 3
 
 		// verify the method annotations
-		methods, err := GetFieldOptionsString(field, state.E_Method)
+    fieldAnnotations, err := GetFieldOptions(field)
 		if err != nil {
 			return nil, fmt.Errorf("Error getting field level annotations: %v", err)
 		}
 
 		// using custom method annotation anywhere but CustomActions is an error
-		if methods.GetCustom() != "" {
+		if fieldAnnotations.GetMethod().GetCustom() != "" {
 			return nil, fmt.Errorf("Method annotation 'custom' provided outside of CustomActions message. Correct this by removing the '(method).custom' annotation on field: %s", field.GetName())
 		}
 
 		// loop through CLUDG verbs
 		var meth *gp.MethodDescriptorProto
 		for c := CREATE; c < CRUD_MAX; c++ {
-			// verify the annotation exists in the methods struct
-			crudAnnotation := GetAnnotation(methods, c, repeated)
+			// verify the annotation exists in the fieldAnnotations struct
+			crudAnnotation := GetAnnotation(*fieldAnnotations.GetMethod(), c, repeated)
 			if crudAnnotation != "" {
 				meth, err = FindMethodDescriptor(serviceFiles, crudAnnotation)
 				if err != nil {
@@ -290,21 +121,21 @@ func CreateActionFile(stateFields []*gp.FieldDescriptorProto, outputType state.O
 	for _, field := range customFields {
 		repeated := field.GetLabel() == 3
 		// get the method annoations
-		methods, err := GetFieldOptionsString(field, state.E_Method)
+    fieldAnnotations, err := GetFieldOptions(field)
 		if err != nil {
 			return nil, fmt.Errorf("Error getting field level annotations: %v", err)
 		}
 
 		// only custom method annotations allowed in CustomActions
 		for c := CREATE; c < CRUD_MAX; c++ {
-			if GetAnnotation(methods, c, repeated) != "" {
+			if GetAnnotation(*fieldAnnotations.GetMethod(), c, repeated) != "" {
 				return nil, fmt.Errorf("Invalid method annotation. Only method annotation '(method).custom' is allowed within CustomActions message. Correct the annotation on field: %s", *field.JsonName)
 			}
 		}
 
 		// and it must have a custom annotation
 		var meth *gp.MethodDescriptorProto
-		crudAnnotation := methods.GetCustom()
+		crudAnnotation := fieldAnnotations.GetMethod().GetCustom()
 		if crudAnnotation != "" {
 			meth, err = FindMethodDescriptor(serviceFiles, crudAnnotation)
 			if err != nil {
@@ -333,16 +164,18 @@ func CreateActionFile(stateFields []*gp.FieldDescriptorProto, outputType state.O
 	}
 
 	// generate the templates
-	getT := template.Must(template.New("get").Funcs(funcMap).Parse(getTemplate))
-	listT := template.Must(template.New("list").Funcs(funcMap).Parse(listTemplate))
-	resetT := template.Must(template.New("reset").Funcs(funcMap).Parse(resetTemplate))
-	createT := template.Must(template.New("create").Funcs(funcMap).Parse(createTemplate))
-	deleteT := template.Must(template.New("delete").Funcs(funcMap).Parse(deleteTemplate))
-	updateT := template.Must(template.New("update").Funcs(funcMap).Parse(updateTemplate))
-	customT := template.Must(template.New("update").Funcs(funcMap).Parse(customTemplate))
+  importsT := template.Must(template.New("imports").Funcs(funcMap).Parse(this.ActionFile.ImportTemplate))
+	getT := template.Must(template.New("get").Funcs(funcMap).Parse(this.ActionFile.GetTemplate))
+	listT := template.Must(template.New("list").Funcs(funcMap).Parse(this.ActionFile.ListTemplate))
+	resetT := template.Must(template.New("reset").Funcs(funcMap).Parse(this.ActionFile.ResetTemplate))
+	createT := template.Must(template.New("create").Funcs(funcMap).Parse(this.ActionFile.CreateTemplate))
+	deleteT := template.Must(template.New("delete").Funcs(funcMap).Parse(this.ActionFile.DeleteTemplate))
+	updateT := template.Must(template.New("update").Funcs(funcMap).Parse(this.ActionFile.UpdateTemplate))
+	customT := template.Must(template.New("update").Funcs(funcMap).Parse(this.ActionFile.CustomTemplate))
 
 	// append to output
 	var output bytes.Buffer
+  importsT.Execute(&output, nil)
 	getT.Execute(&output, getEntities)
 	listT.Execute(&output, listEntities)
 	resetT.Execute(&output, resetEntities)
@@ -354,6 +187,6 @@ func CreateActionFile(stateFields []*gp.FieldDescriptorProto, outputType state.O
 	// return the completed file
 	return &File{
 		Name:    "actions_pb.ts",
-		Content: createActionImports() + output.String(),
+		Content: output.String(),
 	}, nil
 }

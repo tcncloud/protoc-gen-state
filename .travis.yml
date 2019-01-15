@@ -14,6 +14,9 @@ before_script:
 - go get -u github.com/onsi/gomega/...
 - export GO111MODULE=on
 
+script:
+  - make test
+
 before_deploy:
 - rm protoc-gen-state
 - export VER=`echo $TRAVIS_TAG|tr -d v`

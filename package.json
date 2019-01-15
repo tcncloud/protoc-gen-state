@@ -5,10 +5,7 @@
   "license": "MIT",
   "scripts": {
     "start": "run-s build run",
-    "build-ts": "protoc --plugin=\"protoc-gen-ts=node_modules/.bin/protoc-gen-ts\" --js_out=\"import_style=commonjs,binary:.\" --ts_out=\"service=true:.\" e2e/redux3/protos/readinglist/readinglist.proto",
-    "build": "yarn run build-ts && mkdir -p e2e/redux3/protos/BasicState && protoc -I. -I./e2e/redux3/protos -I./state/options.proto --plugin=./protoc-gen-state --state_out=e2e/redux3/protos/BasicState ./e2e/redux3/protos/basic.proto",
     "run": "yarn run build && echo 'should start a backend server' && parcel src/index.tsx",
-    "test": "JASMINE_CONFIG_PATH=e2e/spec/support/jasmine.json node_modules/.bin/ts-node --node_options=--preserve-symlinks --node_options=--max-old-space-size=8192 node_modules/jasmine/bin/jasmine"
   },
   "devDependencies": {
     "@babel/plugin-proposal-class-properties": "^7.2.1",

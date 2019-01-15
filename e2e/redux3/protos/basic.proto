@@ -22,24 +22,24 @@ message ReduxState {
   option (state_options).type = REDUX_STATE;
   //// Used for unit tests, do not remove ////
   repeated readinglist.Book library = 1 [
-    (method).create = "readinglist.ReadingList.CreateBook",
-    (method).update = "readinglist.ReadingList.UpdateBook",
-    (method).delete = "readinglist.ReadingList.DeleteBook",
-    (method).list = "readinglist.ReadingList.ReadAllBooks"
+    (state_field_options).method.create = "readinglist.ReadingList.CreateBook",
+    (state_field_options).method.update = "readinglist.ReadingList.UpdateBook",
+    (state_field_options).method.delete = "readinglist.ReadingList.DeleteBook",
+    (state_field_options).method.list = "readinglist.ReadingList.ReadAllBooks"
   ];
   readinglist.Book book_of_the_month = 2 [
-    (method).create = "readinglist.ReadingList.CreateBook",
-    (method).update = "readinglist.ReadingList.UpdateBook",
-    (method).delete = "readinglist.ReadingList.DeleteBook",
-    (method).get = "readinglist.ReadingList.ReadBook"
+    (state_field_options).method.create = "readinglist.ReadingList.CreateBook",
+    (state_field_options).method.update = "readinglist.ReadingList.UpdateBook",
+    (state_field_options).method.delete = "readinglist.ReadingList.DeleteBook",
+    (state_field_options).method.get = "readinglist.ReadingList.ReadBook"
   ];
   // TODO map
   // TODO oneof
   // TODO enum
   //// End unit test usage ////
   readinglist.Book timeout_book = 3 [
-    (method).get = "readinglist.ReadingList.ReadBook",
-    (method_timeout).get = -1 // intentional timeout
+    (state_field_options).method.get = "readinglist.ReadingList.ReadBook",
+    (state_field_options).method_timeout.get = -1 // intentional timeout
   ];
 }
 
@@ -47,8 +47,8 @@ message CustomActions {
   option (state_options).type = CUSTOM_ACTION;
   //// Used for unit tests ////
   readinglist.Book error_book = 1 [
-    (method).custom = "readinglist.ReadingList.ErrorOut",
-    (retries) = 0
+    (state_field_options).method.custom = "readinglist.ReadingList.ErrorOut",
+    (state_field_options).retries = 0
   ];
   //// End unit tests ////
 }

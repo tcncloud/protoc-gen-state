@@ -39,20 +39,11 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-const typeAggregate = `/* THIS FILE IS GENERATED FROM THE TOOL PROTOC-GEN-STATE  */
-/* ANYTHING YOU EDIT WILL BE OVERWRITTEN IN FUTURE BUILDS */
-/* typeAggregate */
-
-{{range $i, $e := .}}
-import * as {{$e.Package}} from "./{{$e.Package}}_aggregate";{{end}}
-{{range $i, $e := .}}
-export { {{$e.Package}} };{{end}}`
-
 type TypeEntity struct {
 	Package string
 }
 
-func CreateAggregateTypesFile(msgFiles []*gp.FileDescriptorProto, outputType state.OutputTypes, statePkg string) (*File, error) {
+func (this *GenericOutputter) CreateAggregateTypesFile(msgFiles []*gp.FileDescriptorProto, outputType state.OutputTypes, statePkg string) (*File, error) {
 	typeEntities := []*TypeEntity{}
 	packageNames := []string{statePkg}
 
@@ -67,7 +58,7 @@ func CreateAggregateTypesFile(msgFiles []*gp.FileDescriptorProto, outputType sta
 		logrus.Info(">>>>> " + t.Package)
 	}
 
-	tmpl := template.Must(template.New("types").Parse(typeAggregate))
+	tmpl := template.Must(template.New("types").Parse(this.AggregatorFile.TypeTemplate))
 	var output bytes.Buffer
 	tmpl.Execute(&output, typeEntities)
 
@@ -76,19 +67,6 @@ func CreateAggregateTypesFile(msgFiles []*gp.FileDescriptorProto, outputType sta
 		Content: output.String(),
 	}, nil
 }
-
-const serviceAggregate = `/* THIS FILE IS GENERATED FROM THE TOOL PROTOC-GEN-STATE  */
-/* ANYTHING YOU EDIT WILL BE OVERWRITTEN IN FUTURE BUILDS */
-/* serviceAggregate */
-
-{{range $i, $e := .}}
-import * as {{$e.Name}}_service_in from "{{$e.Location}}_service";{{end}}`
-
-const serviceExports = `
-{{range $i, $e := .}}
-export var {{$e.Package}} = {
-{{range $j, $x := $e.Exports}}  ...{{$x}}_service_in,{{end}}
-}{{end}}`
 
 type ServiceEntity struct {
 	Location string
@@ -100,7 +78,7 @@ type ServiceExport struct {
 	Exports []string
 }
 
-func CreateAggregateServicesFile(serviceFiles []*gp.FileDescriptorProto, outputType state.OutputTypes, protocTsPath string, statePkg string) (*File, error) {
+func (this *GenericOutputter) CreateAggregateServicesFile(serviceFiles []*gp.FileDescriptorProto, outputType state.OutputTypes, protocTsPath string, statePkg string) (*File, error) {
 	serviceEntities := []*ServiceEntity{}
 	exportEntities := []*ServiceExport{}
 	packageNames := []string{statePkg}
@@ -134,8 +112,8 @@ func CreateAggregateServicesFile(serviceFiles []*gp.FileDescriptorProto, outputT
 		}
 	}
 
-	tmpl := template.Must(template.New("services").Parse(serviceAggregate))
-	exp := template.Must(template.New("exports").Parse(serviceExports))
+	tmpl := template.Must(template.New("services").Parse(this.AggregatorFile.ServiceTemplate))
+	exp := template.Must(template.New("exports").Parse(this.AggregatorFile.ExportsTemplate))
 	var output bytes.Buffer
 	tmpl.Execute(&output, serviceEntities)
 	exp.Execute(&output, exportEntities)

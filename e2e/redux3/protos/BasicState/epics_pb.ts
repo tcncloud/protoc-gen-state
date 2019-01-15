@@ -59,7 +59,7 @@ export const createLibraryEpic = (action$, store) => action$
 			});
 		})) 
 		.retry(0)
-		.timeout(3000)
+		.timeout(0)
 		.map((resObj: ProtocTypes.readinglist.Book.AsObject) => {
 			request.resolve(resObj);
 			return protocActions.createLibrarySuccess(resObj);
@@ -105,7 +105,7 @@ export const listLibraryEpic = (action$, store) => action$
 				client.send(request.message);
 			})) 
 		.retry(0)
-		.timeout(3000)
+		.timeout(0)
 		.map((resObj: ProtocTypes.readinglist.Book.AsObject[]) => {
 			request.resolve(resObj);
 			return protocActions.listLibrarySuccess(resObj);
@@ -151,7 +151,7 @@ export const updateLibraryEpic = (action$, store) => action$
 			});
 		})) 
 		.retry(0)
-		.timeout(3000)
+		.timeout(0)
 		.map(obj => ({ ...obj } as { prev: ProtocTypes.readinglist.Book.AsObject, updated: ProtocTypes.readinglist.Book.AsObject } ))
 		.map(lib => {
 			request.resolve(lib.prev, lib.updated);
@@ -198,7 +198,7 @@ export const deleteLibraryEpic = (action$, store) => action$
 			});
 		})) 
 		.retry(0)
-		.timeout(3000)
+		.timeout(0)
 		.map((resObj: ProtocTypes.readinglist.Book.AsObject) => {
 			request.resolve(resObj);
 			return protocActions.deleteLibrarySuccess(resObj);
@@ -244,7 +244,7 @@ export const createBookOfTheMonthEpic = (action$, store) => action$
 			});
 		})) 
 		.retry(0)
-		.timeout(3000)
+		.timeout(0)
 		.map((resObj: ProtocTypes.readinglist.Book.AsObject) => {
 			request.resolve(resObj);
 			return protocActions.createBookOfTheMonthSuccess(resObj);
@@ -290,7 +290,7 @@ export const getBookOfTheMonthEpic = (action$, store) => action$
 			});
 		})) 
 		.retry(0)
-		.timeout(3000)
+		.timeout(0)
 		.map((resObj: ProtocTypes.readinglist.Book.AsObject) => {
 			request.resolve(resObj);
 			return protocActions.getBookOfTheMonthSuccess(resObj);
@@ -336,7 +336,7 @@ export const updateBookOfTheMonthEpic = (action$, store) => action$
 			});
 		})) 
 		.retry(0)
-		.timeout(3000)
+		.timeout(0)
 		.map((resObj: ProtocTypes.readinglist.Book.AsObject) => {
 			request.resolve(resObj);
 			return protocActions.updateBookOfTheMonthSuccess(resObj);
@@ -382,7 +382,7 @@ export const deleteBookOfTheMonthEpic = (action$, store) => action$
 			});
 		})) 
 		.retry(0)
-		.timeout(3000)
+		.timeout(0)
 		.map((resObj: ProtocTypes.readinglist.Book.AsObject) => {
 			request.resolve(resObj);
 			return protocActions.deleteBookOfTheMonthSuccess(resObj);
@@ -428,7 +428,7 @@ export const getTimeoutBookEpic = (action$, store) => action$
 			});
 		})) 
 		.retry(0)
-		.timeout(3000)
+		.timeout(0)
 		.map((resObj: ProtocTypes.readinglist.Book.AsObject) => {
 			request.resolve(resObj);
 			return protocActions.getTimeoutBookSuccess(resObj);
@@ -474,7 +474,7 @@ export const customErrorBookEpic = (action$, store) => action$
 			});
 		})) 
 		.retry(0)
-		.timeout(3000)
+		.timeout(0)
 		.map((resObj: ProtocTypes.readinglist.Book.AsObject) => {
 			request.resolve(resObj);
 			return protocActions.customErrorBookSuccess(resObj);
@@ -487,6 +487,8 @@ export const customErrorBookEpic = (action$, store) => action$
 	})
 	.takeUntil(action$.filter(isActionOf(protocActions.customErrorBookCancel)))
 	.repeat();
+
+
 
 
 export const protocEpics = combineEpics(

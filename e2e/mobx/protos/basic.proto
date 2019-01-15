@@ -1,10 +1,10 @@
 syntax = "proto3";
 
 package state; // match package of state/options.proto
-option go_package="github.com/tcncloud/protoc-gen-state/e2e/redux4/protos;protos";
+option go_package="github.com/tcncloud/protoc-gen-state/e2e/mobx/protos;protos";
 
 import "state/options.proto";
-import "e2e/redux4/protos/readinglist/readinglist.proto";
+import "e2e/mobx/protos/readinglist/readinglist.proto";
 
 option (state_file_options) = {
   debounce: 510,
@@ -14,7 +14,7 @@ option (state_file_options) = {
   hostname_location: "config.host",
   port: 9090,
   protoc_ts_path: "../",
-  output_type: redux4
+  output_type: mobx
   /* option (auth_token_location) = "config.token"; */
 };
 

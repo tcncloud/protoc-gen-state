@@ -33,7 +33,7 @@ all: deps build test
 
 build: gen protos
 
-test: test-go test-js
+test: build test
 
 gen: state/options.pb.go
 	go build .
@@ -51,14 +51,9 @@ deps:
 clean:
 	./scripts/clean-project.sh
 
-test-go:
-	ginkgo .
+test:
+	./scripts/test-all-outputs.sh
 
-test-js:
-	yarn
-	yarn run build
-	npx tsc -p "./tsconfig.json"
-	yarn run test
 
 # test - generate multiple proto files, panic
 # test - <1 or >3 messages in state proto, panic

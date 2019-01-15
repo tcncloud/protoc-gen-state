@@ -26,7 +26,7 @@ message IntFieldOptions {
 
 
 extend google.protobuf.MessageOptions { 
-  optional StateMessageOptions state_options = 550006;
+  optional StateMessageOptions state_options = 550002;
 }
 
 message StateMessageOptions {
@@ -40,12 +40,16 @@ enum StateMessageType {
 }
 
 
+message StateFieldOptions {
+  optional int64 timeout                  = 1;
+  optional int64 retries                  = 2;
+  optional StringFieldOptions method      = 3;
+  optional IntFieldOptions method_timeout = 4;
+  optional IntFieldOptions method_retries = 5;
+}
+
 extend google.protobuf.FieldOptions {
-  optional int64 timeout                  = 550001;
-  optional int64 retries                  = 550002;
-  optional StringFieldOptions method      = 550003;
-  optional IntFieldOptions method_timeout = 550004;
-  optional IntFieldOptions method_retries = 550005;
+  optional StateFieldOptions state_field_options = 550001;
 }
 
 enum OutputTypes {
@@ -75,5 +79,5 @@ message StateFileOptions {
 }
 
 extend google.protobuf.FileOptions {
-  optional StateFileOptions state_file_options = 550007;
+  optional StateFileOptions state_file_options = 550003;
 }

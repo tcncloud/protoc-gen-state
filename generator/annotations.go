@@ -47,55 +47,29 @@ func GetFileExtensions(desc *gp.FileDescriptorProto) (*state.StateFileOptions, e
   if proto.HasExtension(desc.GetOptions(), extName) {
     pkg, err := proto.GetExtension(desc.GetOptions(), extName)
     if err != nil {
-      return nil, errors.New("Failed to get output_type extension")
+      return nil, err
     }
     return pkg.(*state.StateFileOptions), nil
   }
   return nil, errors.New("Could not get file extensions")
 }
 
-func GetFieldOptionsString(desc *gp.FieldDescriptorProto, extName *proto.ExtensionDesc) (state.StringFieldOptions, error) {
-	junk := state.StringFieldOptions{}
-	if desc == nil || desc.GetOptions() == nil {
-		return junk, nil
-	}
-	if proto.HasExtension(desc.GetOptions(), extName) {
-		pkg, err := proto.GetExtension(desc.GetOptions(), extName)
-		if err != nil {
-			return junk, errors.New("Failed to get debounce extension")
-		}
-		return *pkg.(*state.StringFieldOptions), nil
-	}
-	return junk, nil
-}
+func GetFieldOptions(desc *gp.FieldDescriptorProto) (*state.StateFieldOptions, error) {
+  var extName *proto.ExtensionDesc
+  extName = state.E_StateFieldOptions
 
-func GetFieldOptionsInt(desc *gp.FieldDescriptorProto, extName *proto.ExtensionDesc) (state.IntFieldOptions, error) {
-	junk := state.IntFieldOptions{}
-	if desc == nil || desc.GetOptions() == nil {
-		return junk, nil
-	}
-	if proto.HasExtension(desc.GetOptions(), extName) {
-		pkg, err := proto.GetExtension(desc.GetOptions(), extName)
-		if err != nil {
-			return junk, errors.New("Failed to get debounce extension")
-		}
-		return *pkg.(*state.IntFieldOptions), nil
-	}
-	return junk, nil
-}
+  if desc == nil || desc.GetOptions() == nil {
+    return nil, errors.New("Could not get field extensions. Descriptor was empty")
+  }
 
-func GetFieldAnnotationInt(desc *gp.FieldDescriptorProto, extName *proto.ExtensionDesc) (int64, error) {
-	if desc == nil || desc.GetOptions() == nil {
-		return -1, nil
-	}
-	if proto.HasExtension(desc.GetOptions(), extName) {
-		pkg, err := proto.GetExtension(desc.GetOptions(), extName)
-		if err != nil {
-			return -1, errors.New("Failed to get debounce extension")
-		}
-		return *pkg.(*int64), nil
-	}
-	return -1, nil
+  if proto.HasExtension(desc.GetOptions(), extName) {
+    pkg, err := proto.GetExtension(desc.GetOptions(), extName)
+    if err != nil {
+      return nil, err
+    }
+    return pkg.(*state.StateFieldOptions), nil
+  }
+  return nil, nil
 }
 
 func GetAnnotation(meth state.StringFieldOptions, crud Crud, repeated bool) string {
