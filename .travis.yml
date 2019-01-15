@@ -15,7 +15,7 @@ before_script:
 - export GO111MODULE=on
 
 script:
-  - make test
+  - make
 
 before_deploy:
 - rm protoc-gen-state
