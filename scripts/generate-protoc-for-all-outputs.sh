@@ -1,5 +1,8 @@
  #!/bin/bash
 
+echo ${BASH_SOURCE[0]}
+echo $(dirname "${BASH_SOURCE[0]}")
+
 #Change subshell working directory to root directory of this repo
 cd "$(cd "$(dirname "${BASH_SOURCE[0]}")/../" > /dev/null && pwd)" || return
 
