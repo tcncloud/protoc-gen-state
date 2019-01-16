@@ -41,10 +41,10 @@ Configuration for the plugin is provided by annotations inside the proto file.
 | | file | port | port to append after the hostname for api calls | |
 | | field | retries | overrides the default retries for a specific field | |
 | | field | timeout | overrides the default timeout for a specific [CLUDG](https://cloud.google.com/apis/design/standard_methods) method on a specific field | |
-|x| field.method | (method).\<cludg\> | defines the full RPC method name (package.service.method) to be used for a specific [CLUDG](https://cloud.google.com/apis/design/standard_methods) method for a specific field | |
-|x| field.method | (method).custom | defines the full RPC method name (package.service.method) for a custom action. Required for each CustomAction. Throws an error if used elsewhere. | |
-| | field.method | (method_timeout).\<cludg\> | overrides all timeouts for this specific [CLUDG](https://cloud.google.com/apis/design/standard_methods) method | |
-| | field.method | (method_retries).\<cludg\> | overrides all retries for this specific [CLUDG](https://cloud.google.com/apis/design/standard_methods) method | |
+|x| field.method | method.\<cludg\> | defines the full RPC method name (package.service.method) to be used for a specific [CLUDG](https://cloud.google.com/apis/design/standard_methods) method for a specific field | |
+|x| field.method | method.custom | defines the full RPC method name (package.service.method) for a custom action. Required for each CustomAction. Throws an error if used elsewhere. | |
+| | field.method | method_timeout.\<cludg\> | overrides all timeouts for this specific [CLUDG](https://cloud.google.com/apis/design/standard_methods) method | |
+| | field.method | method_retries.\<cludg\> | overrides all retries for this specific [CLUDG](https://cloud.google.com/apis/design/standard_methods) method | |
 
 Notes:
  * one hostname annotation is required, if neither or both are provided an error will be thrown.
@@ -54,25 +54,26 @@ Notes:
 Here is an example of a state proto file with all the bells and whistles. The configuration options are defined by the file level annotations at the top.
 
 ```
-option (auth_token_location) = "auth.idToken";            // redux location of token
-option (debounce) = 500;                                  // debounce timer set to .5 s
-option (debug) = true;                                    // debug console logs in generated code
-option (default_retries) = 0;                             // overrides plugin default
-option (default_timeout) = 7000;                          // overrides plugin default
-option (hostname_location) = "user.selectedRegion.value"; // redux location of hostname
-option (port) = 9090;                                     // port to append to hostname
-option (protoc_ts_path) = "../../";                       // path to generated typescript files
-option (root_path) = "@App/src/apps/agent/";              // path to rootAction file
+option (state_file_options) = {
+  auth_token_location = "auth.idToken";            // redux location of token
+  debounce = 500;                                  // debounce timer set to .5 s
+  debug = true;                                    // debug console logs in generated code
+  default_retries = 0;                             // overrides plugin default
+  default_timeout = 7000;                          // overrides plugin default
+  hostname_location = "user.selectedRegion.value"; // redux location of hostname
+  port = 9090;                                     // port to append to hostname
+  protoc_ts_path = "../../";                       // path to generated typescript files
+};
 
 message ReduxState {   // generates the redux state
   option (state_options).type = REDUX_STATE; // mark as redux state message
 
   api.v0alpha.Organization myOrg = 1 [
-    (retries) = 3,
-    (method).create = "api.v0alpha.Org.CreateOrganization",
-    (method).delete = "api.v0alpha.Org.DeleteOrganization",
-    (method_timeout).create = 3000,
-    (method_retries).delete = 4
+    (state_field_options).retries = 3,
+    (state_field_options).method.create = "api.v0alpha.Org.CreateOrganization",
+    (state_field_options).method.delete = "api.v0alpha.Org.DeleteOrganization",
+    (state_field_options).method_timeout.create = 3000,
+    (state_field_options).method_retries.delete = 4
   ];
 }
 
@@ -80,8 +81,8 @@ message CustomAction {  // generates non-CLUDG actions/epics without a reducer
   option (state_options).type = CUSTOM_ACTION; // mark as custom message, so no reducer generated
 
   api.v0alpha.Country countryNameChange = 1 [
-    (timeout) = 4,
-    (method).custom = "api.v0alpha.Org.ChangeNameOfCountry"
+    (state_field_options).timeout = 4,
+    (state_field_options).method.custom = "api.v0alpha.Org.ChangeNameOfCountry"
   ];
 }
 ```
@@ -192,7 +193,7 @@ message ReduxState {
 message CustomActions {
   option (state_options).type = CUSTOM_ACTION;
   my.example.Bork borkFromBook = 1 [
-    (method).custom = "my.example.ExampleService.CreateBorkFromBook"
+    (state_field_options).method.custom = "my.example.ExampleService.CreateBorkFromBook"
   ];
 }
 ```
@@ -235,17 +236,17 @@ message ReduxState {
   option (state_options).type = REDUX_STATE;
 
   repeated package1.Book library = 1 [
-    (method).create = "package1.CreateBook",
-    (method).list = "package1.GetAllBook", // if repeated use list, otherwise use get
-    (method).update = "package1.UpdateBook",
-    (method).delete = "package1.DeleteBook"
+    (state_field_options).method.create = "package1.CreateBook",
+    (state_field_options).method.list = "package1.GetAllBook", // if repeated use list, otherwise use get
+    (state_field_options).method.update = "package1.UpdateBook",
+    (state_field_options).method.delete = "package1.DeleteBook"
   ];
 }
 message CustomActions {
   option (state_options).type = CUSTOM_ACTION;
 
   package1.Book doSomething = 1 [
-    (method).custom = "package1.DoSomethingCrazy"
+    (state_field_options).method.custom = "package1.DoSomethingCrazy"
   ];
 }
 ```
