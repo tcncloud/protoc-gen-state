@@ -1,7 +1,7 @@
  #!/usr/bin/env bash
 
 #Change subshell working directory to root directory of this repo
-cd "$(cd "$(dirname "${BASH_SOURCE[0]}")/../" > /dev/null && pwd)" || return
+cd "$(cd "$(dirname "$0")/../" > /dev/null && pwd)" || return
 
 # run go tests:
 ginkgo .

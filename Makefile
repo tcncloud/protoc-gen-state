@@ -39,7 +39,7 @@ gen: state/options.pb.go
 	go build .
 
 protos: state/options.pb.go
-	sh ./scripts/generate-protoc-for-all-outputs.sh
+	./scripts/generate-protoc-for-all-outputs.sh
 
 state/options.pb.go : state/options.proto
 	protoc --go_out=paths=source_relative:. $<
@@ -49,10 +49,10 @@ deps:
 	go get -u github.com/iancoleman/strcase
 
 clean:
-	sh ./scripts/clean-project.sh
+	./scripts/clean-project.sh
 
 test:
-	sh ./scripts/test-all-outputs.sh
+	./scripts/test-all-outputs.sh
 
 
 # test - generate multiple proto files, panic
