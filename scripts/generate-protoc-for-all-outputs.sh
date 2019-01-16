@@ -35,7 +35,7 @@ generate_state() { # first parameter should be the name of the output directory
 # then it gets the first word of each field
 for line in $(sed -n -e '/enum OutputTypes {/,/}/ p' state/options.proto | sed '1d;$d' | awk ' { print $1 } ')
 do
-  echo "line: $line"
+  echo "generating: $line"
   generate_ts "$line"
   generate_state "$line"
 done

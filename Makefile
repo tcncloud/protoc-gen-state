@@ -33,13 +33,13 @@ all: deps build test
 
 build: gen protos
 
-test: build test
+test: build
 
 gen: state/options.pb.go
 	go build .
 
 protos: state/options.pb.go
-	./scripts/generate-protoc-for-all-outputs.sh
+	sh ./scripts/generate-protoc-for-all-outputs.sh
 
 state/options.pb.go : state/options.proto
 	protoc --go_out=paths=source_relative:. $<
@@ -49,10 +49,10 @@ deps:
 	go get -u github.com/iancoleman/strcase
 
 clean:
-	./scripts/clean-project.sh
+	sh ./scripts/clean-project.sh
 
 test:
-	./scripts/test-all-outputs.sh
+	sh ./scripts/test-all-outputs.sh
 
 
 # test - generate multiple proto files, panic
