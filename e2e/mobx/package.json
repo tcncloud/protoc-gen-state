@@ -4,7 +4,7 @@
   "description": "unimplemented",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\""
+    "test": "echo \"No tests for mobx\""
   },
   "keywords": [],
   "author": "",
