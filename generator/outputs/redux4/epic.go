@@ -29,24 +29,24 @@ function createErrorObject(code: number|string|undefined, message: string): Node
 }
 
 {{range $i, $e := .}}
-export const {{$e.Name}}Epic = (action$, store) => action$
-	.filter(isActionOf(protocActions.{{$e.Name}}Request))
-	.debounceTime({{$e.Debounce}})
-	.map(({ payload, meta: { resolve = noop, reject = noop } }) => ({
+export const {{$e.Name}}Epic = (action$, store) => action$.pipe(
+	filter(isActionOf(protocActions.{{$e.Name}}Request)),
+	debounceTime({{$e.Debounce}}),
+	map(({ payload, meta: { resolve = noop, reject = noop } }) => ({
 		message: toMessage(payload, {{$e.InputType}}),
 		resolve,
 		reject,
-	}))
-	.flatMap((request) => {
+	})),
+	flatMap((request) => {
 {{if $e.Repeat}} {{template "grpcStream" $e}} {{ else }} {{template "grpcUnary" $e}} {{end}}
-		.retry({{$e.Retries}})
-		.timeout({{$e.Timeout}}){{if $e.Updater}}
-		.map(obj => ({ ...obj } as { prev: {{$e.OutputType}}.AsObject, updated: {{$e.OutputType}}.AsObject } ))
-		.map(lib => {
+		retry({{$e.Retries}}),
+		timeout({{$e.Timeout}}),{{if $e.Updater}}
+		map(obj => ({ ...obj } as { prev: {{$e.OutputType}}.AsObject, updated: {{$e.OutputType}}.AsObject } )),
+		map(lib => {
 			request.resolve(lib.prev, lib.updated);
 			return protocActions.{{$e.Name}}Success(lib);
-		}){{else}}
-		.map((resObj: {{$e.OutputType}}.AsObject{{if $e.Repeat}}[]{{end}}) => {
+		}),{{else}}
+		map((resObj: {{$e.OutputType}}.AsObject{{if $e.Repeat}}[]{{end}}) => {
 			request.resolve(resObj);
 			return protocActions.{{$e.Name}}Success(resObj);
 		}){{end}}
@@ -55,9 +55,9 @@ export const {{$e.Name}}Epic = (action$, store) => action$
 			if(request.reject){ request.reject(err); }
 			return Observable.of(protocActions.{{$e.Name}}Failure(err));
 		})
-	})
-	.takeUntil(action$.filter(isActionOf(protocActions.{{$e.Name}}Cancel)))
-	.repeat();
+	}),
+	takeUntil(action$.filter(isActionOf(protocActions.{{$e.Name}}Cancel))),
+	repeat();
 {{end}}
 {{define "grpcUnary"}}   return Observable
 		.defer(() => new Promise((resolve, reject) => {
