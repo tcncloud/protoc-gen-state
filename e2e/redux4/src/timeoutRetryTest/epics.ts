@@ -7,8 +7,15 @@
 
 import { grpc } from 'grpc-web-client';
 import { combineEpics, Epic } from 'redux-observable';
-import { Observable } from 'rxjs';
+
+// import { Observable } from 'rxjs/Rx';
+// import 'rxjs/add/observable/merge';
+// import 'rxjs/add/observable/from';
+
+import { of, Observable, defer, from } from 'rxjs';
+import { filter, map, flatMap, debounceTime, tap, catchError, timeout, retry } from 'rxjs/operators';
 import 'rxjs/add/observable/dom/ajax';
+
 import { isActionOf } from 'typesafe-actions';
 
 import { RootAction } from '../rootAction';
@@ -22,46 +29,50 @@ import * as ProtocTypes from 'protos/BasicState/protoc_types_pb';
 import { toMessage } from 'protos/BasicState/to_message_pb';
 
 // const host: string = 'http://35.192.235.78:9090';
-const host: string = 'https://localhost:9091';
-const badhost: string = 'http://www.google.com:81';
+// const host: string = 'https://localhost:9091';
+// const badhost: string = 'http://www.google.com:81';
 
 
-const timeoutEpic: Epic<RootAction, RootState> = (action$) => action$
-  .filter(isActionOf(actions.timeoutRequestPromise))
-  .do((action) => { console.log('right here: ', action); })
-  .debounceTime(1000)
-  .flatMap((action) => {
-    return Observable
+const timeoutEpic: Epic<RootAction, RootState> = (action$) => action$.pipe(
+  filter(isActionOf(actions.timeoutRequestPromise))
+  ,tap((action:any) => { console.log('right here: ', action); })
+  ,debounceTime(1000)
+  ,flatMap((action:any) => {
+    // return Observable
+    return 
       // just set a timer longer than the timeout
-      .defer(() => new Promise((resolve) => {
+      from(() => new Promise((resolve) => {
         setTimeout(() =>
           resolve({ title: 'Ulysses', author: 'James Joyce' }),
           3000
         )
-      }))
-      // hit this timeout
-      .timeout(100) // <-- bingo
-      // never makes it here but oh well
-      .map(a => {
-        console.log('no error: ', a);
-        action.payload.resolve(a as ProtocTypes.readinglist.Book.AsObject);
-        return actions.timeoutSuccess(a as ProtocTypes.readinglist.Book.AsObject)
-      })
-      // catch and reject
-      .catch((err) => {
-        console.log('error: ', err);
-        action.payload.reject(err);
-        return Observable.of(actions.timeoutFailure(err));
-      });
+      })).pipe(
+        // hit this timeout
+        timeout(100) // <-- bingo
+        // never makes it here but oh well
+        ,map(a => {
+          console.log('no error: ', a);
+          action.payload.resolve(a as ProtocTypes.readinglist.Book.AsObject);
+          return actions.timeoutSuccess(a as ProtocTypes.readinglist.Book.AsObject)
+        })
+        // catch and reject
+        ,catchError((err) => {
+          console.log('error: ', err);
+          action.payload.reject(err);
+          return of(actions.timeoutFailure(err));
+        })
+      )
   })
+)
 
-const retryEpic: Epic<RootAction, RootState> = (action$) => action$
-  .filter(isActionOf(actions.retryRequestPromise))
-  .do((action) => { console.log('right here: ', action); })
-  .debounceTime(1000)
-  .flatMap((action) => {
-    return Observable
-      .defer(() => new Promise((resolve, reject) => {
+const retryEpic: Epic<RootAction, RootState> = (action$) => action$.pipe(
+  filter(isActionOf(actions.retryRequestPromise))
+  ,tap((action:any) => { console.log('right here: ', action); })
+  ,debounceTime(1000)
+  ,flatMap((action:any) => {
+    // return Observable
+    return
+      from(() => new Promise((resolve, reject) => {
         let counter = 0
         setTimeout(() => {
           if(counter > 2) {
@@ -73,30 +84,33 @@ const retryEpic: Epic<RootAction, RootState> = (action$) => action$
         },
           100
         )
-      }))
-      .map(a => {
-        console.log('no error: ', a);
-        action.payload.resolve(a as ProtocTypes.readinglist.Book.AsObject);
-        return actions.retrySuccess(a as ProtocTypes.readinglist.Book.AsObject)
-      })
-      .catch((err) => {
-        // Observable.merge( // <-- come back to this yikes
-        //   Observable.of(actions.retryRequestPromise(...action.payload)),
-        //   source
-        // )
-        console.log('error: ', err);
-        action.payload.reject(err);
-        return Observable.of(actions.retryFailure(err));
-      })
-      .retry()
+      })).pipe(
+        map(a => {
+          console.log('no error: ', a);
+          action.payload.resolve(a as ProtocTypes.readinglist.Book.AsObject);
+          return actions.retrySuccess(a as ProtocTypes.readinglist.Book.AsObject)
+        })
+        ,catchError((err) => {
+          // Observable.merge( // <-- come back to this yikes
+          //   Observable.of(actions.retryRequestPromise(...action.payload)),
+          //   source
+          // )
+          console.log('error: ', err);
+          action.payload.reject(err);
+          return of(actions.retryFailure(err));
+        })
+        ,retry()
+      )
   })
+)
 
-const codeEpic = (action$, store) => action$
-  .filter(isActionOf(actions.codeRequestPromise))
-  .map((action) => ({ ...action.payload, request: toMessage(action.payload.book, ProtocTypes.readinglist.Book)}))
-  .flatMap((action) => {
-    return Observable
-      .defer(() => new Promise((resolve, reject) => {
+const codeEpic = (action$, store) => action$.pipe(
+  filter(isActionOf(actions.codeRequestPromise))
+  ,map((action:any) => ({ ...action.payload, request: toMessage(action.payload.book, ProtocTypes.readinglist.Book)}))
+  ,flatMap((action: any) => {
+    // return Observable
+    return
+      from(() => new Promise((resolve, reject) => {
         var host = store.getState()['config']['host'].slice(0, -1) + ":9090";
         grpc.unary(ProtocServices.readinglist.ReadingList.ErrorOut, {
           request: action.request,
@@ -111,17 +125,19 @@ const codeEpic = (action$, store) => action$
             }
           }
         });
-      }))
-      .timeout(3000)
-      .map(resObj => {
-        action.resolve(resObj as ProtocTypes.readinglist.Book.AsObject);
-        return actions.codeSuccess(resObj as ProtocTypes.readinglist.Book.AsObject);
-      })
-      .catch(error => {
-        action.reject(error.toString());
-        return Observable.of(actions.codeFailure(error.toString()));
-      })
+      })).pipe(
+        timeout(3000)
+        ,map(resObj => {
+          action.resolve(resObj as ProtocTypes.readinglist.Book.AsObject);
+          return actions.codeSuccess(resObj as ProtocTypes.readinglist.Book.AsObject);
+        })
+        ,catchError(error => {
+          action.reject(error.toString());
+          return of(actions.codeFailure(error.toString()));
+        })
+      )
   })
+)
 
 export const TimeoutRetryEpics = combineEpics(
   timeoutEpic,
