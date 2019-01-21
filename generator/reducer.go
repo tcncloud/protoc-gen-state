@@ -43,7 +43,6 @@ import (
 // Should try out subtemplates
 // TODO make sure maps are supported
 
-
 type ReducerEntity struct {
 	SwitchCase      string
 	Name            string
@@ -54,7 +53,7 @@ func (this *GenericOutputter) CreateReducerFile(stateFields []*gp.FieldDescripto
 	reducerEntities := []*ReducerEntity{}
 
 	for _, entity := range stateFields {
-    fieldAnnotations, err := GetFieldOptions(entity)
+		fieldAnnotations, err := GetFieldOptions(entity)
 		if err != nil {
 			return nil, err
 		}

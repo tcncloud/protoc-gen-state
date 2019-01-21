@@ -80,17 +80,17 @@ func (this *GenericOutputter) CreateEpicFile(stateFields []*gp.FieldDescriptorPr
 		repeated := field.GetLabel() == 3
 
 		// verify the method annotations
-    fieldAnnotations, err := GetFieldOptions(field)
+		fieldAnnotations, err := GetFieldOptions(field)
 		if err != nil {
 			return nil, fmt.Errorf("Error getting field level annotations: %v", err)
 		}
 
 		// field level overrides for timeout/retry
-    timeout := fieldAnnotations.GetTimeout()
+		timeout := fieldAnnotations.GetTimeout()
 		if timeout == -1 { // if it wasn't overriden
 			timeout = defaultTimeout
 		}
-    retries := fieldAnnotations.GetRetries()
+		retries := fieldAnnotations.GetRetries()
 		if retries == -1 { // if it wasn't overriden
 			retries = defaultRetries
 		}
@@ -162,19 +162,19 @@ func (this *GenericOutputter) CreateEpicFile(stateFields []*gp.FieldDescriptorPr
 		repeated := field.GetLabel() == 3
 
 		// verify the method annotations
-    fieldAnnotations, err := GetFieldOptions(field)
+		fieldAnnotations, err := GetFieldOptions(field)
 		if err != nil {
 			return nil, fmt.Errorf("Error getting field level annotations: %v", err)
 		}
 
-    timeout := fieldAnnotations.GetTimeout()
-    if timeout == -1 { // if it wasn't overriden
-      timeout = defaultTimeout
-    }
-    retries := fieldAnnotations.GetRetries()
-    if retries == -1 { // if it wasn't overriden
-      retries = defaultRetries
-    }
+		timeout := fieldAnnotations.GetTimeout()
+		if timeout == -1 { // if it wasn't overriden
+			timeout = defaultTimeout
+		}
+		retries := fieldAnnotations.GetRetries()
+		if retries == -1 { // if it wasn't overriden
+			retries = defaultRetries
+		}
 
 		var meth *gp.MethodDescriptorProto
 

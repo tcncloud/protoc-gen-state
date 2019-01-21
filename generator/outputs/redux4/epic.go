@@ -108,4 +108,3 @@ export const {{$e.Name}}Epic = (action$, store) => action$
 export const protocEpics = combineEpics({{range $i, $e := .}}
 	{{$e.Name}}Epic,{{end}}
 )`
-

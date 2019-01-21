@@ -89,45 +89,43 @@ func Generate(filepaths []string, protos []*gp.FileDescriptorProto) ([]*File, er
 				} else if stateOptions.GetType() == state.StateMessageType_EXTERNAL_LINK {
 					// ???
 				} else {
-          return nil, fmt.Errorf("Encountered a wrong/non-existent State Message Annotation: ", stateOptions.GetType())
+					return nil, fmt.Errorf("Encountered a wrong/non-existent State Message Annotation: ", stateOptions.GetType())
 				}
 			} else {
-        return nil, fmt.Errorf("Error getting extension: ", err)
+				return nil, fmt.Errorf("Error getting extension: ", err)
 			}
 		}
 	}
 
-  // gather the file level annotations
-  fileOptions, err := GetFileExtensions(stateFile)
-  if err != nil {
-    return nil, fmt.Errorf("Error encountered while parsing file level annotations: %v", err)
-  }
+	// gather the file level annotations
+	fileOptions, err := GetFileExtensions(stateFile)
+	if err != nil {
+		return nil, fmt.Errorf("Error encountered while parsing file level annotations: %v", err)
+	}
 
-  debounce := fileOptions.GetDebounce()
-  defaultTimeout := fileOptions.GetDefaultTimeout()
-  defaultRetries := fileOptions.GetDefaultRetries()
-  port := fileOptions.GetPort()
-  debug := fileOptions.GetDebug()
-  protocTsPath := fileOptions.GetProtocTsPath()
-  outputType := fileOptions.GetOutputType()
-  hostname := fileOptions.GetHostname()
-  hostnameLocation := fileOptions.GetHostnameLocation()
-  authTokenLocation := fileOptions.GetAuthTokenLocation()
+	debounce := fileOptions.GetDebounce()
+	defaultTimeout := fileOptions.GetDefaultTimeout()
+	defaultRetries := fileOptions.GetDefaultRetries()
+	port := fileOptions.GetPort()
+	debug := fileOptions.GetDebug()
+	protocTsPath := fileOptions.GetProtocTsPath()
+	outputType := fileOptions.GetOutputType()
+	hostname := fileOptions.GetHostname()
+	hostnameLocation := fileOptions.GetHostnameLocation()
+	authTokenLocation := fileOptions.GetAuthTokenLocation()
 
 	if protocTsPath[len(protocTsPath)-1] != '/' {
 		// add a slash to the end of the config option if it doesnt exist
 		protocTsPath += "/"
 	}
 
-
-  var outputter Outputter
-  switch state.OutputTypes_name[int32(outputType)] {
-  case "mobx":
-    outputter = &MobxOutputter{}
-  default:
-    outputter = MakeGenericOutputter(outputType)
-  }
-
+	var outputter Outputter
+	switch state.OutputTypes_name[int32(outputType)] {
+	case "mobx":
+		outputter = &MobxOutputter{}
+	default:
+		outputter = MakeGenericOutputter(outputType)
+	}
 
 	stateFields := []*gp.FieldDescriptorProto{}
 	customFields := []*gp.FieldDescriptorProto{}

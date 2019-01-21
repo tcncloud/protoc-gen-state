@@ -38,7 +38,6 @@ import (
 	"text/template"
 )
 
-
 type ActionEntity struct {
 	JsonName   string
 	InputType  string
@@ -60,7 +59,7 @@ func (this *GenericOutputter) CreateActionFile(stateFields []*gp.FieldDescriptor
 		repeated := field.GetLabel() == 3
 
 		// verify the method annotations
-    fieldAnnotations, err := GetFieldOptions(field)
+		fieldAnnotations, err := GetFieldOptions(field)
 		if err != nil {
 			return nil, fmt.Errorf("Error getting field level annotations: %v", err)
 		}
@@ -121,7 +120,7 @@ func (this *GenericOutputter) CreateActionFile(stateFields []*gp.FieldDescriptor
 	for _, field := range customFields {
 		repeated := field.GetLabel() == 3
 		// get the method annoations
-    fieldAnnotations, err := GetFieldOptions(field)
+		fieldAnnotations, err := GetFieldOptions(field)
 		if err != nil {
 			return nil, fmt.Errorf("Error getting field level annotations: %v", err)
 		}
@@ -164,18 +163,18 @@ func (this *GenericOutputter) CreateActionFile(stateFields []*gp.FieldDescriptor
 	}
 
 	// generate the templates
-  importsT := template.Must(template.New("imports").Funcs(funcMap).Parse(this.ActionFile.ImportTemplate))
+	importsT := template.Must(template.New("imports").Funcs(funcMap).Parse(this.ActionFile.ImportTemplate))
 	getT := template.Must(template.New("get").Funcs(funcMap).Parse(this.ActionFile.GetTemplate))
 	listT := template.Must(template.New("list").Funcs(funcMap).Parse(this.ActionFile.ListTemplate))
 	resetT := template.Must(template.New("reset").Funcs(funcMap).Parse(this.ActionFile.ResetTemplate))
 	createT := template.Must(template.New("create").Funcs(funcMap).Parse(this.ActionFile.CreateTemplate))
 	deleteT := template.Must(template.New("delete").Funcs(funcMap).Parse(this.ActionFile.DeleteTemplate))
 	updateT := template.Must(template.New("update").Funcs(funcMap).Parse(this.ActionFile.UpdateTemplate))
-	customT := template.Must(template.New("update").Funcs(funcMap).Parse(this.ActionFile.CustomTemplate))
+	customT := template.Must(template.New("custom").Funcs(funcMap).Parse(this.ActionFile.CustomTemplate))
 
 	// append to output
 	var output bytes.Buffer
-  importsT.Execute(&output, nil)
+	importsT.Execute(&output, nil)
 	getT.Execute(&output, getEntities)
 	listT.Execute(&output, listEntities)
 	resetT.Execute(&output, resetEntities)

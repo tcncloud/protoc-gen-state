@@ -34,9 +34,9 @@ import (
 	"strings"
 	"text/template"
 
-  "github.com/tcncloud/protoc-gen-state/state"
 	gp "github.com/golang/protobuf/protoc-gen-go/descriptor"
 	"github.com/sirupsen/logrus"
+	"github.com/tcncloud/protoc-gen-state/state"
 )
 
 type TypeEntity struct {

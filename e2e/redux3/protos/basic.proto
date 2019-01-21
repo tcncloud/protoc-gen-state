@@ -15,7 +15,7 @@ option (state_file_options) = {
   port: 9090,
   protoc_ts_path: "../",
   output_type: redux3
-  /* option (auth_token_location) = "config.token"; */
+  // auth_token_location) = "config.token"; 
 };
 
 message ReduxState {
