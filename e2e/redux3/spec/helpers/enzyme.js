@@ -1,9 +1,9 @@
-import jasmineEnzyme from 'jasmine-enzyme';
-import { configure } from 'enzyme';
-import Adapter from 'enzyme-adapter-react-16';
+const jasmineEnzyme = require('jasmine-enzyme');
+const enzyme = require('enzyme')
+const  Adapter = require('enzyme-adapter-react-16');
 console.log('Jasmine Helpers: Setting up Enzyme...');
 
-configure({ adapter: new Adapter() });
+enzyme.configure({ adapter: new Adapter() });
 
 beforeEach(function () {
   jasmineEnzyme();

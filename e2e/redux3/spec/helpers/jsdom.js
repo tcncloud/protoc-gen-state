@@ -1,7 +1,7 @@
-import { JSDOM } from 'jsdom';
+const jsdom = require('jsdom');
 console.log('Jasmine Helpers: Setting up jsdom...');
 
-const dom = new JSDOM('<html><body></body></html>');
+const dom = new jsdom.JSDOM('<html><body></body></html>');
 global.document = dom.window.document;
 global.window = dom.window;
 global.navigator = dom.window.navigator;
