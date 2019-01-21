@@ -86,11 +86,11 @@ func (this *GenericOutputter) CreateEpicFile(stateFields []*gp.FieldDescriptorPr
 
 		// field level overrides for timeout/retry
 		timeout := fieldAnnotations.GetTimeout()
-		if timeout == -1 { // if it wasn't overriden
+		if timeout == 0 { // if it wasn't overriden
 			timeout = defaultTimeout
 		}
 		retries := fieldAnnotations.GetRetries()
-		if retries == -1 { // if it wasn't overriden
+		if retries == 0 { // if it wasn't overriden
 			retries = defaultRetries
 		}
 
@@ -171,7 +171,7 @@ func (this *GenericOutputter) CreateEpicFile(stateFields []*gp.FieldDescriptorPr
 			timeout = defaultTimeout
 		}
 		retries := fieldAnnotations.GetRetries()
-		if retries == -1 { // if it wasn't overriden
+		if retries == 0 { // if it wasn't overriden
 			retries = defaultRetries
 		}
 
