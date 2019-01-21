@@ -36,14 +36,13 @@ import (
 
 	gp "github.com/golang/protobuf/protoc-gen-go/descriptor"
 	"github.com/sirupsen/logrus"
-	"github.com/tcncloud/protoc-gen-state/state"
 )
 
 type TypeEntity struct {
 	Package string
 }
 
-func (this *GenericOutputter) CreateAggregateTypesFile(msgFiles []*gp.FileDescriptorProto, outputType state.OutputTypes, statePkg string) (*File, error) {
+func (this *GenericOutputter) CreateAggregateTypesFile(msgFiles []*gp.FileDescriptorProto, statePkg string) (*File, error) {
 	typeEntities := []*TypeEntity{}
 	packageNames := []string{statePkg}
 
@@ -78,7 +77,7 @@ type ServiceExport struct {
 	Exports []string
 }
 
-func (this *GenericOutputter) CreateAggregateServicesFile(serviceFiles []*gp.FileDescriptorProto, outputType state.OutputTypes, protocTsPath string, statePkg string) (*File, error) {
+func (this *GenericOutputter) CreateAggregateServicesFile(serviceFiles []*gp.FileDescriptorProto, protocTsPath string, statePkg string) (*File, error) {
 	serviceEntities := []*ServiceEntity{}
 	exportEntities := []*ServiceExport{}
 	packageNames := []string{statePkg}

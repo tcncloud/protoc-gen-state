@@ -9,13 +9,13 @@ import (
 
 type Outputter interface {
 	SetOutputType(state.OutputTypes)
-	CreateStateFile([]*gp.FieldDescriptorProto, state.OutputTypes, bool) (*File, error)
-	CreateReducerFile([]*gp.FieldDescriptorProto, state.OutputTypes, bool) (*File, error)
-	CreateEpicFile([]*gp.FieldDescriptorProto, state.OutputTypes, []*gp.FieldDescriptorProto, []*gp.FileDescriptorProto, int64, int64, string, string, string, int64, int64, bool) (*File, error)
-	CreateActionFile([]*gp.FieldDescriptorProto, state.OutputTypes, []*gp.FieldDescriptorProto, []*gp.FileDescriptorProto, bool) (*File, error)
-	CreateToMessageFile([]*gp.FileDescriptorProto, state.OutputTypes, []*gp.FileDescriptorProto, string, bool) (*File, error)
-	CreateAggregateTypesFile([]*gp.FileDescriptorProto, state.OutputTypes, string) (*File, error)
-	CreateAggregateServicesFile([]*gp.FileDescriptorProto, state.OutputTypes, string, string) (*File, error)
+	CreateStateFile([]*gp.FieldDescriptorProto, bool) (*File, error)
+	CreateReducerFile([]*gp.FieldDescriptorProto, bool) (*File, error)
+	CreateEpicFile([]*gp.FieldDescriptorProto, []*gp.FieldDescriptorProto, []*gp.FileDescriptorProto, int64, int64, string, string, string, int64, int64, bool) (*File, error)
+	CreateActionFile([]*gp.FieldDescriptorProto, []*gp.FieldDescriptorProto, []*gp.FileDescriptorProto, bool) (*File, error)
+	CreateToMessageFile([]*gp.FileDescriptorProto, []*gp.FileDescriptorProto, string, bool) (*File, error)
+	CreateAggregateTypesFile([]*gp.FileDescriptorProto, string) (*File, error)
+	CreateAggregateServicesFile([]*gp.FileDescriptorProto, string, string) (*File, error)
 }
 
 type StateFileType struct {
@@ -120,44 +120,44 @@ type MobxOutputter struct{}
 func (this *MobxOutputter) SetOutputType(outputType state.OutputTypes) {
 	// do something unique
 }
-func (this *MobxOutputter) CreateStateFile(stateFields []*gp.FieldDescriptorProto, outputType state.OutputTypes, debug bool) (*File, error) {
+func (this *MobxOutputter) CreateStateFile(stateFields []*gp.FieldDescriptorProto, debug bool) (*File, error) {
 	// do something unique
 	return &File{
 		Name:    "state_pb.ts",
 		Content: "Not implemented",
 	}, nil
 }
-func (this *MobxOutputter) CreateActionFile(stateFields []*gp.FieldDescriptorProto, outputType state.OutputTypes, customFields []*gp.FieldDescriptorProto, serviceFiles []*gp.FileDescriptorProto, debug bool) (*File, error) {
+func (this *MobxOutputter) CreateActionFile(stateFields []*gp.FieldDescriptorProto, customFields []*gp.FieldDescriptorProto, serviceFiles []*gp.FileDescriptorProto, debug bool) (*File, error) {
 	return &File{
 		Name:    "actions_pb.ts",
 		Content: "Not implemented",
 	}, nil
 }
-func (this *MobxOutputter) CreateReducerFile(stateFields []*gp.FieldDescriptorProto, outputType state.OutputTypes, debug bool) (*File, error) {
+func (this *MobxOutputter) CreateReducerFile(stateFields []*gp.FieldDescriptorProto, debug bool) (*File, error) {
 	return &File{
 		Name:    "reducer_pb.ts",
 		Content: "Not implemented",
 	}, nil
 }
-func (this *MobxOutputter) CreateEpicFile(stateFields []*gp.FieldDescriptorProto, outputType state.OutputTypes, customFields []*gp.FieldDescriptorProto, serviceFiles []*gp.FileDescriptorProto, defaultTimeout int64, defaultRetries int64, authTokenLocation string, hostnameLocation string, hostname string, portin int64, debounce int64, debug bool) (*File, error) {
+func (this *MobxOutputter) CreateEpicFile(stateFields []*gp.FieldDescriptorProto, customFields []*gp.FieldDescriptorProto, serviceFiles []*gp.FileDescriptorProto, defaultTimeout int64, defaultRetries int64, authTokenLocation string, hostnameLocation string, hostname string, portin int64, debounce int64, debug bool) (*File, error) {
 	return &File{
 		Name:    "epics_pb.ts",
 		Content: "Not implemented",
 	}, nil
 }
-func (this *MobxOutputter) CreateToMessageFile(servFiles []*gp.FileDescriptorProto, outputType state.OutputTypes, protos []*gp.FileDescriptorProto, protocTsPath string, debug bool) (*File, error) {
+func (this *MobxOutputter) CreateToMessageFile(servFiles []*gp.FileDescriptorProto, protos []*gp.FileDescriptorProto, protocTsPath string, debug bool) (*File, error) {
 	return &File{
 		Name:    "to_message_pb.ts",
 		Content: "Not implemented",
 	}, nil
 }
-func (this *MobxOutputter) CreateAggregateServicesFile(serviceFiles []*gp.FileDescriptorProto, outputType state.OutputTypes, protocTsPath string, statePkg string) (*File, error) {
+func (this *MobxOutputter) CreateAggregateServicesFile(serviceFiles []*gp.FileDescriptorProto, protocTsPath string, statePkg string) (*File, error) {
 	return &File{
 		Name:    "protoc_services_pb.ts",
 		Content: "Not implemented",
 	}, nil
 }
-func (this *MobxOutputter) CreateAggregateTypesFile(msgFiles []*gp.FileDescriptorProto, outputType state.OutputTypes, statePkg string) (*File, error) {
+func (this *MobxOutputter) CreateAggregateTypesFile(msgFiles []*gp.FileDescriptorProto, statePkg string) (*File, error) {
 	return &File{
 		Name:    "protoc_types_pb.ts",
 		Content: "Not implemented",

@@ -33,7 +33,6 @@ import (
 	"bytes"
 	"fmt"
 	gp "github.com/golang/protobuf/protoc-gen-go/descriptor"
-	"github.com/tcncloud/protoc-gen-state/state"
 	"strings"
 	"text/template"
 )
@@ -45,7 +44,7 @@ type ActionEntity struct {
 	Repeat     bool
 }
 
-func (this *GenericOutputter) CreateActionFile(stateFields []*gp.FieldDescriptorProto, outputType state.OutputTypes, customFields []*gp.FieldDescriptorProto, serviceFiles []*gp.FileDescriptorProto, debug bool) (*File, error) {
+func (this *GenericOutputter) CreateActionFile(stateFields []*gp.FieldDescriptorProto, customFields []*gp.FieldDescriptorProto, serviceFiles []*gp.FileDescriptorProto, debug bool) (*File, error) {
 	getEntities := []*ActionEntity{}
 	listEntities := []*ActionEntity{}
 	resetEntities := []*ActionEntity{}

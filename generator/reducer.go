@@ -36,7 +36,6 @@ import (
 	"text/template"
 
 	gp "github.com/golang/protobuf/protoc-gen-go/descriptor"
-	"github.com/tcncloud/protoc-gen-state/state"
 )
 
 // cludg also has reset
@@ -49,7 +48,7 @@ type ReducerEntity struct {
 	CludgEffectName string
 }
 
-func (this *GenericOutputter) CreateReducerFile(stateFields []*gp.FieldDescriptorProto, outputType state.OutputTypes, debug bool) (*File, error) {
+func (this *GenericOutputter) CreateReducerFile(stateFields []*gp.FieldDescriptorProto, debug bool) (*File, error) {
 	reducerEntities := []*ReducerEntity{}
 
 	for _, entity := range stateFields {

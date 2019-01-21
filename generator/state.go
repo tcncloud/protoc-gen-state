@@ -34,7 +34,6 @@ import (
 	"text/template"
 
 	gp "github.com/golang/protobuf/protoc-gen-go/descriptor"
-	"github.com/tcncloud/protoc-gen-state/state"
 )
 
 type StateEntity struct {
@@ -43,7 +42,7 @@ type StateEntity struct {
 	Repeated     bool
 }
 
-func (this *GenericOutputter) CreateStateFile(stateFields []*gp.FieldDescriptorProto, outputType state.OutputTypes, debug bool) (*File, error) {
+func (this *GenericOutputter) CreateStateFile(stateFields []*gp.FieldDescriptorProto, debug bool) (*File, error) {
 	stateEntities := []*StateEntity{}
 
 	// transform stateFields into our StateEntity implementation so template can read values

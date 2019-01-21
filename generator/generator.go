@@ -164,49 +164,49 @@ func Generate(filepaths []string, protos []*gp.FileDescriptorProto) ([]*File, er
 	out = append(out, CreateAggregateByPackage(messageFiles, protocTsPath, stateFile.GetPackage())...)
 
 	// create state file
-	statePb, err := outputter.CreateStateFile(stateFields, outputType, debug)
+	statePb, err := outputter.CreateStateFile(stateFields, debug)
 	if err != nil {
 		return nil, fmt.Errorf("Error generating state_pb file: %v", err)
 	}
 	out = append(out, statePb)
 
 	// create action file
-	actionPb, err := outputter.CreateActionFile(stateFields, outputType, customFields, serviceFiles, debug)
+	actionPb, err := outputter.CreateActionFile(stateFields, customFields, serviceFiles, debug)
 	if err != nil {
 		return nil, fmt.Errorf("Error generating actions_pb file: %v", err)
 	}
 	out = append(out, actionPb)
 
 	// create reducer file
-	reducerPb, err := outputter.CreateReducerFile(stateFields, outputType, debug)
+	reducerPb, err := outputter.CreateReducerFile(stateFields, debug)
 	if err != nil {
 		return nil, fmt.Errorf("Error generating reducer_pb file: %v", err)
 	}
 	out = append(out, reducerPb)
 
 	// create epic file
-	epicPb, err := outputter.CreateEpicFile(stateFields, outputType, customFields, serviceFiles, defaultTimeout, defaultRetries, authTokenLocation, hostnameLocation, hostname, port, debounce, debug)
+	epicPb, err := outputter.CreateEpicFile(stateFields, customFields, serviceFiles, defaultTimeout, defaultRetries, authTokenLocation, hostnameLocation, hostname, port, debounce, debug)
 	if err != nil {
 		return nil, fmt.Errorf("Error generating actions_pb file: %v", err)
 	}
 	out = append(out, epicPb)
 
 	// create toMessage file
-	toMessagePb, err := outputter.CreateToMessageFile(serviceFiles, outputType, protos, protocTsPath, debug)
+	toMessagePb, err := outputter.CreateToMessageFile(serviceFiles, protos, protocTsPath, debug)
 	if err != nil {
 		return nil, fmt.Errorf("Error generating to_message_pb file: %v", err)
 	}
 	out = append(out, toMessagePb)
 
 	// create message_aggregate file from the messageFiles
-	typesPb, err := outputter.CreateAggregateTypesFile(messageFiles, outputType, stateFile.GetPackage())
+	typesPb, err := outputter.CreateAggregateTypesFile(messageFiles, stateFile.GetPackage())
 	if err != nil {
 		return nil, fmt.Errorf("Error generating protoc_types_pb file: %v", err)
 	}
 	out = append(out, typesPb)
 
 	// create service_aggregate file from the serviceFiles
-	servicesPb, err := outputter.CreateAggregateServicesFile(serviceFiles, outputType, protocTsPath, stateFile.GetPackage())
+	servicesPb, err := outputter.CreateAggregateServicesFile(serviceFiles, protocTsPath, stateFile.GetPackage())
 	if err != nil {
 		return nil, fmt.Errorf("Error generating protoc_services_pb file: %v", err)
 	}
