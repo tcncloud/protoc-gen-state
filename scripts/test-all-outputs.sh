@@ -17,6 +17,7 @@ ginkgo .
 for line in $(sed -n -e '/enum OutputTypes {/,/}/ p' state/options.proto | sed '1d;$d' | awk ' { print $1 } ')
 do
   cd e2e/$line
+  yarn
   yarn run test
   cd ../../
 done
