@@ -33,7 +33,6 @@ import (
 	"bytes"
 	"fmt"
 	gp "github.com/golang/protobuf/protoc-gen-go/descriptor"
-	"github.com/tcncloud/protoc-gen-state/state"
 	"strconv"
 	"strings"
 	"text/template"
@@ -56,7 +55,7 @@ type EpicEntity struct {
 	Debug          bool
 }
 
-func (this *GenericOutputter) CreateEpicFile(stateFields []*gp.FieldDescriptorProto, outputType state.OutputTypes, customFields []*gp.FieldDescriptorProto, serviceFiles []*gp.FileDescriptorProto, defaultTimeout int64, defaultRetries int64, authTokenLocation string, hostnameLocation string, hostname string, portin int64, debounce int64, debug bool) (*File, error) {
+func (this *GenericOutputter) CreateEpicFile(stateFields []*gp.FieldDescriptorProto, customFields []*gp.FieldDescriptorProto, serviceFiles []*gp.FileDescriptorProto, defaultTimeout int64, defaultRetries int64, authTokenLocation string, hostnameLocation string, hostname string, portin int64, debounce int64, debug bool) (*File, error) {
 	epicEntities := []*EpicEntity{}
 
 	// set up port string
@@ -80,18 +79,18 @@ func (this *GenericOutputter) CreateEpicFile(stateFields []*gp.FieldDescriptorPr
 		repeated := field.GetLabel() == 3
 
 		// verify the method annotations
-    fieldAnnotations, err := GetFieldOptions(field)
+		fieldAnnotations, err := GetFieldOptions(field)
 		if err != nil {
 			return nil, fmt.Errorf("Error getting field level annotations: %v", err)
 		}
 
 		// field level overrides for timeout/retry
-    timeout := fieldAnnotations.GetTimeout()
-		if timeout == -1 { // if it wasn't overriden
+		timeout := fieldAnnotations.GetTimeout()
+		if timeout == 0 { // if it wasn't overriden
 			timeout = defaultTimeout
 		}
-    retries := fieldAnnotations.GetRetries()
-		if retries == -1 { // if it wasn't overriden
+		retries := fieldAnnotations.GetRetries()
+		if retries == 0 { // if it wasn't overriden
 			retries = defaultRetries
 		}
 
@@ -162,19 +161,19 @@ func (this *GenericOutputter) CreateEpicFile(stateFields []*gp.FieldDescriptorPr
 		repeated := field.GetLabel() == 3
 
 		// verify the method annotations
-    fieldAnnotations, err := GetFieldOptions(field)
+		fieldAnnotations, err := GetFieldOptions(field)
 		if err != nil {
 			return nil, fmt.Errorf("Error getting field level annotations: %v", err)
 		}
 
-    timeout := fieldAnnotations.GetTimeout()
-    if timeout == -1 { // if it wasn't overriden
-      timeout = defaultTimeout
-    }
-    retries := fieldAnnotations.GetRetries()
-    if retries == -1 { // if it wasn't overriden
-      retries = defaultRetries
-    }
+		timeout := fieldAnnotations.GetTimeout()
+		if timeout == -1 { // if it wasn't overriden
+			timeout = defaultTimeout
+		}
+		retries := fieldAnnotations.GetRetries()
+		if retries == 0 { // if it wasn't overriden
+			retries = defaultRetries
+		}
 
 		var meth *gp.MethodDescriptorProto
 

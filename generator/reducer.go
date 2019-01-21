@@ -36,13 +36,11 @@ import (
 	"text/template"
 
 	gp "github.com/golang/protobuf/protoc-gen-go/descriptor"
-	"github.com/tcncloud/protoc-gen-state/state"
 )
 
 // cludg also has reset
 // Should try out subtemplates
 // TODO make sure maps are supported
-
 
 type ReducerEntity struct {
 	SwitchCase      string
@@ -50,11 +48,11 @@ type ReducerEntity struct {
 	CludgEffectName string
 }
 
-func (this *GenericOutputter) CreateReducerFile(stateFields []*gp.FieldDescriptorProto, outputType state.OutputTypes, debug bool) (*File, error) {
+func (this *GenericOutputter) CreateReducerFile(stateFields []*gp.FieldDescriptorProto, debug bool) (*File, error) {
 	reducerEntities := []*ReducerEntity{}
 
 	for _, entity := range stateFields {
-    fieldAnnotations, err := GetFieldOptions(entity)
+		fieldAnnotations, err := GetFieldOptions(entity)
 		if err != nil {
 			return nil, err
 		}

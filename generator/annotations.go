@@ -37,39 +37,39 @@ import (
 )
 
 func GetFileExtensions(desc *gp.FileDescriptorProto) (*state.StateFileOptions, error) {
-  var extName *proto.ExtensionDesc
-  extName = state.E_StateFileOptions
+	var extName *proto.ExtensionDesc
+	extName = state.E_StateFileOptions
 
-  if desc == nil || desc.GetOptions() == nil {
-    return nil, errors.New("Could not get file extensions. Descriptor was empty")
-  }
+	if desc == nil || desc.GetOptions() == nil {
+		return nil, errors.New("Could not get file extensions. Descriptor was empty")
+	}
 
-  if proto.HasExtension(desc.GetOptions(), extName) {
-    pkg, err := proto.GetExtension(desc.GetOptions(), extName)
-    if err != nil {
-      return nil, err
-    }
-    return pkg.(*state.StateFileOptions), nil
-  }
-  return nil, errors.New("Could not get file extensions")
+	if proto.HasExtension(desc.GetOptions(), extName) {
+		pkg, err := proto.GetExtension(desc.GetOptions(), extName)
+		if err != nil {
+			return nil, err
+		}
+		return pkg.(*state.StateFileOptions), nil
+	}
+	return nil, errors.New("Could not get file extensions")
 }
 
 func GetFieldOptions(desc *gp.FieldDescriptorProto) (*state.StateFieldOptions, error) {
-  var extName *proto.ExtensionDesc
-  extName = state.E_StateFieldOptions
+	var extName *proto.ExtensionDesc
+	extName = state.E_StateFieldOptions
 
-  if desc == nil || desc.GetOptions() == nil {
-    return nil, errors.New("Could not get field extensions. Descriptor was empty")
-  }
+	if desc == nil || desc.GetOptions() == nil {
+		return nil, errors.New("Could not get field extensions. Descriptor was empty")
+	}
 
-  if proto.HasExtension(desc.GetOptions(), extName) {
-    pkg, err := proto.GetExtension(desc.GetOptions(), extName)
-    if err != nil {
-      return nil, err
-    }
-    return pkg.(*state.StateFieldOptions), nil
-  }
-  return nil, nil
+	if proto.HasExtension(desc.GetOptions(), extName) {
+		pkg, err := proto.GetExtension(desc.GetOptions(), extName)
+		if err != nil {
+			return nil, err
+		}
+		return pkg.(*state.StateFieldOptions), nil
+	}
+	return nil, nil
 }
 
 func GetAnnotation(meth state.StringFieldOptions, crud Crud, repeated bool) string {

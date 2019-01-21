@@ -1,5 +1,5 @@
 package redux3
-       
+
 const AggregatorTypeTemplate = `/* THIS FILE IS GENERATED FROM THE TOOL PROTOC-GEN-STATE  */
 /* ANYTHING YOU EDIT WILL BE OVERWRITTEN IN FUTURE BUILDS */
 /* typeAggregate */
@@ -21,4 +21,3 @@ const AggregatorExportsTemplate = `
 export var {{$e.Package}} = {
 {{range $j, $x := $e.Exports}}  ...{{$x}}_service_in,{{end}}
 }{{end}}`
-

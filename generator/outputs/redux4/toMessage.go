@@ -1,6 +1,5 @@
 package redux4
 
-
 const ToMessageImportTemplate = `{{range $i, $e := .}}
 import {{$e.ModuleName}} from '{{$e.FileName}}';{{end}}`
 

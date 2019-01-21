@@ -25,4 +25,3 @@ export const initialProtocState : ProtocState = { {{range $i, $entity := .}}
 {{end}}
 }
 `
-

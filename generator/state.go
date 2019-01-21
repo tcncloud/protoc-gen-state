@@ -33,7 +33,6 @@ import (
 	"bytes"
 	"text/template"
 
-  "github.com/tcncloud/protoc-gen-state/state"
 	gp "github.com/golang/protobuf/protoc-gen-go/descriptor"
 )
 
@@ -43,26 +42,25 @@ type StateEntity struct {
 	Repeated     bool
 }
 
-func (this *GenericOutputter) CreateStateFile(stateFields []*gp.FieldDescriptorProto, outputType state.OutputTypes, debug bool) (*File, error) {
-  stateEntities := []*StateEntity{}
+func (this *GenericOutputter) CreateStateFile(stateFields []*gp.FieldDescriptorProto, debug bool) (*File, error) {
+	stateEntities := []*StateEntity{}
 
-  // transform stateFields into our StateEntity implementation so template can read values
-  for _, entity := range stateFields {
-    stateEntities = append(stateEntities, &StateEntity{
-      FieldName:    entity.GetJsonName(),
-      FullTypeName: CreatePackageAndTypeString(entity.GetTypeName()),
-      Repeated:     entity.GetLabel() == 3,
-    })
-  }
+	// transform stateFields into our StateEntity implementation so template can read values
+	for _, entity := range stateFields {
+		stateEntities = append(stateEntities, &StateEntity{
+			FieldName:    entity.GetJsonName(),
+			FullTypeName: CreatePackageAndTypeString(entity.GetTypeName()),
+			Repeated:     entity.GetLabel() == 3,
+		})
+	}
 
-  tmpl := template.Must(template.New("state").Parse(this.StateFile.Template))
+	tmpl := template.Must(template.New("state").Parse(this.StateFile.Template))
 
-  var output bytes.Buffer
-  tmpl.Execute(&output, stateEntities)
+	var output bytes.Buffer
+	tmpl.Execute(&output, stateEntities)
 
-  return &File{
-    Name:    "state_pb.ts",
-    Content: output.String(),
-  }, nil
+	return &File{
+		Name:    "state_pb.ts",
+		Content: output.String(),
+	}, nil
 }
-

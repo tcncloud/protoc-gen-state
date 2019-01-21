@@ -37,7 +37,6 @@ import (
 	"strings"
 	"text/template"
 
-  "github.com/tcncloud/protoc-gen-state/state"
 	gp "github.com/golang/protobuf/protoc-gen-go/descriptor"
 	strcase "github.com/iancoleman/strcase"
 )
@@ -262,8 +261,7 @@ func generateMappingEntities(typeMap map[*gp.DescriptorProto]map[*gp.FieldDescri
 	return mappingEntities, fileSlice, nil
 }
 
-
-func (this *GenericOutputter) CreateToMessageFile(servFiles []*gp.FileDescriptorProto, outputType state.OutputTypes, protos []*gp.FileDescriptorProto, protocTsPath string, debug bool) (*File, error) {
+func (this *GenericOutputter) CreateToMessageFile(servFiles []*gp.FileDescriptorProto, protos []*gp.FileDescriptorProto, protocTsPath string, debug bool) (*File, error) {
 	improvedDescriptors := CreateImprovedDescriptors(protos)
 
 	// TODO: first part finished, should have a type map set up now
