@@ -27,6 +27,10 @@ generate_state() { # first parameter should be the name of the output directory
 }
 
 
+
+# install yarn first to have protoc-gen-ts installed
+yarn
+
 # This command finds the code block of "enum OutputTypes" in the state/options.proto file e.g.:
   # enum OutputTypes {
   #   redux3 = 0;
