@@ -1,4 +1,4 @@
-// Copyright 2017, TCN Inc.
+
 // All rights reserved.
 
 // Redistribution and use in source and binary forms, with or without
@@ -66,6 +66,12 @@ func (this *GenericOutputter) CreateEpicFile(stateFields []*gp.FieldDescriptorPr
 
 	//set up host string
 	var host string
+  // TODO figure out how to get redux 3 and 4 working for genericOutputter
+    // maybe:
+      // call this.outputtype == redux3 . 
+      // create template function checks outputtype == redux3
+      // have both host possiblities but do a javascript truthy check: var host  = host1 || host2
+  
 	if hostname != "" {
 		host = fmt.Sprintf("var host = '%s%s';", hostname, port)
 	} else if hostnameLocation != "" {
@@ -167,7 +173,7 @@ func (this *GenericOutputter) CreateEpicFile(stateFields []*gp.FieldDescriptorPr
 		}
 
 		timeout := fieldAnnotations.GetTimeout()
-		if timeout == -1 { // if it wasn't overriden
+		if timeout == 0 { // if it wasn't overriden
 			timeout = defaultTimeout
 		}
 		retries := fieldAnnotations.GetRetries()
