@@ -1,4 +1,3 @@
-
 // All rights reserved.
 
 // Redistribution and use in source and binary forms, with or without
@@ -33,53 +32,53 @@ import (
 	"bytes"
 	"fmt"
 	gp "github.com/golang/protobuf/protoc-gen-go/descriptor"
+	"github.com/tcncloud/protoc-gen-state/state"
 	"strconv"
 	"strings"
 	"text/template"
-  "github.com/tcncloud/protoc-gen-state/state"
 )
 
 type EpicEntity struct {
-	Name                string
-  OutputType          state.OutputTypes
-	ProtoInputType      string
-	ProtoOutputType     string
-	FullMethodName      string
-	JsonName            string
-	Debounce            int64
-	Timeout             int64
-	Retries             int64
-	Repeat              bool
-	Auth                string
-	AuthFollowup        string
-	Host                string
-	Updater             bool
-	Debug               bool
+	Name            string
+	OutputType      state.OutputTypes
+	ProtoInputType  string
+	ProtoOutputType string
+	FullMethodName  string
+	JsonName        string
+	Debounce        int64
+	Timeout         int64
+	Retries         int64
+	Repeat          bool
+	Auth            string
+	AuthFollowup    string
+	Host            string
+	Updater         bool
+	Debug           bool
 }
 
 func GetHostVariableString(outputType state.OutputTypes, hostname string, hostnameLocation string, portin int64) string {
-  var host string
-  port := ":" + strconv.FormatInt(portin, 10)
+	var host string
+	port := ":" + strconv.FormatInt(portin, 10)
 
-  switch state.OutputTypes_name[int32(outputType)] {
-  case "redux4":
-    host = fmt.Sprintf("var host = state$.value.%s.slice(0, -1) + '%s';", hostnameLocation, port)
-    if hostname != "" {
-      host = fmt.Sprintf("var host = '%s%s';", hostname, port)
-    }
-  case "redux3":
-    host = fmt.Sprintf("var host = store.getState().%s.slice(0, -1) + '%s';", hostnameLocation, port)
-    if hostname != "" {
-      host = fmt.Sprintf("var host = '%s%s';", hostname, port)
-    }
-  }
-  return host
+	switch state.OutputTypes_name[int32(outputType)] {
+	case "redux4":
+		host = fmt.Sprintf("var host = state$.value.%s.slice(0, -1) + '%s';", hostnameLocation, port)
+		if hostname != "" {
+			host = fmt.Sprintf("var host = '%s%s';", hostname, port)
+		}
+	case "redux3":
+		host = fmt.Sprintf("var host = store.getState().%s.slice(0, -1) + '%s';", hostnameLocation, port)
+		if hostname != "" {
+			host = fmt.Sprintf("var host = '%s%s';", hostname, port)
+		}
+	}
+	return host
 }
 
 func (this *GenericOutputter) CreateEpicFile(stateFields []*gp.FieldDescriptorProto, customFields []*gp.FieldDescriptorProto, serviceFiles []*gp.FileDescriptorProto, defaultTimeout int64, defaultRetries int64, authTokenLocation string, hostnameLocation string, hostname string, portin int64, debounce int64, debug bool) (*File, error) {
 	epicEntities := []*EpicEntity{}
 
-  host := GetHostVariableString(this.OutputType, hostname, hostnameLocation, portin)
+	host := GetHostVariableString(this.OutputType, hostname, hostnameLocation, portin)
 
 	// transform stateFields into our EpicEntity implementation so template can read values
 	for _, field := range stateFields {
@@ -143,21 +142,21 @@ func (this *GenericOutputter) CreateEpicFile(stateFields []*gp.FieldDescriptorPr
 				}
 
 				epicEntities = append(epicEntities, &EpicEntity{
-					Name:           CrudName(c, repeated) + strings.Title(*field.JsonName),
-          OutputType: this.OutputType,
-					ProtoInputType:      fmt.Sprintf("ProtocTypes.%s", CreatePackageAndTypeString(meth.GetInputType())),
-					ProtoOutputType:     fmt.Sprintf("ProtocTypes.%s", CreatePackageAndTypeString(meth.GetOutputType())),
-					FullMethodName: fmt.Sprintf("ProtocServices.%s", FullMethodNameFormat(crudAnnotation)),
-					JsonName:       *field.JsonName,
-					Debounce:       debounce,
-					Timeout:        timeout,
-					Retries:        retries,
-					Repeat:         repeatEntity,
-					Auth:           idToken,
-					AuthFollowup:   authFollowup,
-					Host:           host,
-					Updater:        updater,
-					Debug:          debug,
+					Name:            CrudName(c, repeated) + strings.Title(*field.JsonName),
+					OutputType:      this.OutputType,
+					ProtoInputType:  fmt.Sprintf("ProtocTypes.%s", CreatePackageAndTypeString(meth.GetInputType())),
+					ProtoOutputType: fmt.Sprintf("ProtocTypes.%s", CreatePackageAndTypeString(meth.GetOutputType())),
+					FullMethodName:  fmt.Sprintf("ProtocServices.%s", FullMethodNameFormat(crudAnnotation)),
+					JsonName:        *field.JsonName,
+					Debounce:        debounce,
+					Timeout:         timeout,
+					Retries:         retries,
+					Repeat:          repeatEntity,
+					Auth:            idToken,
+					AuthFollowup:    authFollowup,
+					Host:            host,
+					Updater:         updater,
+					Debug:           debug,
 				})
 			}
 		}
@@ -208,20 +207,20 @@ func (this *GenericOutputter) CreateEpicFile(stateFields []*gp.FieldDescriptorPr
 
 			// TODO uses repeated from the field name, should use the output type
 			epicEntities = append(epicEntities, &EpicEntity{
-				Name:           "custom" + strings.Title(*field.JsonName),
-        OutputType: this.OutputType,
-				ProtoInputType:      fmt.Sprintf("ProtocTypes.%s", CreatePackageAndTypeString(meth.GetInputType())),
-				ProtoOutputType:     fmt.Sprintf("ProtocTypes.%s", CreatePackageAndTypeString(meth.GetOutputType())),
-				FullMethodName: fmt.Sprintf("ProtocServices.%s", FullMethodNameFormat(crudAnnotation)),
-				JsonName:       *field.JsonName,
-				Debounce:       debounce,
-				Timeout:        timeout,
-				Retries:        retries,
-				Repeat:         repeated,
-				Auth:           idToken,
-				AuthFollowup:   authFollowup,
-        Host:           host,
-				Debug:          debug,
+				Name:            "custom" + strings.Title(*field.JsonName),
+				OutputType:      this.OutputType,
+				ProtoInputType:  fmt.Sprintf("ProtocTypes.%s", CreatePackageAndTypeString(meth.GetInputType())),
+				ProtoOutputType: fmt.Sprintf("ProtocTypes.%s", CreatePackageAndTypeString(meth.GetOutputType())),
+				FullMethodName:  fmt.Sprintf("ProtocServices.%s", FullMethodNameFormat(crudAnnotation)),
+				JsonName:        *field.JsonName,
+				Debounce:        debounce,
+				Timeout:         timeout,
+				Retries:         retries,
+				Repeat:          repeated,
+				Auth:            idToken,
+				AuthFollowup:    authFollowup,
+				Host:            host,
+				Debug:           debug,
 			})
 		}
 	}

@@ -106,7 +106,7 @@ func Generate(filepaths []string, protos []*gp.FileDescriptorProto) ([]*File, er
 	debounce := defaultInt64(fileOptions.GetDebounce(), 400)
 	defaultTimeout := defaultInt64(fileOptions.GetDefaultTimeout(), 15000)
 	defaultRetries := fileOptions.GetDefaultRetries()
-	port := defaultInt64(fileOptions.GetPort(),  9090)
+	port := defaultInt64(fileOptions.GetPort(), 9090)
 	debug := fileOptions.GetDebug()
 	protocTsPath := fileOptions.GetProtocTsPath()
 	outputType := fileOptions.GetOutputType()
@@ -114,9 +114,9 @@ func Generate(filepaths []string, protos []*gp.FileDescriptorProto) ([]*File, er
 	hostnameLocation := fileOptions.GetHostnameLocation()
 	authTokenLocation := fileOptions.GetAuthTokenLocation()
 
-  if hostname == "" && hostnameLocation == "" {
-    return nil, fmt.Errorf("No hostname or hostnameLocation provided. Provide either the hostname or the hostname location in redux so the plugin knows where to send api calls.")
-  }
+	if hostname == "" && hostnameLocation == "" {
+		return nil, fmt.Errorf("No hostname or hostnameLocation provided. Provide either the hostname or the hostname location in redux so the plugin knows where to send api calls.")
+	}
 
 	if protocTsPath[len(protocTsPath)-1] != '/' {
 		// add a slash to the end of the config option if it doesnt exist
@@ -220,8 +220,8 @@ func Generate(filepaths []string, protos []*gp.FileDescriptorProto) ([]*File, er
 }
 
 func defaultInt64(in int64, defaulted int64) int64 {
-  if in == 0 {
-    return defaulted
-  }
-  return in
+	if in == 0 {
+		return defaulted
+	}
+	return in
 }
