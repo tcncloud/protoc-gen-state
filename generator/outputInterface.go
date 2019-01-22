@@ -79,7 +79,7 @@ func (this *GenericOutputter) SetOutputType(outputType state.OutputTypes) {
 		this.AggregatorFile.TypeTemplate = redux4.AggregatorTypeTemplate
 		this.AggregatorFile.ServiceTemplate = redux4.AggregatorServiceTemplate
 		this.AggregatorFile.ExportsTemplate = redux4.AggregatorExportsTemplate
-	default: // defaults to redux3
+  case "redux3":
 		this.StateFile.Template = redux3.StateTemplate
 		this.ReducerFile.Template = redux3.ReducerTemplate
 		this.ActionFile.ImportTemplate = redux3.ActionImportTemplate
@@ -97,7 +97,10 @@ func (this *GenericOutputter) SetOutputType(outputType state.OutputTypes) {
 		this.AggregatorFile.TypeTemplate = redux3.AggregatorTypeTemplate
 		this.AggregatorFile.ServiceTemplate = redux3.AggregatorServiceTemplate
 		this.AggregatorFile.ExportsTemplate = redux3.AggregatorExportsTemplate
-	}
+  default:
+    // cant get here because the outputType proto annotation is required
+  }
+  
 }
 
 func MakeGenericOutputter(outputType state.OutputTypes) *GenericOutputter {

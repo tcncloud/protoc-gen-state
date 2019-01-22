@@ -33,7 +33,7 @@ export const {{$e.Name}}Epic = (action$, store) => action$
 	.filter(isActionOf(protocActions.{{$e.Name}}Request))
 	.debounceTime({{$e.Debounce}})
 	.map(({ payload, meta: { resolve = noop, reject = noop } }) => ({
-		message: toMessage(payload, {{$e.InputType}}),
+		message: toMessage(payload, {{$e.ProtoInputType}}),
 		resolve,
 		reject,
 	}))
@@ -41,12 +41,12 @@ export const {{$e.Name}}Epic = (action$, store) => action$
 {{if $e.Repeat}} {{template "grpcStream" $e}} {{ else }} {{template "grpcUnary" $e}} {{end}}
 		.retry({{$e.Retries}})
 		.timeout({{$e.Timeout}}){{if $e.Updater}}
-		.map(obj => ({ ...obj } as { prev: {{$e.OutputType}}.AsObject, updated: {{$e.OutputType}}.AsObject } ))
+		.map(obj => ({ ...obj } as { prev: {{$e.ProtoOutputType}}.AsObject, updated: {{$e.ProtoOutputType}}.AsObject } ))
 		.map(lib => {
 			request.resolve(lib.prev, lib.updated);
 			return protocActions.{{$e.Name}}Success(lib);
 		}){{else}}
-		.map((resObj: {{$e.OutputType}}.AsObject{{if $e.Repeat}}[]{{end}}) => {
+		.map((resObj: {{$e.ProtoOutputType}}.AsObject{{if $e.Repeat}}[]{{end}}) => {
 			request.resolve(resObj);
 			return protocActions.{{$e.Name}}Success(resObj);
 		}){{end}}
@@ -68,7 +68,7 @@ export const {{$e.Name}}Epic = (action$, store) => action$
 				request: request.message,
 				host: host,
 				{{.AuthFollowup}}
-				onEnd: (res: UnaryOutput<{{.OutputType}}>) => {
+				onEnd: (res: UnaryOutput<{{.ProtoOutputType}}>) => {
           {{if .Debug}}console.log('onEnd {{.FullMethodName}}: ', res.message);{{end}}
 					if(res.status != grpc.Code.OK){
             {{if .Debug}}console.log('Error in epic -- status: ', res.status, ' message: ', res.statusMessage);{{end}}
@@ -85,11 +85,11 @@ export const {{$e.Name}}Epic = (action$, store) => action$
 		return Observable
 			.defer(() => new Promise((resolve, reject) => {
         {{if .Debug}}console.log('calling {{.FullMethodName}} with payload: ', request.message);{{end}}
-				var arr: {{.OutputType}}.AsObject[] = [];
+				var arr: {{.ProtoOutputType}}.AsObject[] = [];
 				const client = grpc.client({{.FullMethodName}}, {
 					host: host,
 				});
-				client.onMessage((message: {{.OutputType}}) => {
+				client.onMessage((message: {{.ProtoOutputType}}) => {
           {{if .Debug}}console.log('in {{.FullMethodName}} streaming message: ', message.toObject());{{end}}
 					arr.push(message.toObject());
 				});

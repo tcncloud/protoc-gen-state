@@ -36,49 +36,50 @@ import (
 	"strconv"
 	"strings"
 	"text/template"
+  "github.com/tcncloud/protoc-gen-state/state"
 )
 
 type EpicEntity struct {
-	Name           string
-	InputType      string
-	OutputType     string
-	FullMethodName string
-	JsonName       string
-	Debounce       int64
-	Timeout        int64
-	Retries        int64
-	Repeat         bool
-	Auth           string
-	AuthFollowup   string
-	Host           string
-	Updater        bool
-	Debug          bool
+	Name                string
+  OutputType          state.OutputTypes
+	ProtoInputType      string
+	ProtoOutputType     string
+	FullMethodName      string
+	JsonName            string
+	Debounce            int64
+	Timeout             int64
+	Retries             int64
+	Repeat              bool
+	Auth                string
+	AuthFollowup        string
+	Host                string
+	Updater             bool
+	Debug               bool
+}
+
+func GetHostVariableString(outputType state.OutputTypes, hostname string, hostnameLocation string, portin int64) string {
+  var host string
+  port := ":" + strconv.FormatInt(portin, 10)
+
+  switch state.OutputTypes_name[int32(outputType)] {
+  case "redux4":
+    host = fmt.Sprintf("var host = state$.value.%s.slice(0, -1) + '%s';", hostnameLocation, port)
+    if hostname != "" {
+      host = fmt.Sprintf("var host = '%s%s';", hostname, port)
+    }
+  case "redux3":
+    host = fmt.Sprintf("var host = store.getState().%s.slice(0, -1) + '%s';", hostnameLocation, port)
+    if hostname != "" {
+      host = fmt.Sprintf("var host = '%s%s';", hostname, port)
+    }
+  }
+  return host
 }
 
 func (this *GenericOutputter) CreateEpicFile(stateFields []*gp.FieldDescriptorProto, customFields []*gp.FieldDescriptorProto, serviceFiles []*gp.FileDescriptorProto, defaultTimeout int64, defaultRetries int64, authTokenLocation string, hostnameLocation string, hostname string, portin int64, debounce int64, debug bool) (*File, error) {
 	epicEntities := []*EpicEntity{}
 
-	// set up port string
-	var port string
-	if portin != -1 {
-		port = ":" + strconv.FormatInt(portin, 10)
-	}
-
-	//set up host string
-	var host string
-  // TODO figure out how to get redux 3 and 4 working for genericOutputter
-    // maybe:
-      // call this.outputtype == redux3 . 
-      // create template function checks outputtype == redux3
-      // have both host possiblities but do a javascript truthy check: var host  = host1 || host2
-  
-	if hostname != "" {
-		host = fmt.Sprintf("var host = '%s%s';", hostname, port)
-	} else if hostnameLocation != "" {
-		host = fmt.Sprintf("var host = store.getState().%s.slice(0, -1) + '%s';", hostnameLocation, port)
-	} else {
-		return nil, fmt.Errorf("No hostname or hostnameLocation provided. Provide either the hostname or the hostname location in redux so the plugin knows where to send api calls.")
-	}
+  host := GetHostVariableString(this.OutputType, hostname, hostnameLocation, portin)
 
 	// transform stateFields into our EpicEntity implementation so template can read values
 	for _, field := range stateFields {
@@ -143,8 +144,9 @@ func (this *GenericOutputter) CreateEpicFile(stateFields []*gp.FieldDescriptorPr
 
 				epicEntities = append(epicEntities, &EpicEntity{
 					Name:           CrudName(c, repeated) + strings.Title(*field.JsonName),
-					InputType:      fmt.Sprintf("ProtocTypes.%s", CreatePackageAndTypeString(meth.GetInputType())),
-					OutputType:     fmt.Sprintf("ProtocTypes.%s", CreatePackageAndTypeString(meth.GetOutputType())),
+          OutputType: this.OutputType,
+					ProtoInputType:      fmt.Sprintf("ProtocTypes.%s", CreatePackageAndTypeString(meth.GetInputType())),
+					ProtoOutputType:     fmt.Sprintf("ProtocTypes.%s", CreatePackageAndTypeString(meth.GetOutputType())),
 					FullMethodName: fmt.Sprintf("ProtocServices.%s", FullMethodNameFormat(crudAnnotation)),
 					JsonName:       *field.JsonName,
 					Debounce:       debounce,
@@ -207,8 +209,9 @@ func (this *GenericOutputter) CreateEpicFile(stateFields []*gp.FieldDescriptorPr
 			// TODO uses repeated from the field name, should use the output type
 			epicEntities = append(epicEntities, &EpicEntity{
 				Name:           "custom" + strings.Title(*field.JsonName),
-				InputType:      fmt.Sprintf("ProtocTypes.%s", CreatePackageAndTypeString(meth.GetInputType())),
-				OutputType:     fmt.Sprintf("ProtocTypes.%s", CreatePackageAndTypeString(meth.GetOutputType())),
+        OutputType: this.OutputType,
+				ProtoInputType:      fmt.Sprintf("ProtocTypes.%s", CreatePackageAndTypeString(meth.GetInputType())),
+				ProtoOutputType:     fmt.Sprintf("ProtocTypes.%s", CreatePackageAndTypeString(meth.GetOutputType())),
 				FullMethodName: fmt.Sprintf("ProtocServices.%s", FullMethodNameFormat(crudAnnotation)),
 				JsonName:       *field.JsonName,
 				Debounce:       debounce,
@@ -217,7 +220,7 @@ func (this *GenericOutputter) CreateEpicFile(stateFields []*gp.FieldDescriptorPr
 				Repeat:         repeated,
 				Auth:           idToken,
 				AuthFollowup:   authFollowup,
-				Host:           host,
+        Host:           host,
 				Debug:          debug,
 			})
 		}
