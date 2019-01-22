@@ -9,8 +9,10 @@ import { RootEpic } from './rootEpic';
 
 function configureStore(initialState?: RootState) {
   // configure middleware
+  const epicMiddleware = createEpicMiddleware()
+
   const middlewares = [
-    createEpicMiddleware(RootEpic),
+    epicMiddleware
   ];
 
   // compose enhancers with dev tools
@@ -24,6 +26,8 @@ function configureStore(initialState?: RootState) {
     initialState!,
     enhancer
   );
+
+  epicMiddleware.run(rootEpic)
 
   // Hot reload reducers
   // if (module.hot) {

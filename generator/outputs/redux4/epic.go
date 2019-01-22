@@ -29,7 +29,7 @@ function createErrorObject(code: number|string|undefined, message: string): Node
 }
 
 {{range $i, $e := .}}
-export const {{$e.Name}}Epic = (action$, store) => action$.pipe(
+export const {{$e.Name}}Epic = (action$, state$) => action$.pipe(
 	filter(isActionOf(protocActions.{{$e.Name}}Request)),
 	debounceTime({{$e.Debounce}}),
 	map(({ payload, meta: { resolve = noop, reject = noop } }) => ({

@@ -12,7 +12,7 @@ import { combineEpics, Epic } from 'redux-observable';
 // import 'rxjs/add/observable/merge';
 // import 'rxjs/add/observable/from';
 
-import { of, Observable, defer, from } from 'rxjs';
+import { of, Observable, from } from 'rxjs';
 import { filter, map, flatMap, debounceTime, tap, catchError, timeout, retry } from 'rxjs/operators';
 import 'rxjs/add/observable/dom/ajax';
 
@@ -38,7 +38,7 @@ const timeoutEpic: Epic<RootAction, RootState> = (action$) => action$.pipe(
   ,tap((action:any) => { console.log('right here: ', action); })
   ,debounceTime(1000)
   ,flatMap((action:any) => {
-    // return Observable
+    // return Observable.pipe(
     return 
       // just set a timer longer than the timeout
       from(() => new Promise((resolve) => {
@@ -70,7 +70,7 @@ const retryEpic: Epic<RootAction, RootState> = (action$) => action$.pipe(
   ,tap((action:any) => { console.log('right here: ', action); })
   ,debounceTime(1000)
   ,flatMap((action:any) => {
-    // return Observable
+    // return Observable.pipe(
     return
       from(() => new Promise((resolve, reject) => {
         let counter = 0
@@ -104,14 +104,14 @@ const retryEpic: Epic<RootAction, RootState> = (action$) => action$.pipe(
   })
 )
 
-const codeEpic = (action$, store) => action$.pipe(
+const codeEpic = (action$, state$) => action$.pipe(
   filter(isActionOf(actions.codeRequestPromise))
   ,map((action:any) => ({ ...action.payload, request: toMessage(action.payload.book, ProtocTypes.readinglist.Book)}))
   ,flatMap((action: any) => {
-    // return Observable
+    // return Observable.pipe(
     return
       from(() => new Promise((resolve, reject) => {
-        var host = store.getState()['config']['host'].slice(0, -1) + ":9090";
+        var host = state$.value.config.host.slice(0, -1) + ":9090";
         grpc.unary(ProtocServices.readinglist.ReadingList.ErrorOut, {
           request: action.request,
           host: host,
