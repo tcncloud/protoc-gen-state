@@ -9,9 +9,8 @@ import * as protocActions from './actions_pb';
 import * as ProtocTypes from './protoc_types_pb';
 import { ProtocState, initialProtocState } from './state_pb';
 
-type RootAction = ActionType<typeof protocActions>;
 
-export function protocReducer(state: ProtocState = initialProtocState, action: RootAction) {
+export function protocReducer(state: ProtocState = initialProtocState, action: ActionType<typeof protocActions>): ProtocState {
   switch(action.type) { {{range $i, $entity := .}}
     case getType(protocActions['{{$entity.CludgEffectName}}']):
       {{$entity.SwitchCase}}{{end}}

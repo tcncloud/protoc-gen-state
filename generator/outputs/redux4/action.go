@@ -12,7 +12,7 @@ const ActionCreateTemplate = `{{range $i, $e := .}}
 export const create{{$e.JsonName | title}}Request = createAction('PROTOC_CREATE_{{$e.JsonName | caps}}_REQUEST', (res) => {
 	return (
 		{{$e.JsonName}}: {{$e.InputType}},
-		resolve?: (payload: {{$e.OutputType}}{{if $e.Repeat}}[]{{end}}) => void,
+		resolve?: (payload: {{$e.OutputType}}) => void,
 		reject?: (error: NodeJS.ErrnoException) => void,
 	) => res({{$e.JsonName}}, { resolve, reject });
 });
@@ -112,7 +112,7 @@ const ActionDeleteTemplate = `{{range $i, $e := .}}
 export const delete{{$e.JsonName | title}}Request = createAction('PROTOC_DELETE_{{$e.JsonName | caps}}_REQUEST', (res) => {
 	return (
 		{{$e.JsonName}}: {{$e.InputType}},
-		resolve?: (payload: {{$e.OutputType}}{{if $e.Repeat}}[]{{end}}) => void,
+		resolve?: (payload: {{$e.OutputType}}) => void,
 		reject?: (error: NodeJS.ErrnoException) => void,
 	) => res({{$e.JsonName}}, { resolve, reject });
 });

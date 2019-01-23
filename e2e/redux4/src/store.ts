@@ -1,15 +1,16 @@
 import { createEpicMiddleware } from 'redux-observable';
 import { composeWithDevTools } from 'redux-devtools-extension';
-import { createStore, applyMiddleware } from "redux";
+import { Store, createStore, applyMiddleware } from "redux";
 
 import { RootReducer } from './rootReducer';
 import { RootState, InitialState } from './rootState';
+import { RootAction } from './rootAction';
 import { RootEpic } from './rootEpic';
 
 
-function configureStore(initialState?: RootState) {
+function configureStore(initialState?: RootState): Store<RootState> {
   // configure middleware
-  const epicMiddleware = createEpicMiddleware()
+  const epicMiddleware = createEpicMiddleware<RootAction, RootAction, RootState>()
 
   const middlewares = [
     epicMiddleware
@@ -27,7 +28,7 @@ function configureStore(initialState?: RootState) {
     enhancer
   );
 
-  epicMiddleware.run(rootEpic)
+  epicMiddleware.run(RootEpic)
 
   // Hot reload reducers
   // if (module.hot) {
@@ -44,4 +45,4 @@ function configureStore(initialState?: RootState) {
   return store;
 }
 
-export const Store = configureStore(InitialState);
+export const store = configureStore(InitialState);

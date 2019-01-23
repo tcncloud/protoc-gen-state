@@ -98,7 +98,7 @@ func (this *GenericOutputter) CreateReducerFile(stateFields []*gp.FieldDescripto
         %s: {
           ...state.%s,
           isLoading: false,
-          error: { code: action.payload.code, message: action.payload.message },
+          error: { code: action.payload.code || '', message: action.payload.message },
         }
       }`, entity.GetJsonName(), entity.GetJsonName())
 					case CANCEL:

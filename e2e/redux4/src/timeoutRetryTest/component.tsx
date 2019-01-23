@@ -4,7 +4,7 @@ import { connect } from 'react-redux';
 import { bindActionCreators, Dispatch  } from 'redux';
 
 import * as ProtocTypes from 'protos/BasicState/protoc_types_pb';
-import { RootState } from '../rootState';
+import { RootAction } from '../rootAction';
 
 import * as actions from './actions';
 
@@ -93,7 +93,7 @@ function mapStateToProps(): IState {
   return { };
 }
 
-function mapDispatchToProps(dispatch: Dispatch<RootState>): IDispatch {
+function mapDispatchToProps(dispatch: Dispatch<RootAction>): IDispatch {
   return bindActionCreators({
     retryRequestPromise: actions.retryRequestPromise,
     timeoutRequestPromise: actions.timeoutRequestPromise,

@@ -4,13 +4,13 @@ import { combineEpics } from 'redux-observable';
 // import { RootGraphEpics } from './graph/epics';
 // import { LibraryEpics } from './book/epics';
 import { TimeoutRetryEpics } from './timeoutRetryTest/epics';
-import { protocEpics } from 'protos/BasicState/epics_pb';
+// import { protocEpics } from 'protos/BasicState/epics_pb';
 
 
 export const RootEpic = combineEpics(
   // DogEpics,
   // RootGraphEpics,
   // LibraryEpics,
-  protocEpics,
+  // protocEpics,
   TimeoutRetryEpics,
 )

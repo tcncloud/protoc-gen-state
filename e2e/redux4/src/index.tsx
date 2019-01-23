@@ -5,13 +5,13 @@ import 'rxjs';
 // import 'core-js';
 // import 'es6-shim';
 
-import { Store } from './store';
+import { store } from './store';
 import App from "./App";
-import "./index.css";
+// import "./index.css";
 
 
 ReactDOM.render(
-  <Provider store={Store}>
+  <Provider store={store}>
     <App />
   </Provider>,
   document.getElementById("root")

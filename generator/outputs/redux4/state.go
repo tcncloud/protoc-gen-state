@@ -10,7 +10,7 @@ import * as ProtocTypes from './protoc_types_pb';
 export interface ProtocState { {{range $i, $entity := .}}
 {{$entity.FieldName}}: {
   isLoading: boolean;
-  error: { code: string; message: string; };
+  error: { code: string; message: string; } | null;
   {{if $entity.Repeated}}value: ProtocTypes.{{$entity.FullTypeName}}.AsObject[];
   {{else}}value: ProtocTypes.{{$entity.FullTypeName}}.AsObject | null;{{end}}
 },

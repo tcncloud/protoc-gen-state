@@ -103,16 +103,22 @@ func Generate(filepaths []string, protos []*gp.FileDescriptorProto) ([]*File, er
 		return nil, fmt.Errorf("Error encountered while parsing file level annotations: %v", err)
 	}
 
-	debounce := fileOptions.GetDebounce()
-	defaultTimeout := fileOptions.GetDefaultTimeout()
+	debounce := defaultInt64(fileOptions.GetDebounce(), 400)
+	defaultTimeout := defaultInt64(fileOptions.GetDefaultTimeout(), 15000)
 	defaultRetries := fileOptions.GetDefaultRetries()
-	port := fileOptions.GetPort()
+	port := defaultInt64(fileOptions.GetPort(), 80)
 	debug := fileOptions.GetDebug()
 	protocTsPath := fileOptions.GetProtocTsPath()
 	outputType := fileOptions.GetOutputType()
 	hostname := fileOptions.GetHostname()
 	hostnameLocation := fileOptions.GetHostnameLocation()
 	authTokenLocation := fileOptions.GetAuthTokenLocation()
+
+	if hostname == "" && hostnameLocation == "" {
+		return nil, fmt.Errorf("No hostname or hostnameLocation provided. Provide either the hostname or the hostname location in redux so the plugin knows where to send api calls.")
+	} else if hostname != "" && hostnameLocation != "" {
+    return nil, fmt.Errorf("Both hostname and hostnameLocation provided. Provide either the hostname OR the hostname location.")
+  }
 
 	if protocTsPath[len(protocTsPath)-1] != '/' {
 		// add a slash to the end of the config option if it doesnt exist
@@ -213,4 +219,11 @@ func Generate(filepaths []string, protos []*gp.FileDescriptorProto) ([]*File, er
 	out = append(out, servicesPb)
 
 	return out, nil
+}
+
+func defaultInt64(in int64, defaulted int64) int64 {
+	if in == 0 {
+		return defaulted
+	}
+	return in
 }

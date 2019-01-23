@@ -6,7 +6,6 @@ import { RootState } from './rootState';
 // import { BookReducer } from './book/reducers';
 import { ConfigReducer } from './config/reducers';
 import { protocReducer } from 'protos/BasicState/reducer_pb';
-import { RootAction } from './rootAction';
 
 
 export const RootReducer: Reducer<RootState> = combineReducers({
