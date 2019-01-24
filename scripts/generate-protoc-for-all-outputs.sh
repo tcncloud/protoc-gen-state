@@ -6,10 +6,14 @@ cd "$(cd "$(dirname "$0")/../" > /dev/null && pwd)" || return
 GENERATED='./generated'
 
 generate_ts() { # first parameter should be the name of the output directory
+  cd e2e/$1 # we change to this directory so we can use it's version of protoc-gen-ts
+
   protoc --plugin="protoc-gen-ts=node_modules/.bin/protoc-gen-ts" \
     --js_out="import_style=commonjs,binary:." \
     --ts_out="service=true:." \
-    e2e/$1/protos/readinglist/readinglist.proto
+    protos/readinglist/readinglist.proto
+
+  cd ../../
 }
 
 generate_state() { # first parameter should be the name of the output directory

@@ -28,6 +28,25 @@ function createErrorObject(code: number|string|undefined, message: string): Node
 	return err;
 }
 
+function createHostString(hostname, hostnameLocation, port, store) {
+  let host = ""
+  if (hostname != "") {
+    host = hostname + port
+  } else if (hostnameLocation != "" ) {
+    host = store.getState().hostnameLocation
+    // last char
+    if (host.charAt(host.length - 1) == '/') {
+      host = host.slice(0,-1) + port
+    } else {
+      host = host + port
+    }
+  } else {
+    // hostnameLocation and host is empty
+    throw new Error("PROTOC-GEN-STATE: hostnameLocation is empty. Check that it's value in redux is set.")
+  }
+  return host
+}
+
 {{range $i, $e := .}}
 export const {{$e.Name}}Epic = (action$, store) => action$
 	.filter(isActionOf(protocActions.{{$e.Name}}Request))
@@ -62,7 +81,7 @@ export const {{$e.Name}}Epic = (action$, store) => action$
 {{define "grpcUnary"}}   return Observable
 		.defer(() => new Promise((resolve, reject) => {
       {{if .Debug}}console.log('calling {{.FullMethodName}} with payload: ', request.message);{{end}}
-      {{template "GetHost" .}}
+      var host = createHostString('{{.Hostname}}', '{{.HostnameLocation}}', '{{.Port}}', store)
 			{{.Auth}}
 			grpc.unary({{.FullMethodName}}, {
 				request: request.message,
@@ -81,7 +100,7 @@ export const {{$e.Name}}Epic = (action$, store) => action$
 				}
 			});
 		})){{end}}
-{{define "grpcStream"}}   {{template "GetHost" .}}
+{{define "grpcStream"}}  var host = createHostString('{{.Hostname}}', '{{.HostnameLocation}}', '{{.Port}}', store)
 		return Observable
 			.defer(() => new Promise((resolve, reject) => {
         {{if .Debug}}console.log('calling {{.FullMethodName}} with payload: ', request.message);{{end}}
@@ -109,7 +128,4 @@ export const protocEpics = combineEpics({{range $i, $e := .}}
 	{{$e.Name}}Epic,{{end}}
 )
 
-{{define "GetHost"}} 
-{{if .Hostname}}var host = '{{.Hostname}}{{.Port}}' {{ else }}var host = store.getState().{{.HostnameLocation}}.slice(0,-1) + '{{.Port}}'{{ end }}
-{{end}}
 `

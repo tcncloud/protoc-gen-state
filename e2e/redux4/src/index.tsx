@@ -7,7 +7,7 @@ import 'rxjs';
 
 import { store } from './store';
 import App from "./App";
-// import "./index.css";
+import "./index.css";
 
 
 ReactDOM.render(

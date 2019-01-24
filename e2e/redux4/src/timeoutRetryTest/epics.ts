@@ -5,7 +5,7 @@
  */
 
 
-import { grpc } from 'grpc-web-client';
+import { grpc } from '@improbable-eng/grpc-web';
 import { combineEpics, ActionsObservable, StateObservable } from 'redux-observable';
 
 // import { Observable } from 'rxjs/Rx';
@@ -14,7 +14,6 @@ import { combineEpics, ActionsObservable, StateObservable } from 'redux-observab
 
 import { of, from } from 'rxjs';
 import { delay, filter, map, flatMap, debounceTime, tap, catchError, timeout, retry } from 'rxjs/operators';
-// import 'rxjs/add/observable/dom/ajax';
 
 import { isActionOf, ActionType } from 'typesafe-actions';
 

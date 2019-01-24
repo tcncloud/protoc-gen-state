@@ -8,5 +8,10 @@
   },
   "keywords": [],
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "devDependencies": {
+    "@types/google-protobuf": "^3.2.7",
+    "google-protobuf": "^3.6.1",
+    "ts-protoc-gen": "^0.9.0"
+  }
 }

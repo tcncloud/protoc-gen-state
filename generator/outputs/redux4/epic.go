@@ -5,13 +5,11 @@ const EpicTemplate = `/* THIS FILE IS GENERATED FROM THE TOOL PROTOC-GEN-STATE  
 
 import { of, from } from 'rxjs';
 import { repeat, takeUntil, filter, map, flatMap, debounceTime, catchError, timeout, retry } from 'rxjs/operators';
-import 'rxjs/add/observable/dom/ajax';
 
 import { combineEpics, ActionsObservable, StateObservable } from 'redux-observable';
 import { isActionOf, ActionType } from 'typesafe-actions';
 import _ from 'lodash';
-import { grpc } from 'grpc-web-client';
-import { UnaryOutput } from 'grpc-web-client/dist/unary';
+import { grpc } from '@improbable-eng/grpc-web';
 import { toMessage } from './to_message_pb';
 import * as protocActions from './actions_pb';
 import * as ProtocTypes from './protoc_types_pb';
@@ -30,6 +28,25 @@ function createErrorObject(code: number|string|undefined, message: string): Node
 	if(code && typeof code == 'number') { err.code = code.toString(); }
 	if(code && typeof code == 'string') { err.code = code; }
 	return err;
+}
+
+function createHostString(hostname, hostnameLocation, port, state$) {
+  let host = ""
+  if (hostname != "") {
+    host = hostname + port
+  } else if (hostnameLocation != "" ) {
+    host = state$.value.hostnameLocation
+    // last char
+    if (host.charAt(host.length - 1) == '/') {
+      host = host.slice(0,-1) + port
+    } else {
+      host = host + port
+    }
+  } else {
+    // hostnameLocation and host is empty
+    throw new Error("PROTOC-GEN-STATE: hostnameLocation is empty. Check that it's value in redux is set.")
+  }
+  return host
 }
 
 {{range $i, $e := .}}
@@ -67,12 +84,13 @@ export const {{$e.Name}}Epic = (action$: ActionsObservable<ProtocActionsType>, s
 {{end}}
 {{define "grpcUnary"}}   return from(
 		new Promise((resolve, reject) => { {{if .Debug}}console.log('calling {{.FullMethodName}} with payload: ', request.message); {{ end }}
-      {{template "GetHost" .}} {{.Auth}}
+      var host = createHostString('{{.Hostname}}', '{{.HostnameLocation}}', '{{.Port}}', state$)
+      {{.Auth}}
 			grpc.unary({{.FullMethodName}}, {
 				request: request.message,
 				host: host,
 				{{.AuthFollowup}}
-				onEnd: (res: UnaryOutput<{{.ProtoOutputType}}>) => {
+				onEnd: (res: grpc.UnaryOutput<{{.ProtoOutputType}}>) => {
           {{if .Debug}}console.log('onEnd {{.FullMethodName}}: ', res.message);{{end}}
 					if(res.status != grpc.Code.OK){
             {{if .Debug}}console.log('Error in epic -- status: ', res.status, ' message: ', res.statusMessage);{{end}}
@@ -85,7 +103,7 @@ export const {{$e.Name}}Epic = (action$: ActionsObservable<ProtocActionsType>, s
 				}
 			});
 		})){{end}}
-{{define "grpcStream"}}   {{template "GetHost" .}}
+{{define "grpcStream"}}  var host = createHostString('{{.Hostname}}', '{{.HostnameLocation}}', '{{.Port}}', state$)
 		return from(
 			new Promise((resolve, reject) => {
         {{if .Debug}}console.log('calling {{.FullMethodName}} with payload: ', request.message);{{end}}
@@ -113,6 +131,4 @@ export const protocEpics = combineEpics({{range $i, $e := .}}
 	{{$e.Name}}Epic,{{end}}
 )
 
-{{define "GetHost"}} {{if .Hostname}}var host = '{{.Hostname}}{{.Port}}' {{ else }}var host = state$.value.{{.HostnameLocation}}.slice(0,-1) + '{{.Port}}'{{ end }}
-{{end}}
 `
