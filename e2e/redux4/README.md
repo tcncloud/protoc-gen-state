@@ -1,4 +1,4 @@
 ## TODO
 + noImplicityAny = true
 + strictNullchecks
-+ uncomment code pulling in generated code 
++ Test that the `throw new Error` in generated epic works

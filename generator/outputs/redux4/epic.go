@@ -30,7 +30,7 @@ function createErrorObject(code: number|string|undefined, message: string): Node
 	return err;
 }
 
-function createHostString(hostname, hostnameLocation, port, state$) {
+function createHostString(hostname: string, hostnameLocation: string, port: string, state$: StateObservable<any>) {
   let host = ""
   if (hostname != "") {
     host = hostname + port

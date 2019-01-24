@@ -13,7 +13,7 @@ messageMap.set({{$e.FileName}}.{{$e.TypeName}}, {{$e.MapName}});
 
 const ToMessageTemplate = `
 
-function getNestedMessageConstructor(messageType, fieldName) {
+function getNestedMessageConstructor(messageType: any, fieldName: string) {
   return messageMap.has(messageType) && messageMap.get(messageType).get(fieldName);
 }
 

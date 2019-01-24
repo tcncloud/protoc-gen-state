@@ -7,6 +7,7 @@ GENERATED='./generated'
 
 generate_ts() { # first parameter should be the name of the output directory
   cd e2e/$1 # we change to this directory so we can use it's version of protoc-gen-ts
+  yarn # install yarn first to have protoc-gen-ts installed
 
   protoc --plugin="protoc-gen-ts=node_modules/.bin/protoc-gen-ts" \
     --js_out="import_style=commonjs,binary:." \
@@ -30,10 +31,6 @@ generate_state() { # first parameter should be the name of the output directory
     --state_out=./e2e/$1/protos/BasicState ./e2e/$1/protos/basic.proto
 }
 
-
-
-# install yarn first to have protoc-gen-ts installed
-yarn
 
 # This command finds the code block of "enum OutputTypes" in the state/options.proto file e.g.:
   # enum OutputTypes {

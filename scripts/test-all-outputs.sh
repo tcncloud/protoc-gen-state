@@ -16,8 +16,10 @@ ginkgo .
   # then it gets the first word of each field
 for line in $(sed -n -e '/enum OutputTypes {/,/}/ p' state/options.proto | sed '1d;$d' | awk ' { print $1 } ')
 do
+  echo "TESTING $line"
   cd e2e/$line
   yarn
+
   yarn run test
   cd ../../
 done
