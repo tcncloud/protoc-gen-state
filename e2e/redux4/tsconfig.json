@@ -27,7 +27,7 @@
     "noUnusedLocals": true,
     "strict": true,
     "strictNullChecks": true,
-    "strictFunctionTypes": false,
+    "strictFunctionTypes": true,
     "pretty": true,
     "removeComments": true,
     "paths": {
