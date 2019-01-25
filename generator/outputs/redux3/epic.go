@@ -82,11 +82,11 @@ export const {{$e.Name}}Epic = (action$, store) => action$
 		.defer(() => new Promise((resolve, reject) => {
       {{if .Debug}}console.log('calling {{.FullMethodName}} with payload: ', request.message);{{end}}
       var host = createHostString('{{.Hostname}}', '{{.HostnameLocation}}', '{{.Port}}', store)
-			{{.Auth}}
+			{{template "authToken" .}}
 			grpc.unary({{.FullMethodName}}, {
 				request: request.message,
 				host: host,
-				{{.AuthFollowup}}
+				{{template "authFollowUp" .}}
 				onEnd: (res: UnaryOutput<{{.ProtoOutputType}}>) => {
           {{if .Debug}}console.log('onEnd {{.FullMethodName}}: ', res.message);{{end}}
 					if(res.status != grpc.Code.OK){
@@ -120,7 +120,7 @@ export const {{$e.Name}}Epic = (action$, store) => action$
 					}
 					resolve(arr);
 				});
-				client.start({{.Auth}});
+				client.start({{template "authToken" .}});
 				client.send(request.message);
 			})){{end}}
 
@@ -128,4 +128,9 @@ export const protocEpics = combineEpics({{range $i, $e := .}}
 	{{$e.Name}}Epic,{{end}}
 )
 
+{{define "authToken"}} {{if .Auth}} {{if .Repeat}} new grpc.Metadata({ 'Authorization': `+ "`" +`Bearer ${store.getState().{{.Auth}}}` + "`" + ` }) {{else}} var idToken = store.getState().{{.Auth}}; {{end}} {{end}}
+{{end}}
+
+{{define "authFollowUp"}} {{if .Auth}} {{if .Repeat}} {{else}} metadata: new grpc.Metadata({ 'Authorization': ` + "`" + `Bearer ${idToken}` + "`" + `}), {{end}} {{end}}
+{{end}}
 `
