@@ -15,8 +15,8 @@ option (state_file_options) = {
   hostname_location: "config.host",
   port: 9090,
   protoc_ts_path: "../",
-  output_type: redux4
-  // auth_token_location) = "config.token";
+  output_type: redux4,
+  auth_token_location: "config.token"
 };
 
 message ReduxState {
