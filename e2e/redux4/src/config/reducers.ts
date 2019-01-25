@@ -10,6 +10,7 @@ export interface ConfigState {
 
 export const InitialConfigState: ConfigState = {
   host: 'http://localhost/',
+  token: 'thisisasecrettoken',
 };
 
 export function ConfigReducer(state: ConfigState = InitialConfigState, action: RootAction) {

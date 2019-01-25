@@ -154,7 +154,7 @@ export const protocEpics = combineEpics({{range $i, $e := .}}
 	{{$e.Name}}Epic,{{end}}
 )
 
-{{define "authToken"}} {{if .Auth}} {{if .Repeat}} new grpc.Metadata({ 'Authorization': `+ "`" +`Bearer ${createAuthBearer(state$.value, '{{.Auth}}')}` + "`" + ` }) {{else}} let idToken = createAuthBearer(state$.value, '{{.Auth}}'); {{end}} {{end}}
+{{define "authToken"}} {{if .Auth}} {{if .Repeat}} new grpc.Metadata({ 'Authorization': `+ "`" +`Bearer ${createAuthBearer(state$, '{{.Auth}}')}` + "`" + ` }) {{else}} let idToken = createAuthBearer(state$, '{{.Auth}}'); {{end}} {{end}}
 {{end}}
 {{define "authFollowUp"}} {{if .Auth}} {{if .Repeat}} {{else}} metadata: new grpc.Metadata({ 'Authorization': ` + "`" + `Bearer ${idToken}` + "`" + `}), {{end}} {{end}}
 {{end}}
