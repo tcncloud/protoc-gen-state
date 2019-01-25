@@ -115,7 +115,7 @@ func Generate(filepaths []string, protos []*gp.FileDescriptorProto) ([]*File, er
 	authTokenLocation := fileOptions.GetAuthTokenLocation()
 
 	if hostname == "" && hostnameLocation == "" {
-		return nil, fmt.Errorf("No hostname or hostnameLocation provided. Provide either the hostname or the hostname location in redux so the plugin knows where to send api calls.")
+		return nil, fmt.Errorf("Provide either the hostname or the hostname location in redux so the plugin knows where to send api calls.")
 	} else if hostname != "" && hostnameLocation != "" {
     return nil, fmt.Errorf("Both hostname and hostnameLocation provided. Provide either the hostname OR the hostname location.")
   }

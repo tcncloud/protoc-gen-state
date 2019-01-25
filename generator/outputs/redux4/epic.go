@@ -23,19 +23,27 @@ function noop() {
 }
 
 function createErrorObject(code: number|string|undefined, message: string): NodeJS.ErrnoException {
-	var err: NodeJS.ErrnoException = new Error();
+	let err: NodeJS.ErrnoException = new Error();
 	err.message = message;
 	if(code && typeof code == 'number') { err.code = code.toString(); }
 	if(code && typeof code == 'string') { err.code = code; }
 	return err;
 }
 
-function createHostString(hostname: string, hostnameLocation: string, port: string, state$: StateObservable<any>) {
+function createHostString(hostname: string, hostnameLocation: string, port: string, state$: StateObservable<any>): string {
   let host = ""
   if (hostname != "") {
     host = hostname + port
   } else if (hostnameLocation != "" ) {
-    host = state$.value.hostnameLocation
+    let keys = hostnameLocation.split(".")
+    let host = state$.value[keys[0]]
+    for (let i = 1; i < keys.length; i ++) { // only enters this for loop if keys array is larger than 1
+      console.log('host: ', host)
+      host = host[keys[i]]
+    }
+    if (host == "" || host == undefined || host == null) {
+      throw new Error("PROTOC-GEN-STATE: the value of hostnameLocation <" + hostnameLocation + "> is empty. Check that this path is set in redux")
+    }
     // last char
     if (host.charAt(host.length - 1) == '/') {
       host = host.slice(0,-1) + port
@@ -44,7 +52,7 @@ function createHostString(hostname: string, hostnameLocation: string, port: stri
     }
   } else {
     // hostnameLocation and host is empty
-    throw new Error("PROTOC-GEN-STATE: hostnameLocation is empty. Check that it's value in redux is set.")
+    throw new Error("PROTOC-GEN-STATE: the hostnameLocation and the host is empty. Should never happen.")
   }
   return host
 }
@@ -84,7 +92,7 @@ export const {{$e.Name}}Epic = (action$: ActionsObservable<ProtocActionsType>, s
 {{end}}
 {{define "grpcUnary"}}   return from(
 		new Promise((resolve, reject) => { {{if .Debug}}console.log('calling {{.FullMethodName}} with payload: ', request.message); {{ end }}
-      var host = createHostString('{{.Hostname}}', '{{.HostnameLocation}}', '{{.Port}}', state$)
+      let host = createHostString('{{.Hostname}}', '{{.HostnameLocation}}', '{{.Port}}', state$)
       {{template "authToken" .}}
 			grpc.unary({{.FullMethodName}}, {
 				request: request.message,
@@ -103,11 +111,11 @@ export const {{$e.Name}}Epic = (action$: ActionsObservable<ProtocActionsType>, s
 				}
 			});
 		})){{end}}
-{{define "grpcStream"}}  var host = createHostString('{{.Hostname}}', '{{.HostnameLocation}}', '{{.Port}}', state$)
+{{define "grpcStream"}}  let host = createHostString('{{.Hostname}}', '{{.HostnameLocation}}', '{{.Port}}', state$)
 		return from(
 			new Promise((resolve, reject) => {
         {{if .Debug}}console.log('calling {{.FullMethodName}} with payload: ', request.message);{{end}}
-				var arr: {{.ProtoOutputType}}.AsObject[] = [];
+				let arr: {{.ProtoOutputType}}.AsObject[] = [];
 				const client = grpc.client({{.FullMethodName}}, {
 					host: host,
 				});
@@ -130,7 +138,7 @@ export const {{$e.Name}}Epic = (action$: ActionsObservable<ProtocActionsType>, s
 export const protocEpics = combineEpics({{range $i, $e := .}}
 	{{$e.Name}}Epic,{{end}}
 )
-{{define "authToken"}} {{if .Auth}} {{if .Repeat}} new grpc.Metadata({ 'Authorization': `+ "`" +`Bearer ${state$.value.{{.Auth}}}` + "`" + ` }) {{else}} var idToken = state$.value.{{.Auth}}; {{end}} {{end}}
+{{define "authToken"}} {{if .Auth}} {{if .Repeat}} new grpc.Metadata({ 'Authorization': `+ "`" +`Bearer ${state$.value.{{.Auth}}}` + "`" + ` }) {{else}} let idToken = state$.value.{{.Auth}}; {{end}} {{end}}
 {{end}}
 {{define "authFollowUp"}} {{if .Auth}} {{if .Repeat}} {{else}} metadata: new grpc.Metadata({ 'Authorization': ` + "`" + `Bearer ${idToken}` + "`" + `}), {{end}} {{end}}
 {{end}}

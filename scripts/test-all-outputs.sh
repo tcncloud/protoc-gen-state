@@ -21,5 +21,10 @@ do
   yarn
 
   yarn run test
+  if [ $? -ne 0 ]; then
+    echo "$line Tests failed"
+    exit 1
+  fi
+
   cd ../../
 done

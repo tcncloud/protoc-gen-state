@@ -33,7 +33,15 @@ function createHostString(hostname, hostnameLocation, port, store) {
   if (hostname != "") {
     host = hostname + port
   } else if (hostnameLocation != "" ) {
-    host = store.getState().hostnameLocation
+    let keys = hostnameLocation.split(".")
+    let host = store.getState()[keys[0]]
+    for (let i = 1; i < keys.length; i ++) { // only enters this for loop if keys array is larger than 1
+      console.log('host: ', host)
+      host = host[keys[i]]
+    }
+    if (host == "" || host == undefined || host == null) {
+      throw new Error("PROTOC-GEN-STATE: the value of hostnameLocation is empty. Check that this path is set in redux: "+ hostnameLocation)
+    }
     // last char
     if (host.charAt(host.length - 1) == '/') {
       host = host.slice(0,-1) + port
