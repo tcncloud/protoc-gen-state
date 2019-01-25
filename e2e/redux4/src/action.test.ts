@@ -78,7 +78,8 @@ describe('Action Type Tests', () => {
       let effects : string[] = ["Request", "Success", "Failure", "Cancel"]
       for(var cIndex : number = 0; cIndex < cruds.length; cIndex++){
         for(var eIndex : number = 0; eIndex < effects.length; eIndex++){
-          expect(ProtocActions[cruds[cIndex]+payload+effects[eIndex]]().type)
+          var action : any = Object.getOwnPropertyDescriptor(ProtocActions, cruds[cIndex]+payload+effects[eIndex])
+          expect(action.value().type)
             .toBe("PROTOC_" + cruds[cIndex].toUpperCase() + "_" + payload.toUpperCase() + "_" + effects[eIndex].toUpperCase())
         }
       }
@@ -91,7 +92,8 @@ describe('Action Type Tests', () => {
       let effects : string[] = ["Request", "Success", "Failure", "Cancel"]
       for(var cIndex : number = 0; cIndex < cruds.length; cIndex++){
         for(var eIndex : number = 0; eIndex < effects.length; eIndex++){
-          expect(ProtocActions[cruds[cIndex]+payload+effects[eIndex]]().type)
+          var action : any = Object.getOwnPropertyDescriptor(ProtocActions, cruds[cIndex]+payload+effects[eIndex])
+          expect(action.value().type)
             .toBe("PROTOC_" + cruds[cIndex].toUpperCase() + "_" + payload.toUpperCase() + "_" + effects[eIndex].toUpperCase())
         }
       }
@@ -148,7 +150,7 @@ describe('Action Payload Tests', () => {
     describe('Single Entity Cancel', () => {
       it('should return no payload', () => {
         let result = ProtocActions.createBookOfTheMonthCancel();
-        expect(result["payload"]).toEqual(undefined);
+        expect("payload" in result).toEqual(false);
       })
     })
     describe('Repeated Entity Request', () => {
@@ -182,7 +184,7 @@ describe('Action Payload Tests', () => {
     describe('Repeated Entity Cancel', () => {
       it('should return no payload', () => {
         let result = ProtocActions.createLibraryCancel();
-        expect(result["payload"]).toEqual(undefined);
+        expect("payload" in result).toEqual(false);
       })
     })
   })
@@ -219,7 +221,7 @@ describe('Action Payload Tests', () => {
     describe('Single Entity Cancel', () => {
       it('should return no payload', () => {
         let result = ProtocActions.getBookOfTheMonthCancel();
-        expect(result["payload"]).toEqual(undefined);
+        expect("payload" in result).toEqual(false);
       })
     })
     describe('Repeated Entity Request', () => {
@@ -253,7 +255,7 @@ describe('Action Payload Tests', () => {
     describe('Repeated Entity Cancel', () => {
       it('should return no payload', () => {
         let result = ProtocActions.listLibraryCancel();
-        expect(result["payload"]).toEqual(undefined);
+        expect("payload" in result).toEqual(false);
       })
     })
   })
@@ -295,7 +297,7 @@ describe('Action Payload Tests', () => {
     describe('Single Entity Cancel', () => {
       it('should return no payload', () => {
         let result = ProtocActions.updateBookOfTheMonthCancel();
-        expect(result["payload"]).toEqual(undefined);
+        expect("payload" in result).toEqual(false);
       })
     })
     describe('Repeated Entity Request', () => {
@@ -328,7 +330,7 @@ describe('Action Payload Tests', () => {
     describe('Repeated Entity Cancel', () => {
       it('should return no payload', () => {
         let result = ProtocActions.updateLibraryCancel();
-        expect(result["payload"]).toEqual(undefined);
+        expect("payload" in result).toEqual(false);
       })
     })
   })
@@ -365,7 +367,7 @@ describe('Action Payload Tests', () => {
     describe('Single Entity Cancel', () => {
       it('should return no payload', () => {
         let result = ProtocActions.deleteBookOfTheMonthCancel();
-        expect(result["payload"]).toEqual(undefined);
+        expect("payload" in result).toEqual(false);
       })
     })
     describe('Repeated Entity Request', () => {
@@ -399,7 +401,7 @@ describe('Action Payload Tests', () => {
     describe('Repeated Entity Cancel', () => {
       it('should return no payload', () => {
         let result = ProtocActions.deleteLibraryCancel();
-        expect(result["payload"]).toEqual(undefined);
+        expect("payload" in result).toEqual(false);
       })
     })
   })
@@ -407,13 +409,13 @@ describe('Action Payload Tests', () => {
   describe('Single Entity Reset', () => {
     it('should return no payload', () => {
       let result = ProtocActions.resetBookOfTheMonth();
-      expect(result["payload"]).toEqual(undefined);
+      expect("payload" in result).toEqual(false);
     })
   })
   describe('Repeated Entity Reset', () => {
     it('should return no payload', () => {
       let result = ProtocActions.resetLibrary();
-      expect(result["payload"]).toEqual(undefined);
+      expect("payload" in result).toEqual(false);
     })
   })
 })
@@ -435,7 +437,8 @@ describe('Custom Action Tests', () => {
       let effects : string[] = ["Request", "Success", "Failure", "Cancel"]
       for(var cIndex : number = 0; cIndex < cruds.length; cIndex++){
         for(var eIndex : number = 0; eIndex < effects.length; eIndex++){
-          expect(ProtocActions[cruds[cIndex]+payload+effects[eIndex]]().type)
+          var action : any = Object.getOwnPropertyDescriptor(ProtocActions, cruds[cIndex]+payload+effects[eIndex])
+          expect(action.value().type)
             .toBe("PROTOC_" + cruds[cIndex].toUpperCase() + "_" + payload.toUpperCase() + "_" + effects[eIndex].toUpperCase())
         }
       }
@@ -477,7 +480,7 @@ describe('Custom Action Tests', () => {
     })
     it('should return no payload', () => {
       let result = ProtocActions.customErrorBookCancel();
-      expect(result["payload"]).toEqual(undefined);
+      expect("payload" in result).toEqual(false);
     })
   })
 })

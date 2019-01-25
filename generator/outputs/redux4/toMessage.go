@@ -58,7 +58,7 @@ export function toMessage(obj: any, messageClass: any) {
             var mappedFieldValueConstructor = getNestedMessageConstructor(messageClass, key);
             if (mappedFieldValueConstructor) {
               {{if .}}console.groupCollapsed('keys & values, unserialized');{{end}}
-              ele = ele.map(([key, value]) => {
+							ele = ele.map(([key, value]: [string, any]) => {
                 {{if .}}console.log('key:', key);
                 console.log('value:', value);{{end}}
                 return [key, mappedFieldValueConstructor(value)];
@@ -66,7 +66,7 @@ export function toMessage(obj: any, messageClass: any) {
               {{if .}}console.groupEnd();{{end}}
             }
             {{if .}}console.groupCollapsed('keys & values, serialized');{{end}}
-            ele.forEach(([key, value]) => {
+						ele.forEach(([key, value]: [string, any]) => {
               {{if .}}console.log('key:', key);
               console.log('value:', value);{{end}}
               mapObj.set(key, value);
