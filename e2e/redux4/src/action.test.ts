@@ -150,7 +150,8 @@ describe('Action Payload Tests', () => {
     describe('Single Entity Cancel', () => {
       it('should return no payload', () => {
         let result = ProtocActions.createBookOfTheMonthCancel();
-        expect("payload" in result).toEqual(false);
+        var payload : any =  Object.getOwnPropertyDescriptor(result, 'payload');
+        expect(payload.value).toEqual(undefined);
       })
     })
     describe('Repeated Entity Request', () => {
@@ -184,7 +185,8 @@ describe('Action Payload Tests', () => {
     describe('Repeated Entity Cancel', () => {
       it('should return no payload', () => {
         let result = ProtocActions.createLibraryCancel();
-        expect("payload" in result).toEqual(false);
+        var payload : any =  Object.getOwnPropertyDescriptor(result, 'payload');
+        expect(payload.value).toEqual(undefined);
       })
     })
   })
@@ -221,7 +223,8 @@ describe('Action Payload Tests', () => {
     describe('Single Entity Cancel', () => {
       it('should return no payload', () => {
         let result = ProtocActions.getBookOfTheMonthCancel();
-        expect("payload" in result).toEqual(false);
+        var payload : any =  Object.getOwnPropertyDescriptor(result, 'payload');
+        expect(payload.value).toEqual(undefined);
       })
     })
     describe('Repeated Entity Request', () => {
@@ -255,7 +258,8 @@ describe('Action Payload Tests', () => {
     describe('Repeated Entity Cancel', () => {
       it('should return no payload', () => {
         let result = ProtocActions.listLibraryCancel();
-        expect("payload" in result).toEqual(false);
+        var payload : any =  Object.getOwnPropertyDescriptor(result, 'payload');
+        expect(payload.value).toEqual(undefined);
       })
     })
   })
@@ -297,7 +301,8 @@ describe('Action Payload Tests', () => {
     describe('Single Entity Cancel', () => {
       it('should return no payload', () => {
         let result = ProtocActions.updateBookOfTheMonthCancel();
-        expect("payload" in result).toEqual(false);
+        var payload : any =  Object.getOwnPropertyDescriptor(result, 'payload');
+        expect(payload.value).toEqual(undefined);
       })
     })
     describe('Repeated Entity Request', () => {
@@ -330,7 +335,8 @@ describe('Action Payload Tests', () => {
     describe('Repeated Entity Cancel', () => {
       it('should return no payload', () => {
         let result = ProtocActions.updateLibraryCancel();
-        expect("payload" in result).toEqual(false);
+        var payload : any =  Object.getOwnPropertyDescriptor(result, 'payload');
+        expect(payload.value).toEqual(undefined);
       })
     })
   })
@@ -367,7 +373,8 @@ describe('Action Payload Tests', () => {
     describe('Single Entity Cancel', () => {
       it('should return no payload', () => {
         let result = ProtocActions.deleteBookOfTheMonthCancel();
-        expect("payload" in result).toEqual(false);
+        var payload : any =  Object.getOwnPropertyDescriptor(result, 'payload');
+        expect(payload.value).toEqual(undefined);
       })
     })
     describe('Repeated Entity Request', () => {
@@ -401,7 +408,8 @@ describe('Action Payload Tests', () => {
     describe('Repeated Entity Cancel', () => {
       it('should return no payload', () => {
         let result = ProtocActions.deleteLibraryCancel();
-        expect("payload" in result).toEqual(false);
+        var payload : any =  Object.getOwnPropertyDescriptor(result, 'payload');
+        expect(payload.value).toEqual(undefined);
       })
     })
   })
@@ -409,13 +417,15 @@ describe('Action Payload Tests', () => {
   describe('Single Entity Reset', () => {
     it('should return no payload', () => {
       let result = ProtocActions.resetBookOfTheMonth();
-      expect("payload" in result).toEqual(false);
+      var payload : any =  Object.getOwnPropertyDescriptor(result, 'payload');
+      expect(payload.value).toEqual(undefined);
     })
   })
   describe('Repeated Entity Reset', () => {
     it('should return no payload', () => {
       let result = ProtocActions.resetLibrary();
-      expect("payload" in result).toEqual(false);
+      var payload : any =  Object.getOwnPropertyDescriptor(result, 'payload');
+      expect(payload.value).toEqual(undefined);
     })
   })
 })
@@ -480,7 +490,8 @@ describe('Custom Action Tests', () => {
     })
     it('should return no payload', () => {
       let result = ProtocActions.customErrorBookCancel();
-      expect("payload" in result).toEqual(false);
+      var payload : any =  Object.getOwnPropertyDescriptor(result, 'payload');
+      expect(payload.value).toEqual(undefined);
     })
   })
 })
