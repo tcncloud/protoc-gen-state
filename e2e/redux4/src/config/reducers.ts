@@ -5,7 +5,8 @@ import { RootAction } from '../rootAction';
 
 
 export interface ConfigState {
-  host: string;
+  host:   string;
+  token:  string;
 }
 
 export const InitialConfigState: ConfigState = {
