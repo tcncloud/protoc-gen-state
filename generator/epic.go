@@ -32,7 +32,6 @@ import (
 	"bytes"
 	"fmt"
 	gp "github.com/golang/protobuf/protoc-gen-go/descriptor"
-	"github.com/tcncloud/protoc-gen-state/state"
 	"strings"
   "strconv"
 	"text/template"
@@ -40,7 +39,6 @@ import (
 
 type EpicEntity struct {
 	Name              string
-	OutputType        state.OutputTypes
 	ProtoInputType    string
 	ProtoOutputType   string
 	FullMethodName    string
@@ -50,7 +48,6 @@ type EpicEntity struct {
 	Retries           int64
 	Repeat            bool
 	Auth              string
-	AuthFollowup      string
   Hostname          string
   HostnameLocation  string
   Port              string
@@ -100,17 +97,6 @@ func (this *GenericOutputter) CreateEpicFile(stateFields []*gp.FieldDescriptorPr
 			}
 
 			if meth != nil {
-				// set up auth string for repeated values (streaming epics)
-				var idToken string
-				authFollowup := ""
-				if authTokenLocation != "" {
-					if repeated {
-						idToken = fmt.Sprintf("new grpc.Metadata({ 'Authorization': `Bearer ${store.getState().%s}` })", authTokenLocation)
-					} else {
-						idToken = fmt.Sprintf("var idToken = store.getState().%s;", authTokenLocation)
-						authFollowup = "metadata: new grpc.Metadata({ 'Authorization': `Bearer ${idToken}` }),"
-					}
-				}
 				// only returns arrays on these
 				var repeatEntity bool
 				if CrudName(c, repeated) == "list" {
@@ -128,7 +114,6 @@ func (this *GenericOutputter) CreateEpicFile(stateFields []*gp.FieldDescriptorPr
 
 				epicEntities = append(epicEntities, &EpicEntity{
 					Name:             CrudName(c, repeated) + strings.Title(*field.JsonName),
-					OutputType:       this.OutputType,
 					ProtoInputType:   fmt.Sprintf("ProtocTypes.%s", CreatePackageAndTypeString(meth.GetInputType())),
 					ProtoOutputType:  fmt.Sprintf("ProtocTypes.%s", CreatePackageAndTypeString(meth.GetOutputType())),
 					FullMethodName:   fmt.Sprintf("ProtocServices.%s", FullMethodNameFormat(crudAnnotation)),
@@ -137,8 +122,7 @@ func (this *GenericOutputter) CreateEpicFile(stateFields []*gp.FieldDescriptorPr
 					Timeout:          timeout,
 					Retries:          retries,
 					Repeat:           repeatEntity,
-					Auth:             idToken,
-					AuthFollowup:     authFollowup,
+					Auth:             authTokenLocation,
 					Hostname:         hostname,
           HostnameLocation: hostnameLocation,
           Port:             port,
@@ -180,22 +164,10 @@ func (this *GenericOutputter) CreateEpicFile(stateFields []*gp.FieldDescriptorPr
 		}
 
 		if meth != nil {
-			// set up auth string for repeated values (streaming epics)
-			var idToken string
-			authFollowup := ""
-			if authTokenLocation != "" {
-				if repeated {
-					idToken = fmt.Sprintf("new grpc.Metadata({ 'Authorization': `Bearer ${store.getState().%s` })", authTokenLocation)
-				} else {
-					idToken = fmt.Sprintf("var idToken = store.getState().%s;", authTokenLocation)
-					authFollowup = "metadata: new grpc.Metadata({ 'Authorization': `Bearer ${idToken}` }),"
-				}
-			}
 
 			// TODO uses repeated from the field name, should use the output type
 			epicEntities = append(epicEntities, &EpicEntity{
 				Name:             "custom" + strings.Title(*field.JsonName),
-				OutputType:       this.OutputType,
 				ProtoInputType:   fmt.Sprintf("ProtocTypes.%s", CreatePackageAndTypeString(meth.GetInputType())),
 				ProtoOutputType:  fmt.Sprintf("ProtocTypes.%s", CreatePackageAndTypeString(meth.GetOutputType())),
 				FullMethodName:   fmt.Sprintf("ProtocServices.%s", FullMethodNameFormat(crudAnnotation)),
@@ -204,8 +176,7 @@ func (this *GenericOutputter) CreateEpicFile(stateFields []*gp.FieldDescriptorPr
 				Timeout:          timeout,
 				Retries:          retries,
 				Repeat:           repeated,
-				Auth:             idToken,
-				AuthFollowup:     authFollowup,
+				Auth:             authTokenLocation,
 				Hostname:         hostname,
         HostnameLocation: hostnameLocation,
         Port:             port,
