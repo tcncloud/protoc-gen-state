@@ -43,7 +43,7 @@ function createAuthBearer(state$: StateObservable<any>, authLocation: string): s
   if (authLocation === '' || authLocation === undefined || authLocation === null) {
     throw new Error('PROTOC-GEN-STATE: the value of auth_token_location <' + authLocation + '> is empty. Check that this path is set in redux')
   }
-  let token = getNestedValue(state$.value, authLocation)
+  const token = getNestedValue(state$.value, authLocation)
   if (token === '' || token === undefined || token === null) {
     throw new Error('PROTOC-GEN-STATE: the value of auth_token_location <' + token + '> in Redux is empty')
   }
