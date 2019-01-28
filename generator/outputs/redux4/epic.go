@@ -30,7 +30,7 @@ function createErrorObject(code: number|string|undefined, message: string): Node
 }
 
 function getNestedValue(obj: any, locate: string): any {
-  let keys = locate.split('.')
+  const keys = locate.split('.')
   let value = obj[keys[0]]
 
   for (let i = 1; i < keys.length; i ++) { // only enters this for loop if keys array is larger than 1
@@ -40,24 +40,24 @@ function getNestedValue(obj: any, locate: string): any {
 }
 
 function createAuthBearer(state$: StateObservable<any>, authLocation: string): string {
-  if (authLocation == "" || authLocation == undefined || authLocation == null) {
-    throw new Error("PROTOC-GEN-STATE: the value of auth_token_location <" + authLocation + "> is empty. Check that this path is set in redux")
+  if (authLocation === '' || authLocation === undefined || authLocation === null) {
+    throw new Error('PROTOC-GEN-STATE: the value of auth_token_location <' + authLocation + '> is empty. Check that this path is set in redux')
   }
   let token = getNestedValue(state$.value, authLocation)
-  if (token == "" || token == undefined || token == null) {
-    throw new Error("PROTOC-GEN-STATE: the value of auth_token_location <" + token + "> in Redux is empty")
+  if (token === '' || token === undefined || token === null) {
+    throw new Error('PROTOC-GEN-STATE: the value of auth_token_location <' + token + '> in Redux is empty')
   }
   return token
 }
 
 function createHostString(hostname: string, hostnameLocation: string, port: string, state$: StateObservable<any>): string {
-  let host = ""
-  if (hostname != "") {
+  let host = ''
+  if (hostname != '') {
     host = hostname + port
-  } else if (hostnameLocation != "" ) {
-    let host = getNestedValue(state$.value, hostnameLocation)
-    if (host == "" || host == undefined || host == null) {
-      throw new Error("PROTOC-GEN-STATE: the value of hostnameLocation <" + hostnameLocation + "> is empty. Check that this path is set in redux")
+  } else if (hostnameLocation !== '' ) {
+    host = getNestedValue(state$.value, hostnameLocation)
+    if (host === '' || host === undefined || host === null) {
+      throw new Error('PROTOC-GEN-STATE: the value of hostnameLocation <' + hostnameLocation + '> is empty. Check that this path is set in redux')
     }
     // last char
     if (host.charAt(host.length - 1) == '/') {
@@ -67,7 +67,7 @@ function createHostString(hostname: string, hostnameLocation: string, port: stri
     }
   } else {
     // hostnameLocation and host is empty
-    throw new Error("PROTOC-GEN-STATE: the hostnameLocation and the host is empty. Should never happen.")
+    throw new Error('PROTOC-GEN-STATE: the hostnameLocation and the host is empty. Should never happen.')
   }
   return host
 }
