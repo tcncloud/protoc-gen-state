@@ -31,7 +31,7 @@ GENERATED=generated/
 
 all: deps build test
 
-build: deps gen protos
+build: gen protos
 
 test: build
 
