@@ -1,7 +1,7 @@
 module github.com/tcncloud/protoc-gen-state
 
 require (
-	github.com/golang/protobuf
+	github.com/google/protobuf v3.0.0-beta-3-pre-1.0.20190129012028-41f94bf372d3+incompatible // indirect
 	github.com/iancoleman/strcase v0.0.0-20180726023541-3605ed457bf7
 	github.com/onsi/ginkgo v1.7.0
 	github.com/onsi/gomega v1.4.3
