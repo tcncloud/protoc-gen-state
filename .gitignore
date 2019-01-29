@@ -14,4 +14,3 @@ protoc-gen-state
 *_pb.js
 *_pb_service.d.ts
 *_pb_service.js
-*pb.go
