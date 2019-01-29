@@ -36,7 +36,6 @@ build: gen protos
 test: build
 
 gen: state/options.pb.go
-	go mod download
 	go build .
 
 protos: state/options.pb.go
