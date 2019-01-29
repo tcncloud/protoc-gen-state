@@ -8,7 +8,7 @@ import "e2e/redux4/protos/readinglist/readinglist.proto";
 
 option (state_file_options) = {
   debounce: 510,
-  debug: true,
+  debug: false,
   default_retries: 0,
   default_timeout: 3000,
   // hostname: "",

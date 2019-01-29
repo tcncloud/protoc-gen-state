@@ -72,8 +72,17 @@ function createHostString(hostname: string, hostnameLocation: string, port: stri
   return host
 }
 
+function injectGrpcDependency(api: any): any {
+  if (api === null || api === undefined || api === {} ) {
+    api = grpc
+  }
+  return api
+}
+
 {{range $i, $e := .}}
-export const {{$e.Name}}Epic = (action$: ActionsObservable<ProtocActionsType>, state$: StateObservable<any>) => action$.pipe(
+export const {{$e.Name}}Epic = (action$: ActionsObservable<ProtocActionsType>, state$: StateObservable<any>, api: any) =>  {
+  api = injectGrpcDependency(api)
+  return action$.pipe(
 	filter(isActionOf(protocActions.{{$e.Name}}Request)),
 	debounceTime({{$e.Debounce}}),
 	map(({ payload, meta: { resolve = noop, reject = noop } }) => ({
@@ -103,13 +112,13 @@ export const {{$e.Name}}Epic = (action$: ActionsObservable<ProtocActionsType>, s
 	}),
 	takeUntil(action$.pipe(filter(isActionOf(protocActions.{{$e.Name}}Cancel)))),
 	repeat()
-)
+)}
 {{end}}
 {{define "grpcUnary"}}   return from(
 		new Promise((resolve, reject) => { {{if .Debug}}console.log('calling {{.FullMethodName}} with payload: ', request.message); {{ end }}
       let host = createHostString('{{.Hostname}}', '{{.HostnameLocation}}', '{{.Port}}', state$)
       {{template "authToken" .}}
-			grpc.unary({{.FullMethodName}}, {
+			api.unary({{.FullMethodName}}, {
 				request: request.message,
 				host: host,
 				{{template "authFollowUp" .}}
@@ -131,7 +140,7 @@ export const {{$e.Name}}Epic = (action$: ActionsObservable<ProtocActionsType>, s
 			new Promise((resolve, reject) => {
         {{if .Debug}}console.log('calling {{.FullMethodName}} with payload: ', request.message);{{end}}
 				let arr: {{.ProtoOutputType}}.AsObject[] = [];
-				const client = grpc.client({{.FullMethodName}}, {
+				const client = api.client({{.FullMethodName}}, {
 					host: host,
 				});
 				client.onMessage((message: {{.ProtoOutputType}}) => {
