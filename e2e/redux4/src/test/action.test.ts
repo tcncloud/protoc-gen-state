@@ -496,6 +496,10 @@ describe('Custom Action Tests', () => {
   })
 })
 
+// it('should fail', () => {
+//   expect(false).toEqual(true);
+// })
+
 // TODO: test map type
 // TODO: test enum type
 // TODO: test oneof type

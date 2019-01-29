@@ -37,9 +37,6 @@
         "*",
         "node_modules/*"
       ],
-      "proto/*": [
-        "protos/*"
-      ],
       "@App/*": [
         "*"
       ]

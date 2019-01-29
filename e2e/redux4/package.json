@@ -5,7 +5,7 @@
   "scripts": {
     "start": "webpack-dev-server -d --config=./webpack.config.js",
     "test": "yarn run test-js && yarn run test-ts",
-    "test-js": "JASMINE_CONFIG_PATH=spec/support/jasmine.json node_modules/.bin/ts-node --node_options=--preserve-symlinks --node_options=--max-old-space-size=8192 node_modules/jasmine/bin/jasmine",
+    "test-js": "JASMINE_CONFIG_PATH=spec/support/jasmine.json node_modules/.bin/ts-node --node_options=--preserve-symlinks --node_options=--max-old-space-size=8192 node_modules/jasmine/bin/jasmine > /dev/null",
     "test-ts": "npx tsc -p './tsconfig.json'"
   },
   "keywords": [],
@@ -14,8 +14,7 @@
   "description": "",
   "dependencies": {
     "@types/google-protobuf": "3.2.7",
-    "@types/react": "^16.7.18",
-    "@types/react-dom": "^16.0.11",
+    "@types/react": "^16.7.22",
     "@types/react-redux": "^6.0.11",
     "google-protobuf": "3.5.0",
     "react": "^16.7.0",
@@ -37,8 +36,10 @@
     "@babel/preset-typescript": "^7.1.0",
     "@babel/register": "^7.0.0",
     "@improbable-eng/grpc-web": "^0.8.0",
+    "@types/enzyme": "^3.1.15",
     "@types/jasmine": "2.8.7",
     "@types/lodash": "^4.14.120",
+    "@types/react-dom": "^16.0.11",
     "ansi-html": "^0.0.7",
     "autoprefixer": "^9.4.6",
     "babel-loader": "^8.0.5",
@@ -70,5 +71,8 @@
     "webpack-cli": "^3.2.1",
     "webpack-dev-server": "^3.1.14",
     "whatwg-fetch": "^3.0.0"
+  },
+  "resolutions": {
+    "@types/react": "^16.7.22"
   }
 }
