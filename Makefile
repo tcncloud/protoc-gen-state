@@ -48,7 +48,7 @@ deps: $(GOPATH)/bin/protoc-gen-go $(GOPATH)/bin/ginkgo
 	go get -u github.com/iancoleman/strcase
 
 $(GOPATH)/bin/protoc-gen-go:
-	go get -u github.com/golang/protobuf/protoc-gen-go
+	# go get -u github.com/golang/protobuf/protoc-gen-go
 
 $(GOPATH)/bin/ginkgo:
 	go get -u github.com/onsi/ginkgo/ginkgo
