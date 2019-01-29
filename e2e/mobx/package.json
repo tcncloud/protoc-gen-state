@@ -1,0 +1,17 @@
+{
+  "name": "mobx",
+  "version": "1.0.0",
+  "description": "unimplemented",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"No tests for mobx\""
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/google-protobuf": "^3.2.7",
+    "google-protobuf": "^3.6.1",
+    "ts-protoc-gen": "^0.9.0"
+  }
+}

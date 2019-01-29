@@ -1,4 +1,3 @@
-// Copyright 2017, TCN Inc.
 // All rights reserved.
 
 // Redistribution and use in source and binary forms, with or without
@@ -33,180 +32,53 @@ import (
 	"bytes"
 	"fmt"
 	gp "github.com/golang/protobuf/protoc-gen-go/descriptor"
-	"github.com/tcncloud/protoc-gen-state/state"
-	"strconv"
 	"strings"
+  "strconv"
 	"text/template"
 )
 
-const epicTemplate = `/* THIS FILE IS GENERATED FROM THE TOOL PROTOC-GEN-STATE  */
-/* ANYTHING YOU EDIT WILL BE OVERWRITTEN IN FUTURE BUILDS */
-
-import { combineEpics } from 'redux-observable';
-import { isActionOf } from 'typesafe-actions';
-import { Observable } from 'rxjs';
-import _ from 'lodash';
-import { grpc } from 'grpc-web-client';
-import { UnaryOutput } from 'grpc-web-client/dist/unary';
-import 'rxjs/add/observable/dom/ajax';
-import { toMessage } from './to_message_pb';
-import * as protocActions from './actions_pb';
-import * as ProtocTypes from './protoc_types_pb';
-import * as ProtocServices from './protoc_services_pb';
-
-
-function noop() {
-	return;
-}
-
-function createErrorObject(code: number|string|undefined, message: string): NodeJS.ErrnoException {
-	var err: NodeJS.ErrnoException = new Error();
-	err.message = message;
-	if(code && typeof code == 'number') { err.code = code.toString(); }
-	if(code && typeof code == 'string') { err.code = code; }
-	return err;
-}
-
-{{range $i, $e := .}}
-export const {{$e.Name}}Epic = (action$, store) => action$
-	.filter(isActionOf(protocActions.{{$e.Name}}Request))
-	.debounceTime({{$e.Debounce}})
-	.map(({ payload, meta: { resolve = noop, reject = noop } }) => ({
-		message: toMessage(payload, {{$e.InputType}}),
-		resolve,
-		reject,
-	}))
-	.flatMap((request) => {
-{{if $e.Repeat}} {{template "grpcStream" $e}} {{ else }} {{template "grpcUnary" $e}} {{end}}
-		.retry({{$e.Retries}})
-		.timeout({{$e.Timeout}}){{if $e.Updater}}
-		.map(obj => ({ ...obj } as { prev: {{$e.OutputType}}.AsObject, updated: {{$e.OutputType}}.AsObject } ))
-		.map(lib => {
-			request.resolve(lib.prev, lib.updated);
-			return protocActions.{{$e.Name}}Success(lib);
-		}){{else}}
-		.map((resObj: {{$e.OutputType}}.AsObject{{if $e.Repeat}}[]{{end}}) => {
-			request.resolve(resObj);
-			return protocActions.{{$e.Name}}Success(resObj);
-		}){{end}}
-		.catch(error => {
-			const err: NodeJS.ErrnoException = createErrorObject(error.code, error.message);
-			if(request.reject){ request.reject(err); }
-			return Observable.of(protocActions.{{$e.Name}}Failure(err));
-		})
-	})
-	.takeUntil(action$.filter(isActionOf(protocActions.{{$e.Name}}Cancel)))
-	.repeat();
-{{end}}
-{{define "grpcUnary"}}   return Observable
-		.defer(() => new Promise((resolve, reject) => {
-      {{if .Debug}}console.log('calling {{.FullMethodName}} with payload: ', request.message);{{end}}
-			{{.Host}}
-			{{.Auth}}
-			grpc.unary({{.FullMethodName}}, {
-				request: request.message,
-				host: host,
-				{{.AuthFollowup}}
-				onEnd: (res: UnaryOutput<{{.OutputType}}>) => {
-          {{if .Debug}}console.log('onEnd {{.FullMethodName}}: ', res.message);{{end}}
-					if(res.status != grpc.Code.OK){
-            {{if .Debug}}console.log('Error in epic -- status: ', res.status, ' message: ', res.statusMessage);{{end}}
-						const err: NodeJS.ErrnoException = createErrorObject(res.status, res.statusMessage);
-						reject(err);
-					}
-					if(res.message){
-						resolve(res.message.toObject());
-					}
-				}
-			});
-		})){{end}}
-{{define "grpcStream"}}   {{.Host}}
-		return Observable
-			.defer(() => new Promise((resolve, reject) => {
-        {{if .Debug}}console.log('calling {{.FullMethodName}} with payload: ', request.message);{{end}}
-				var arr: {{.OutputType}}.AsObject[] = [];
-				const client = grpc.client({{.FullMethodName}}, {
-					host: host,
-				});
-				client.onMessage((message: {{.OutputType}}) => {
-          {{if .Debug}}console.log('in {{.FullMethodName}} streaming message: ', message.toObject());{{end}}
-					arr.push(message.toObject());
-				});
-        {{if .Debug}}client.onEnd((code: grpc.Code, msg: string, trailers: grpc.Metadata) => {
-          console.log('in {{.FullMethodName}} streaming onEnd: ', code, msg, trailers, request.message);{{else}}client.onEnd((code: grpc.Code, msg: string) => { {{end}}
-					if (code != grpc.Code.OK) {
-            {{if .Debug}}console.log('Error in streaming epic -- code: ', code, ' message: ', msg);{{end}}
-						reject(createErrorObject(code, msg));
-					}
-					resolve(arr);
-				});
-				client.start({{.Auth}});
-				client.send(request.message);
-			})){{end}}`
-
-const epicExportTemplate = `export const protocEpics = combineEpics({{range $i, $e := .}}
-	{{$e.Name}}Epic,{{end}}
-)`
-
 type EpicEntity struct {
-	Name           string
-	InputType      string
-	OutputType     string
-	FullMethodName string
-	JsonName       string
-	Debounce       int64
-	Timeout        int64
-	Retries        int64
-	Repeat         bool
-	Auth           string
-	AuthFollowup   string
-	Host           string
-	Updater        bool
-	Debug          bool
+	Name              string
+	ProtoInputType    string
+	ProtoOutputType   string
+	FullMethodName    string
+	JsonName          string
+	Debounce          int64
+	Timeout           int64
+	Retries           int64
+	Repeat            bool
+	Auth              string
+  Hostname          string
+  HostnameLocation  string
+  Port              string
+	Updater           bool
+	Debug             bool
 }
 
-func CreateEpicFile(stateFields []*gp.FieldDescriptorProto, customFields []*gp.FieldDescriptorProto, serviceFiles []*gp.FileDescriptorProto, defaultTimeout int64, defaultRetries int64, authTokenLocation string, hostnameLocation string, hostname string, portin int64, debounce int64, debug bool) (*File, error) {
+
+func (this *GenericOutputter) CreateEpicFile(stateFields []*gp.FieldDescriptorProto, customFields []*gp.FieldDescriptorProto, serviceFiles []*gp.FileDescriptorProto, defaultTimeout int64, defaultRetries int64, authTokenLocation string, hostnameLocation string, hostname string, portin int64, debounce int64, debug bool) (*File, error) {
 	epicEntities := []*EpicEntity{}
 
-	// set up port string
-	var port string
-	if portin != -1 {
-		port = ":" + strconv.FormatInt(portin, 10)
-	}
 
-	//set up host string
-	var host string
-	if hostname != "" {
-		host = fmt.Sprintf("var host = '%s%s';", hostname, port)
-	} else if hostnameLocation != "" {
-		host = fmt.Sprintf("var host = store.getState().%s.slice(0, -1) + '%s';", hostnameLocation, port)
-	} else {
-		return nil, fmt.Errorf("No hostname or hostnameLocation provided. Provide either the hostname or the hostname location in redux so the plugin knows where to send api calls.")
-	}
+  port := ":" + strconv.FormatInt(portin, 10)
 
 	// transform stateFields into our EpicEntity implementation so template can read values
 	for _, field := range stateFields {
 		repeated := field.GetLabel() == 3
 
 		// verify the method annotations
-		methods, err := GetFieldOptionsString(field, state.E_Method)
+		fieldAnnotations, err := GetFieldOptions(field)
 		if err != nil {
 			return nil, fmt.Errorf("Error getting field level annotations: %v", err)
 		}
 
 		// field level overrides for timeout/retry
-		timeout, err := GetFieldAnnotationInt(field, state.E_Timeout)
-		if err != nil {
-			return nil, fmt.Errorf("Error getting field level timeout annotation: %v", err)
-		}
-		if timeout == -1 { // if it wasn't overriden
+		timeout := fieldAnnotations.GetTimeout()
+		if timeout == 0 { // if it wasn't overriden
 			timeout = defaultTimeout
 		}
-		retries, err := GetFieldAnnotationInt(field, state.E_Retries)
-		if err != nil {
-			return nil, fmt.Errorf("Error getting field level retries annotation: %v", err)
-		}
-		if retries == -1 { // if it wasn't overriden
+		retries := fieldAnnotations.GetRetries()
+		if retries == 0 { // if it wasn't overriden
 			retries = defaultRetries
 		}
 
@@ -216,7 +88,7 @@ func CreateEpicFile(stateFields []*gp.FieldDescriptorProto, customFields []*gp.F
 			// clear for the loop
 			meth = nil
 
-			crudAnnotation := GetAnnotation(methods, c, repeated)
+			crudAnnotation := GetAnnotation(*fieldAnnotations.GetMethod(), c, repeated)
 			if crudAnnotation != "" {
 				meth, err = FindMethodDescriptor(serviceFiles, crudAnnotation)
 				if err != nil {
@@ -225,17 +97,6 @@ func CreateEpicFile(stateFields []*gp.FieldDescriptorProto, customFields []*gp.F
 			}
 
 			if meth != nil {
-				// set up auth string for repeated values (streaming epics)
-				var idToken string
-				authFollowup := ""
-				if authTokenLocation != "" {
-					if repeated {
-						idToken = fmt.Sprintf("new grpc.Metadata({ 'Authorization': `Bearer ${store.getState().%s}` })", authTokenLocation)
-					} else {
-						idToken = fmt.Sprintf("var idToken = store.getState().%s;", authTokenLocation)
-						authFollowup = "metadata: new grpc.Metadata({ 'Authorization': `Bearer ${idToken}` }),"
-					}
-				}
 				// only returns arrays on these
 				var repeatEntity bool
 				if CrudName(c, repeated) == "list" {
@@ -252,20 +113,21 @@ func CreateEpicFile(stateFields []*gp.FieldDescriptorProto, customFields []*gp.F
 				}
 
 				epicEntities = append(epicEntities, &EpicEntity{
-					Name:           CrudName(c, repeated) + strings.Title(*field.JsonName),
-					InputType:      fmt.Sprintf("ProtocTypes.%s", CreatePackageAndTypeString(meth.GetInputType())),
-					OutputType:     fmt.Sprintf("ProtocTypes.%s", CreatePackageAndTypeString(meth.GetOutputType())),
-					FullMethodName: fmt.Sprintf("ProtocServices.%s", FullMethodNameFormat(crudAnnotation)),
-					JsonName:       *field.JsonName,
-					Debounce:       debounce,
-					Timeout:        timeout,
-					Retries:        retries,
-					Repeat:         repeatEntity,
-					Auth:           idToken,
-					AuthFollowup:   authFollowup,
-					Host:           host,
-					Updater:        updater,
-					Debug:          debug,
+					Name:             CrudName(c, repeated) + strings.Title(*field.JsonName),
+					ProtoInputType:   fmt.Sprintf("ProtocTypes.%s", CreatePackageAndTypeString(meth.GetInputType())),
+					ProtoOutputType:  fmt.Sprintf("ProtocTypes.%s", CreatePackageAndTypeString(meth.GetOutputType())),
+					FullMethodName:   fmt.Sprintf("ProtocServices.%s", FullMethodNameFormat(crudAnnotation)),
+					JsonName:         *field.JsonName,
+					Debounce:         debounce,
+					Timeout:          timeout,
+					Retries:          retries,
+					Repeat:           repeatEntity,
+					Auth:             authTokenLocation,
+					Hostname:         hostname,
+          HostnameLocation: hostnameLocation,
+          Port:             port,
+					Updater:          updater,
+					Debug:            debug,
 				})
 			}
 		}
@@ -277,30 +139,23 @@ func CreateEpicFile(stateFields []*gp.FieldDescriptorProto, customFields []*gp.F
 		repeated := field.GetLabel() == 3
 
 		// verify the method annotations
-		methods, err := GetFieldOptionsString(field, state.E_Method)
+		fieldAnnotations, err := GetFieldOptions(field)
 		if err != nil {
 			return nil, fmt.Errorf("Error getting field level annotations: %v", err)
 		}
 
-		// field level overrides for timeout/retry
-		timeout, err := GetFieldAnnotationInt(field, state.E_Timeout)
-		if err != nil {
-			return nil, fmt.Errorf("Error getting field level timeout annotation: %v", err)
-		}
-		if timeout == -1 { // if it wasn't overriden
+		timeout := fieldAnnotations.GetTimeout()
+		if timeout == 0 { // if it wasn't overriden
 			timeout = defaultTimeout
 		}
-		retries, err := GetFieldAnnotationInt(field, state.E_Retries)
-		if err != nil {
-			return nil, fmt.Errorf("Error getting field level retries annotation: %v", err)
-		}
-		if retries == -1 { // if it wasn't overriden
+		retries := fieldAnnotations.GetRetries()
+		if retries == 0 { // if it wasn't overriden
 			retries = defaultRetries
 		}
 
 		var meth *gp.MethodDescriptorProto
 
-		crudAnnotation := methods.GetCustom()
+		crudAnnotation := fieldAnnotations.GetMethod().GetCustom()
 		if crudAnnotation != "" {
 			meth, err = FindMethodDescriptor(serviceFiles, crudAnnotation)
 			if err != nil {
@@ -309,43 +164,31 @@ func CreateEpicFile(stateFields []*gp.FieldDescriptorProto, customFields []*gp.F
 		}
 
 		if meth != nil {
-			// set up auth string for repeated values (streaming epics)
-			var idToken string
-			authFollowup := ""
-			if authTokenLocation != "" {
-				if repeated {
-					idToken = fmt.Sprintf("new grpc.Metadata({ 'Authorization': `Bearer ${store.getState().%s` })", authTokenLocation)
-				} else {
-					idToken = fmt.Sprintf("var idToken = store.getState().%s;", authTokenLocation)
-					authFollowup = "metadata: new grpc.Metadata({ 'Authorization': `Bearer ${idToken}` }),"
-				}
-			}
 
 			// TODO uses repeated from the field name, should use the output type
 			epicEntities = append(epicEntities, &EpicEntity{
-				Name:           "custom" + strings.Title(*field.JsonName),
-				InputType:      fmt.Sprintf("ProtocTypes.%s", CreatePackageAndTypeString(meth.GetInputType())),
-				OutputType:     fmt.Sprintf("ProtocTypes.%s", CreatePackageAndTypeString(meth.GetOutputType())),
-				FullMethodName: fmt.Sprintf("ProtocServices.%s", FullMethodNameFormat(crudAnnotation)),
-				JsonName:       *field.JsonName,
-				Debounce:       debounce,
-				Timeout:        timeout,
-				Retries:        retries,
-				Repeat:         repeated,
-				Auth:           idToken,
-				AuthFollowup:   authFollowup,
-				Host:           host,
-				Debug:          debug,
+				Name:             "custom" + strings.Title(*field.JsonName),
+				ProtoInputType:   fmt.Sprintf("ProtocTypes.%s", CreatePackageAndTypeString(meth.GetInputType())),
+				ProtoOutputType:  fmt.Sprintf("ProtocTypes.%s", CreatePackageAndTypeString(meth.GetOutputType())),
+				FullMethodName:   fmt.Sprintf("ProtocServices.%s", FullMethodNameFormat(crudAnnotation)),
+				JsonName:         *field.JsonName,
+				Debounce:         debounce,
+				Timeout:          timeout,
+				Retries:          retries,
+				Repeat:           repeated,
+				Auth:             authTokenLocation,
+				Hostname:         hostname,
+        HostnameLocation: hostnameLocation,
+        Port:             port,
+				Debug:            debug,
 			})
 		}
 	}
 
-	tmpl := template.Must(template.New("epic").Parse(epicTemplate))
-	exTmpl := template.Must(template.New("epic-exports").Parse(epicExportTemplate))
+	tmpl := template.Must(template.New("epic").Parse(this.EpicFile.Template))
 
 	var output bytes.Buffer
 	tmpl.Execute(&output, epicEntities)
-	exTmpl.Execute(&output, epicEntities)
 
 	return &File{
 		Name:    "epics_pb.ts",

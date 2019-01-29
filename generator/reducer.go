@@ -36,32 +36,11 @@ import (
 	"text/template"
 
 	gp "github.com/golang/protobuf/protoc-gen-go/descriptor"
-	"github.com/tcncloud/protoc-gen-state/state"
 )
 
 // cludg also has reset
 // Should try out subtemplates
 // TODO make sure maps are supported
-
-const reducerTemplate = `/* THIS FILE IS GENERATED FROM THE TOOL PROTOC-GEN-STATE  */
-/* ANYTHING YOU EDIT WILL BE OVERWRITTEN IN FUTURE BUILDS */
-
-import { getType, ActionType } from 'typesafe-actions';
-import _ from 'lodash';
-import * as protocActions from './actions_pb';
-import * as ProtocTypes from './protoc_types_pb';
-import { ProtocState, initialProtocState } from './state_pb';
-
-type RootAction = ActionType<typeof protocActions>;
-
-export function protocReducer(state: ProtocState = initialProtocState, action: RootAction) {
-  switch(action.type) { {{range $i, $entity := .}}
-    case getType(protocActions['{{$entity.CludgEffectName}}']):
-      {{$entity.SwitchCase}}{{end}}
-    default: return state;
-  }
-};
-`
 
 type ReducerEntity struct {
 	SwitchCase      string
@@ -69,11 +48,11 @@ type ReducerEntity struct {
 	CludgEffectName string
 }
 
-func CreateReducerFile(stateFields []*gp.FieldDescriptorProto, debug bool) (*File, error) {
+func (this *GenericOutputter) CreateReducerFile(stateFields []*gp.FieldDescriptorProto, debug bool) (*File, error) {
 	reducerEntities := []*ReducerEntity{}
 
 	for _, entity := range stateFields {
-		methods, err := GetFieldOptionsString(entity, state.E_Method)
+		fieldAnnotations, err := GetFieldOptions(entity)
 		if err != nil {
 			return nil, err
 		}
@@ -81,7 +60,7 @@ func CreateReducerFile(stateFields []*gp.FieldDescriptorProto, debug bool) (*Fil
 		for c := CREATE; c < CRUD_MAX; c++ {
 			switchCase := ""
 			repeated := entity.GetLabel() == 3
-			annotation := GetAnnotation(methods, c, repeated)
+			annotation := GetAnnotation(*fieldAnnotations.GetMethod(), c, repeated)
 
 			if annotation != "" {
 				for s := REQUEST; s < SIDE_EFFECT_MAX; s++ {
@@ -119,7 +98,7 @@ func CreateReducerFile(stateFields []*gp.FieldDescriptorProto, debug bool) (*Fil
         %s: {
           ...state.%s,
           isLoading: false,
-          error: { code: action.payload.code, message: action.payload.message },
+          error: { code: action.payload.code || '', message: action.payload.message },
         }
       }`, entity.GetJsonName(), entity.GetJsonName())
 					case CANCEL:
@@ -158,7 +137,7 @@ func CreateReducerFile(stateFields []*gp.FieldDescriptorProto, debug bool) (*Fil
 		"title": strings.Title,
 	}
 
-	tmpl := template.Must(template.New("reducer").Funcs(funcMap).Parse(reducerTemplate))
+	tmpl := template.Must(template.New("reducer").Funcs(funcMap).Parse(this.ReducerFile.Template))
 
 	var output bytes.Buffer
 	tmpl.Execute(&output, reducerEntities)

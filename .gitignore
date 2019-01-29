@@ -1,18 +1,17 @@
 generated/
-protoc-gen-state
-
-build
-e2e/generated
-
-node_modules/
 OldGenerated
 
+protoc-gen-state
 
+**/build
+**/node_modules/
 
-e2e/protos/readinglist/*.ts
-e2e/protos/readinglist/*.js
-e2e/protos/BasicState
+**/readinglist/*.ts
+**/readinglist/*.js
+**/BasicState
 
-
-*.swo
-*.swp
+*_pb.d.ts
+*_pb.js
+*_pb_service.d.ts
+*_pb_service.js
+*pb.go

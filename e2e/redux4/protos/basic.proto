@@ -1,0 +1,55 @@
+syntax = "proto3";
+
+package state; // match package of state/options.proto
+option go_package="github.com/tcncloud/protoc-gen-state/e2e/redux4/protos;protos";
+
+import "state/options.proto";
+import "e2e/redux4/protos/readinglist/readinglist.proto";
+
+option (state_file_options) = {
+  debounce: 510,
+  debug: false,
+  default_retries: 0,
+  default_timeout: 3000,
+  // hostname: "",
+  hostname_location: "config.host",
+  port: 9090,
+  protoc_ts_path: "../",
+  output_type: redux4,
+  auth_token_location: "config.token"
+};
+
+message ReduxState {
+  option (state_options).type = REDUX_STATE;
+  //// Used for unit tests, do not remove ////
+  repeated readinglist.Book library = 1 [
+    (state_field_options).method.create = "readinglist.ReadingList.CreateBook",
+    (state_field_options).method.update = "readinglist.ReadingList.UpdateBook",
+    (state_field_options).method.delete = "readinglist.ReadingList.DeleteBook",
+    (state_field_options).method.list = "readinglist.ReadingList.ReadAllBooks"
+  ];
+  readinglist.Book book_of_the_month = 2 [
+    (state_field_options).method.create = "readinglist.ReadingList.CreateBook",
+    (state_field_options).method.update = "readinglist.ReadingList.UpdateBook",
+    (state_field_options).method.delete = "readinglist.ReadingList.DeleteBook",
+    (state_field_options).method.get = "readinglist.ReadingList.ReadBook"
+  ];
+  // TODO map
+  // TODO oneof
+  // TODO enum
+  //// End unit test usage ////
+  readinglist.Book timeout_book = 3 [
+    (state_field_options).method.get = "readinglist.ReadingList.ReadBook",
+    (state_field_options).method_timeout.get = -1 // intentional timeout
+  ];
+}
+
+message CustomActions {
+  option (state_options).type = CUSTOM_ACTION;
+  //// Used for unit tests ////
+  readinglist.Book error_book = 1 [
+    (state_field_options).method.custom = "readinglist.ReadingList.ErrorOut",
+    (state_field_options).retries = 0
+  ];
+  //// End unit tests ////
+}

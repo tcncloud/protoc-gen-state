@@ -89,31 +89,48 @@ func Generate(filepaths []string, protos []*gp.FileDescriptorProto) ([]*File, er
 				} else if stateOptions.GetType() == state.StateMessageType_EXTERNAL_LINK {
 					// ???
 				} else {
-					// TODO ... this should never happen!
+					return nil, fmt.Errorf("Encountered a wrong/non-existent State Message Annotation: ", stateOptions.GetType())
 				}
 			} else {
-				// TODO .... do something here, this error should never happen
+				return nil, fmt.Errorf("Error getting extension: ", err)
 			}
 		}
 	}
 
-	// gather the configuration annotations, throw if they're required
-	debounce, err := GetFileExtensionInt(stateFile, "debounce")
-	defaultTimeout, err := GetFileExtensionInt(stateFile, "default_timeout")
-	defaultRetries, err := GetFileExtensionInt(stateFile, "default_retries")
-	port, err := GetFileExtensionInt(stateFile, "port")
-	debug, err := GetFileExtensionBool(stateFile, "debug")
-	protocTsPath, err := GetFileExtensionString(stateFile, "protoc_ts_path")
+	// gather the file level annotations
+	fileOptions, err := GetFileExtensions(stateFile)
+	if err != nil {
+		return nil, fmt.Errorf("Error encountered while parsing file level annotations: %v", err)
+	}
+
+	debounce := defaultInt64(fileOptions.GetDebounce(), 400)
+	defaultTimeout := defaultInt64(fileOptions.GetDefaultTimeout(), 15000)
+	defaultRetries := fileOptions.GetDefaultRetries()
+	port := defaultInt64(fileOptions.GetPort(), 80)
+	debug := fileOptions.GetDebug()
+	protocTsPath := fileOptions.GetProtocTsPath()
+	outputType := fileOptions.GetOutputType()
+	hostname := fileOptions.GetHostname()
+	hostnameLocation := fileOptions.GetHostnameLocation()
+	authTokenLocation := fileOptions.GetAuthTokenLocation()
+
+	if hostname == "" && hostnameLocation == "" {
+		return nil, fmt.Errorf("Provide either the hostname or the hostname location in redux so the plugin knows where to send api calls.")
+	} else if hostname != "" && hostnameLocation != "" {
+    return nil, fmt.Errorf("Both hostname and hostnameLocation provided. Provide either the hostname OR the hostname location.")
+  }
+
 	if protocTsPath[len(protocTsPath)-1] != '/' {
 		// add a slash to the end of the config option if it doesnt exist
 		protocTsPath += "/"
 	}
-	hostname, err := GetFileExtensionString(stateFile, "hostname")
-	hostnameLocation, err := GetFileExtensionString(stateFile, "hostname_location")
-	authTokenLocation, err := GetFileExtensionString(stateFile, "auth_token_location")
 
-	if err != nil {
-		return nil, fmt.Errorf("Error encountered while parsing file level annotations: %v", err)
+	var outputter Outputter
+	switch state.OutputTypes_name[int32(outputType)] {
+	case "mobx":
+		outputter = &MobxOutputter{}
+	default:
+		outputter = MakeGenericOutputter(outputType)
 	}
 
 	stateFields := []*gp.FieldDescriptorProto{}
@@ -153,53 +170,60 @@ func Generate(filepaths []string, protos []*gp.FileDescriptorProto) ([]*File, er
 	out = append(out, CreateAggregateByPackage(messageFiles, protocTsPath, stateFile.GetPackage())...)
 
 	// create state file
-	statePb, err := CreateStateFile(stateFields, debug)
+	statePb, err := outputter.CreateStateFile(stateFields, debug)
 	if err != nil {
 		return nil, fmt.Errorf("Error generating state_pb file: %v", err)
 	}
 	out = append(out, statePb)
 
 	// create action file
-	actionPb, err := CreateActionFile(stateFields, customFields, serviceFiles, debug)
+	actionPb, err := outputter.CreateActionFile(stateFields, customFields, serviceFiles, debug)
 	if err != nil {
 		return nil, fmt.Errorf("Error generating actions_pb file: %v", err)
 	}
 	out = append(out, actionPb)
 
 	// create reducer file
-	reducerPb, err := CreateReducerFile(stateFields, debug)
+	reducerPb, err := outputter.CreateReducerFile(stateFields, debug)
 	if err != nil {
 		return nil, fmt.Errorf("Error generating reducer_pb file: %v", err)
 	}
 	out = append(out, reducerPb)
 
 	// create epic file
-	epicPb, err := CreateEpicFile(stateFields, customFields, serviceFiles, defaultTimeout, defaultRetries, authTokenLocation, hostnameLocation, hostname, port, debounce, debug)
+	epicPb, err := outputter.CreateEpicFile(stateFields, customFields, serviceFiles, defaultTimeout, defaultRetries, authTokenLocation, hostnameLocation, hostname, port, debounce, debug)
 	if err != nil {
 		return nil, fmt.Errorf("Error generating actions_pb file: %v", err)
 	}
 	out = append(out, epicPb)
 
 	// create toMessage file
-	toMessagePb, err := CreateToMessageFile(serviceFiles, protos, protocTsPath, debug)
+	toMessagePb, err := outputter.CreateToMessageFile(serviceFiles, protos, protocTsPath, debug)
 	if err != nil {
 		return nil, fmt.Errorf("Error generating to_message_pb file: %v", err)
 	}
 	out = append(out, toMessagePb)
 
 	// create message_aggregate file from the messageFiles
-	typesPb, err := CreateAggregateTypesFile(messageFiles, stateFile.GetPackage())
+	typesPb, err := outputter.CreateAggregateTypesFile(messageFiles, stateFile.GetPackage())
 	if err != nil {
 		return nil, fmt.Errorf("Error generating protoc_types_pb file: %v", err)
 	}
 	out = append(out, typesPb)
 
 	// create service_aggregate file from the serviceFiles
-	servicesPb, err := CreateAggregateServicesFile(serviceFiles, protocTsPath, stateFile.GetPackage())
+	servicesPb, err := outputter.CreateAggregateServicesFile(serviceFiles, protocTsPath, stateFile.GetPackage())
 	if err != nil {
 		return nil, fmt.Errorf("Error generating protoc_services_pb file: %v", err)
 	}
 	out = append(out, servicesPb)
 
 	return out, nil
+}
+
+func defaultInt64(in int64, defaulted int64) int64 {
+	if in == 0 {
+		return defaulted
+	}
+	return in
 }

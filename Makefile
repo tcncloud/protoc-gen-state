@@ -33,18 +33,13 @@ all: deps build test
 
 build: gen protos
 
-test: test-go clean-go test-js clean-js
+test: build
 
 gen: state/options.pb.go
 	go build .
 
 protos: state/options.pb.go
-	mkdir -p $(GENERATED)
-	protoc -I. -I./e2e/protos -I./state/options.proto \
-		--plugin=./protoc-gen-state \
-		--state_out=$(GENERATED) ./e2e/protos/basic.proto
-	cp protoc-gen-state e2e
-
+	./scripts/generate-protoc-for-all-outputs.sh
 
 state/options.pb.go : state/options.proto
 	protoc --go_out=paths=source_relative:. $<
@@ -53,22 +48,12 @@ deps:
 	go get -u github.com/golang/protobuf/protoc-gen-go
 	go get -u github.com/iancoleman/strcase
 
-clean-go:
-	# rm -f ./protoc-gen-state
-	rm -rf $(GENERATED)
+clean:
+	./scripts/clean-project.sh
 
-clean-js:
-	rm -rf node_modules/
-	yarn run clean
+test:
+	./scripts/test-all-outputs.sh
 
-test-go:
-	ginkgo .
-
-test-js:
-	yarn
-	yarn run build
-	npx tsc -p "./tsconfig.json"
-	yarn run test
 
 # test - generate multiple proto files, panic
 # test - <1 or >3 messages in state proto, panic
