@@ -44,15 +44,9 @@ protos: state/options.pb.go
 state/options.pb.go : state/options.proto
 	protoc --go_out=paths=source_relative:. $<
 
-deps: $(GOPATH)/bin/protoc-gen-go $(GOPATH)/bin/ginkgo
+deps:
+	go mod download
 	go get -u github.com/iancoleman/strcase
-
-$(GOPATH)/bin/protoc-gen-go:
-	# go get -u github.com/golang/protobuf/protoc-gen-go
-
-$(GOPATH)/bin/ginkgo:
-	go get -u github.com/onsi/ginkgo/ginkgo
-	go get -u github.com/onsi/gomega
 
 clean:
 	./scripts/clean-project.sh
