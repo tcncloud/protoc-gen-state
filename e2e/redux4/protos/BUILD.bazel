@@ -1,0 +1,30 @@
+# load("@io_bazel_rules_go//go:def.bzl", "go_library")
+# load("@io_bazel_rules_go//proto:def.bzl", "go_proto_library")
+
+# proto_library(
+#     name = "protos_proto",
+#     srcs = ["basic.proto"],
+#     visibility = ["//visibility:public"],
+#     deps = [
+#         "//e2e/redux4/protos/readinglist:protos_proto",
+#         "//state:state_proto",
+#     ],
+# )
+
+# go_proto_library(
+#     name = "protos_go_proto",
+#     importpath = "github.com/tcncloud/protoc-gen-state/e2e/redux4/protos",
+#     proto = ":protos_proto",
+#     visibility = ["//visibility:public"],
+#     deps = [
+#         "//e2e/redux4/protos/readinglist:go_default_library",
+#         "//state:go_default_library",
+#     ],
+# )
+
+# go_library(
+#     name = "go_default_library",
+#     embed = [":protos_go_proto"],
+#     importpath = "github.com/tcncloud/protoc-gen-state/e2e/redux4/protos",
+#     visibility = ["//visibility:public"],
+# )
