@@ -33,7 +33,7 @@ jobs:
           name: "Publish Release on Github"
           command: |
             go get github.com/tcnksm/ghr
-            VERSION=$(my-binary --version)
+            VERSION=${CIRCLE_TAG}
             ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -delete ${VERSION} ./artifacts/ 
 
 workflows:
