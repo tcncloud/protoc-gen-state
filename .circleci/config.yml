@@ -12,7 +12,18 @@ jobs:
       - checkout
       - run: |
           make
-          ls -la 
+          if [ "$CIRCLE_TAG" != "" ]
+          then
+            mkdir ./artifacts
+            export GOOS=linux
+            export GOARCH=amd64
+            make gen 
+            tar czvf ./artifacts/protoc-gen-state-${CIRCLE_TAG}-${GOOS}-${GOARCH}.tar.gz protoc-gen-stage state/options.proto
+            export GOOS=linux
+            export GOARCH=amd64
+            make gen 
+            tar czvf ./artifacts/protoc-gen-state-${CIRCLE_TAG}-${GOOS}-${GOARCH}.tar.gz protoc-gen-stage state/options.proto
+          fi 
   github-release:
     executor: exec
     steps:
