@@ -23,6 +23,7 @@ jobs:
             export GOARCH=amd64
             make gen 
             tar czvf ./artifacts/protoc-gen-state-${CIRCLE_TAG}-${GOOS}-${GOARCH}.tar.gz protoc-gen-state state/options.proto
+            ls -la ./artifacts
           fi 
   github-release:
     executor: exec
