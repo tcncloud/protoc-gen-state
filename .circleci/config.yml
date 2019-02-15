@@ -31,7 +31,7 @@ jobs:
             tar czvf ./artifacts/protoc-gen-state-${CIRCLE_TAG}-${GOOS}-${GOARCH}.tar.gz protoc-gen-state state/options.proto
             VERSION=${CIRCLE_TAG}
             echo ${VERSION}
-            ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -delete -replace -debug  ${VERSION} ./artifacts/ 
+            ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -replace  ${VERSION} ./artifacts/ 
 
 workflows:
   version: 2.1
@@ -48,4 +48,4 @@ workflows:
             branches:
               ignore: /.*/
             tags:
-              only: /^v\d+\.\d+\.\d+$/
+              only: /^v\d+\.\d+\.\d+$/ 
