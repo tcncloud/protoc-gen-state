@@ -1,0 +1,10 @@
+version: 2
+
+jobs:
+  build:
+    docker:
+      - image: golang:1.11
+    steps:
+      - run: |
+          go build ./...
+          go test ./...
