@@ -1,10 +1,48 @@
-version: 2
+version: 2.1
+
+executors:
+  exec:
+    docker:
+      - image tcncloud/golang-node:3
+    working_directory: /tmp
 
 jobs:
   build:
-    docker:
-      - image: tcncloud/golang-node:3
+    executor: exec
     steps:
       - checkout
       - run: |
           make
+  github-release:
+    executor: exec
+    requires:
+      - build
+    filters:
+      branches:
+        ignore: /.*/
+    steps:
+      - attach_workspace:
+          at: ./artifacts
+      - run:
+          name: "Publish Release on Github"
+          command: |
+            go get github.com/tcnksm/ghr
+            VERSION=$(my-binary --version)
+            ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -delete ${VERSION} ./artifacts/ 
+
+workflows:
+  version: 2.1
+  main:
+    jobs:
+      - build:
+          filters:
+            tags:
+              only: /^\d+\.\d+\.\d+$/
+      - github-release:
+          requires:
+            - build
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              only: /^\d+\.\d+\.\d+$/
