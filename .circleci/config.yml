@@ -13,13 +13,11 @@ jobs:
       - checkout
       - run: |
           make
+          ls -la 
   github-release:
     executor: exec
     requires:
       - build
-    filters:
-      branches:
-        ignore: /.*/
     steps:
       - attach_workspace:
           at: ./artifacts
