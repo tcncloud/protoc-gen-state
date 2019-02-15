@@ -12,29 +12,22 @@ jobs:
       - checkout
       - run: |
           make
-          if [ "$CIRCLE_TAG" != "" ]
-          then
-            mkdir ./artifacts
-            export GOOS=linux
-            export GOARCH=amd64
-            make gen 
-            tar czvf ./artifacts/protoc-gen-state-${CIRCLE_TAG}-${GOOS}-${GOARCH}.tar.gz protoc-gen-state state/options.proto
-            export GOOS=linux
-            export GOARCH=amd64
-            make gen 
-            tar czvf ./artifacts/protoc-gen-state-${CIRCLE_TAG}-${GOOS}-${GOARCH}.tar.gz protoc-gen-state state/options.proto
-            ls -la ./artifacts
-          fi 
   github-release:
     executor: exec
     steps:
-      - attach_workspace:
-          at: ./artifacts
+      - checkout
       - run:
           name: "Publish Release on Github"
           command: |
-            ls -la ./artifacts
             go get github.com/tcnksm/ghr
+            mkdir ./artifacts
+            GOOS=linux
+            GOARCH=amd64
+            make gen
+            tar czvf ./artifacts/protoc-gen-state-${CIRCLE_TAG}-${GOOS}-${GOARCH}.tar.gz protoc-gen-state state/options.proto
+            GOOS=darwin
+            make gen
+            tar czvf ./artifacts/protoc-gen-state-${CIRCLE_TAG}-${GOOS}-${GOARCH}.tar.gz protoc-gen-state state/options.proto
             VERSION=${CIRCLE_TAG}
             echo ${VERSION}
             ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -delete -replace -debug  ${VERSION} ./artifacts/ 
