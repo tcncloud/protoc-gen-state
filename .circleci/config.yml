@@ -6,5 +6,4 @@ jobs:
       - image: golang:1.11
     steps:
       - run: |
-          go build ./...
-          go test ./...
+          make
