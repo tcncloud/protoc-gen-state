@@ -20,6 +20,7 @@ jobs:
           name: "Publish Release on Github"
           command: |
             go get github.com/tcnksm/ghr
+            make
             mkdir ./artifacts
             GOOS=linux
             GOARCH=amd64
