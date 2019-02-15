@@ -16,8 +16,6 @@ jobs:
           ls -la 
   github-release:
     executor: exec
-    requires:
-      - build
     steps:
       - attach_workspace:
           at: ./artifacts
