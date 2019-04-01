@@ -79,6 +79,46 @@ function injectGrpcDependency(api: any): any {
   return api
 }
 
+export const genericRetryStrategy = ({
+  maxRetryAttempts = 5,
+  scalingDuration = 100,
+}: {
+  maxRetryAttempts?: number,
+  scalingDuration?: number,
+} = {}) => (attempts: Observable<any>) => {
+  return attempts.pipe(
+    mergeMap((error, i) => {
+			const retryAttempt = i + 1;
+			const includedErrorMessages = [
+				"Response closed without headers",
+				"Connection reset by peer",
+			];
+
+			console.log("error message", error.message);
+
+      // if maximum number of retries have been met
+			// or response is a status code we don't wish to retry
+			// or error is a message we don't wish to retry, throw error
+      if (
+        retryAttempt > maxRetryAttempts ||
+				!includedErrorMessages.includes(error.message)
+      ) {
+        throw(error);
+      }
+
+			// exponential backoff, starts at scalingDuration then increases exponentially with each retry
+			let delay: number = (((Math.pow(2, i) + 1)) / 2) * scalingDuration;
+
+			console.log(
+        'Attempt ' + retryAttempt+ ': retrying in ' + delay + 'ms'
+			);
+			
+      return timer(retryAttempt * scalingDuration);
+    }),
+    finalize(() => console.log('We are done!'))
+  );
+};
+
 {{range $i, $e := .}}
 export const {{$e.Name}}Epic = (action$: ActionsObservable<ProtocActionsType>, state$: StateObservable<any>, api: any) =>  {
   api = injectGrpcDependency(api)
@@ -92,7 +132,7 @@ export const {{$e.Name}}Epic = (action$: ActionsObservable<ProtocActionsType>, s
 	})),
 	flatMap((request) => {
 {{if $e.Repeat}} {{template "grpcStream" $e}} {{ else }} {{template "grpcUnary" $e}} {{end}}.pipe(
-      retry({{$e.Retries}}),
+      retryWhen(genericRetryStrategy({maxRetryAttempts: {{$e.Retries}}})),
       timeout({{$e.Timeout}}),{{if $e.Updater}}
       map(obj => ({ ...obj } as { prev: {{$e.ProtoOutputType}}.AsObject, updated: {{$e.ProtoOutputType}}.AsObject } )),
       map(lib => {
@@ -114,8 +154,8 @@ export const {{$e.Name}}Epic = (action$: ActionsObservable<ProtocActionsType>, s
 	repeat()
 )}
 {{end}}
-{{define "grpcUnary"}}   return from(
-		new Promise((resolve, reject) => { {{if .Debug}}console.log('calling {{.FullMethodName}} with payload: ', request.message); {{ end }}
+{{define "grpcUnary"}}   return defer(() => {
+		return new Promise((resolve, reject) => { {{if .Debug}}console.log('calling {{.FullMethodName}} with payload: ', request.message); {{ end }}
       let host = createHostString('{{.Hostname}}', '{{.HostnameLocation}}', '{{.Port}}', state$)
       {{template "authToken" .}}
 			api.unary({{.FullMethodName}}, {
@@ -134,10 +174,10 @@ export const {{$e.Name}}Epic = (action$: ActionsObservable<ProtocActionsType>, s
 					}
 				}
 			});
-		})){{end}}
+		})}){{end}}
 {{define "grpcStream"}}  let host = createHostString('{{.Hostname}}', '{{.HostnameLocation}}', '{{.Port}}', state$)
-		return from(
-			new Promise((resolve, reject) => {
+    return defer(() => {
+			return new Promise((resolve, reject) => {
         {{if .Debug}}console.log('calling {{.FullMethodName}} with payload: ', request.message);{{end}}
 				let arr: {{.ProtoOutputType}}.AsObject[] = [];
 				const client = api.client({{.FullMethodName}}, {
@@ -157,13 +197,13 @@ export const {{$e.Name}}Epic = (action$: ActionsObservable<ProtocActionsType>, s
 				});
 				client.start({{template "authToken" .}});
 				client.send(request.message);
-			})){{end}}
+			})}){{end}}
 
 export const protocEpics = combineEpics({{range $i, $e := .}}
 	{{$e.Name}}Epic,{{end}}
 )
 
-{{define "authToken"}} {{if .Auth}} {{if .Repeat}} new grpc.Metadata({ 'Authorization': `+ "`" +`Bearer ${createAuthBearer(state$, '{{.Auth}}')}` + "`" + ` }) {{else}} let idToken = createAuthBearer(state$, '{{.Auth}}'); {{end}} {{end}}
+{{define "authToken"}} {{if .Auth}} {{if .Repeat}} new grpc.Metadata({ 'Authorization': ` + "`" + `Bearer ${createAuthBearer(state$, '{{.Auth}}')}` + "`" + ` }) {{else}} let idToken = createAuthBearer(state$, '{{.Auth}}'); {{end}} {{end}}
 {{end}}
 {{define "authFollowUp"}} {{if .Auth}} {{if .Repeat}} {{else}} metadata: new grpc.Metadata({ 'Authorization': ` + "`" + `Bearer ${idToken}` + "`" + `}), {{end}} {{end}}
 {{end}}
