@@ -1,0 +1,37 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_binary", "go_library", "go_test")
+load("@bazel_gazelle//:def.bzl", "gazelle")
+
+# gazelle:prefix github.com/tcncloud/protoc-gen-state
+gazelle(name = "gazelle")
+
+go_library(
+    name = "go_default_library",
+    srcs = ["main.go"],
+    importpath = "github.com/tcncloud/protoc-gen-state",
+    visibility = ["//visibility:private"],
+    deps = [
+        "//generator:go_default_library",
+        "@com_github_golang_protobuf//proto:go_default_library",
+        "@io_bazel_rules_go//proto/wkt:compiler_plugin_go_proto",
+    ],
+)
+
+go_binary(
+    name = "protoc-gen-state",
+    embed = [":go_default_library"],
+    visibility = ["//visibility:public"],
+)
+
+go_test(
+    name = "go_default_test",
+    srcs = [
+        "main_test.go",
+        "protoc_gen_state_suite_test.go",
+    ],
+    embed = [":go_default_library"],
+    deps = [
+        "//state:go_default_library",
+        "@com_github_onsi_ginkgo//:go_default_library",
+        "@com_github_onsi_gomega//:go_default_library",
+    ],
+)
