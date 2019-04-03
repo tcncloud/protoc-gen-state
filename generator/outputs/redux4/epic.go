@@ -130,7 +130,7 @@ export const {{$e.Name}}Epic = (action$: ActionsObservable<ProtocActionsType>, s
 	})),
 	flatMap((request) => {
 {{if $e.Repeat}} {{template "grpcStream" $e}} {{ else }} {{template "grpcUnary" $e}} {{end}}.pipe(
-      retryWhen(genericRetryStrategy({maxRetryAttempts: {{$e.Retries}, debug: {$e.Debug}}})),
+      retryWhen(genericRetryStrategy({maxRetryAttempts: {{$e.Retries}}, debug: {{$e.Debug}} })),
       timeout({{$e.Timeout}}),{{if $e.Updater}}
       map(obj => ({ ...obj } as { prev: {{$e.ProtoOutputType}}.AsObject, updated: {{$e.ProtoOutputType}}.AsObject } )),
       map(lib => {
