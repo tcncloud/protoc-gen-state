@@ -104,10 +104,10 @@ export const genericRetryStrategy = ({
         throw(error);
       }
 
-			// exponential backoff, starts at scalingDuration then increases exponentially with each retry
-			let delay: number = (((Math.pow(2, i) + 1)) / 2) * scalingDuration;
+      // exponential backoff, starts at scalingDuration then increases exponentially with each retry
+      let delay: number = (((Math.pow(2, i) + 1)) / 2) * scalingDuration;
 
-			{{if .Debug}}console.log('Attempt ' + retryAttempt+ ': retrying in ' + delay + 'ms');{{end}}
+      {{if .Debug}}console.log('Attempt ' + retryAttempt+ ': retrying in ' + delay + 'ms');{{end}}
 			
       return timer(retryAttempt * scalingDuration);
     }),
