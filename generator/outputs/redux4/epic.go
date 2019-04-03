@@ -96,8 +96,8 @@ export const genericRetryStrategy = ({
       }
 
       // if maximum number of retries have been met
-			// or response is a status code we don't wish to retry
-			// or error is a message we don't wish to retry, throw error
+      // or response is a status code we don't wish to retry
+      // or error is a message we don't wish to retry, throw error
       if (
         retryAttempt > maxRetryAttempts || !shouldRetry(error.message)
       ) {
