@@ -82,14 +82,16 @@ function injectGrpcDependency(api: any): any {
 export const genericRetryStrategy = ({
   maxRetryAttempts = 5,
   scalingDuration = 100,
+  debug = false,
 }: {
   maxRetryAttempts?: number,
   scalingDuration?: number,
+  debug?: boolean
 } = {}) => (attempts: Observable<any>) => {
   return attempts.pipe(
     mergeMap((error, i) => {
       const retryAttempt = i + 1;
-      {{if .Debug}}console.log("error message", error.message);{{end}}
+      if (debug) { console.log("error message", error.message); }
 
       const shouldRetry = (message: string) => {
         return (message === "Response closed without headers" || message.includes("connection reset by peer"));
@@ -107,11 +109,11 @@ export const genericRetryStrategy = ({
       // exponential backoff, starts at scalingDuration then increases exponentially with each retry
       let delay: number = (((Math.pow(2, i) + 1)) / 2) * scalingDuration;
 
-      {{if .Debug}}console.log('Attempt ' + retryAttempt+ ': retrying in ' + delay + 'ms');{{end}}
+      if (debug) { console.log('Attempt ' + retryAttempt+ ': retrying in ' + delay + 'ms'); }
 			
       return timer(retryAttempt * scalingDuration);
     }),
-    finalize(() => {{if .Debug}}console.log('We are done!');{{end}})
+    finalize(() => if (debug) {console.log('We are done!');})
   );
 };
 
@@ -128,7 +130,7 @@ export const {{$e.Name}}Epic = (action$: ActionsObservable<ProtocActionsType>, s
 	})),
 	flatMap((request) => {
 {{if $e.Repeat}} {{template "grpcStream" $e}} {{ else }} {{template "grpcUnary" $e}} {{end}}.pipe(
-      retryWhen(genericRetryStrategy({maxRetryAttempts: {{$e.Retries}}})),
+      retryWhen(genericRetryStrategy({maxRetryAttempts: {{$e.Retries}, debug: {$e.Debug}}})),
       timeout({{$e.Timeout}}),{{if $e.Updater}}
       map(obj => ({ ...obj } as { prev: {{$e.ProtoOutputType}}.AsObject, updated: {{$e.ProtoOutputType}}.AsObject } )),
       map(lib => {
