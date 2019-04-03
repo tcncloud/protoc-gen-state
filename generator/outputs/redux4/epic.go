@@ -88,20 +88,18 @@ export const genericRetryStrategy = ({
 } = {}) => (attempts: Observable<any>) => {
   return attempts.pipe(
     mergeMap((error, i) => {
-			const retryAttempt = i + 1;
-			const includedErrorMessages = [
-				"Response closed without headers",
-				"Connection reset by peer",
-			];
+      {{if .Debug}}console.log("error message", error.message);{{end}}
+      const retryAttempt = i + 1;
 
-			console.log("error message", error.message);
+      const shouldRetry = (message: string) => {
+        return (message === "Response closed without headers" || message.includes("connection reset by peer"));
+      }
 
       // if maximum number of retries have been met
 			// or response is a status code we don't wish to retry
 			// or error is a message we don't wish to retry, throw error
       if (
-        retryAttempt > maxRetryAttempts ||
-				!includedErrorMessages.includes(error.message)
+        retryAttempt > maxRetryAttempts || !shouldRetry(error.message)
       ) {
         throw(error);
       }
@@ -109,13 +107,11 @@ export const genericRetryStrategy = ({
 			// exponential backoff, starts at scalingDuration then increases exponentially with each retry
 			let delay: number = (((Math.pow(2, i) + 1)) / 2) * scalingDuration;
 
-			console.log(
-        'Attempt ' + retryAttempt+ ': retrying in ' + delay + 'ms'
-			);
+			{{if .Debug}}console.log('Attempt ' + retryAttempt+ ': retrying in ' + delay + 'ms');{{end}}
 			
       return timer(retryAttempt * scalingDuration);
     }),
-    finalize(() => console.log('We are done!'))
+    finalize(() => {{if .Debug}}console.log('We are done!');{{end}})
   );
 };
 
