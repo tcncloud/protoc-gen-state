@@ -88,8 +88,8 @@ export const genericRetryStrategy = ({
 } = {}) => (attempts: Observable<any>) => {
   return attempts.pipe(
     mergeMap((error, i) => {
-      {{if .Debug}}console.log("error message", error.message);{{end}}
       const retryAttempt = i + 1;
+      {{if .Debug}}console.log("error message", error.message);{{end}}
 
       const shouldRetry = (message: string) => {
         return (message === "Response closed without headers" || message.includes("connection reset by peer"));
