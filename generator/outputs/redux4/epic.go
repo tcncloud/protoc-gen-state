@@ -3,8 +3,8 @@ package redux4
 const EpicTemplate = `/* THIS FILE IS GENERATED FROM THE TOOL PROTOC-GEN-STATE  */
 /* ANYTHING YOU EDIT WILL BE OVERWRITTEN IN FUTURE BUILDS */
 
-import { of, from } from 'rxjs';
-import { repeat, takeUntil, filter, map, flatMap, debounceTime, catchError, timeout, retry } from 'rxjs/operators';
+import { of, defer, timer, Observable } from 'rxjs';
+import { repeat, takeUntil, filter, map, flatMap, debounceTime, catchError, timeout, retryWhen, finalize } from 'rxjs/operators';
 
 import { combineEpics, ActionsObservable, StateObservable } from 'redux-observable';
 import { isActionOf, ActionType } from 'typesafe-actions';
@@ -89,19 +89,17 @@ export const genericRetryStrategy = ({
   debug?: boolean
 } = {}) => (attempts: Observable<any>) => {
   return attempts.pipe(
-    mergeMap((error, i) => {
+    flatMap((error: NodeJS.ErrnoException, i: number) => {
       const retryAttempt = i + 1;
       if (debug) { console.log("error message", error.message); }
 
-      const shouldRetry = (message: string) => {
+      const shouldRetryGivenError = (message: string) => {
         return (message === "Response closed without headers" || message.includes("connection reset by peer"));
       }
 
-      // if maximum number of retries have been met
-      // or response is a status code we don't wish to retry
-      // or error is a message we don't wish to retry, throw error
+      // Throw error if maximum number of retries have been met or error is a message we don't wish to retry
       if (
-        retryAttempt > maxRetryAttempts || !shouldRetry(error.message)
+        retryAttempt > maxRetryAttempts || !shouldRetryGivenError(error.message)
       ) {
         throw(error);
       }
@@ -113,7 +111,7 @@ export const genericRetryStrategy = ({
 			
       return timer(retryAttempt * scalingDuration);
     }),
-    finalize(() => if (debug) {console.log('We are done!');})
+    finalize(() => { if (debug) {console.log('We are done!');} })
   );
 };
 
