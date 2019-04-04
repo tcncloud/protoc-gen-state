@@ -32,35 +32,33 @@ import (
 	"bytes"
 	"fmt"
 	gp "github.com/golang/protobuf/protoc-gen-go/descriptor"
+	"strconv"
 	"strings"
-  "strconv"
 	"text/template"
 )
 
 type EpicEntity struct {
-	Name              string
-	ProtoInputType    string
-	ProtoOutputType   string
-	FullMethodName    string
-	JsonName          string
-	Debounce          int64
-	Timeout           int64
-	Retries           int64
-	Repeat            bool
-	Auth              string
-  Hostname          string
-  HostnameLocation  string
-  Port              string
-	Updater           bool
-	Debug             bool
+	Name             string
+	ProtoInputType   string
+	ProtoOutputType  string
+	FullMethodName   string
+	JsonName         string
+	Debounce         int64
+	Timeout          int64
+	Retries          int64
+	Repeat           bool
+	Auth             string
+	Hostname         string
+	HostnameLocation string
+	Port             string
+	Updater          bool
+	Debug            bool
 }
-
 
 func (this *GenericOutputter) CreateEpicFile(stateFields []*gp.FieldDescriptorProto, customFields []*gp.FieldDescriptorProto, serviceFiles []*gp.FileDescriptorProto, defaultTimeout int64, defaultRetries int64, authTokenLocation string, hostnameLocation string, hostname string, portin int64, debounce int64, debug bool) (*File, error) {
 	epicEntities := []*EpicEntity{}
 
-
-  port := ":" + strconv.FormatInt(portin, 10)
+	port := ":" + strconv.FormatInt(portin, 10)
 
 	// transform stateFields into our EpicEntity implementation so template can read values
 	for _, field := range stateFields {
@@ -124,8 +122,8 @@ func (this *GenericOutputter) CreateEpicFile(stateFields []*gp.FieldDescriptorPr
 					Repeat:           repeatEntity,
 					Auth:             authTokenLocation,
 					Hostname:         hostname,
-          HostnameLocation: hostnameLocation,
-          Port:             port,
+					HostnameLocation: hostnameLocation,
+					Port:             port,
 					Updater:          updater,
 					Debug:            debug,
 				})
@@ -178,8 +176,8 @@ func (this *GenericOutputter) CreateEpicFile(stateFields []*gp.FieldDescriptorPr
 				Repeat:           repeated,
 				Auth:             authTokenLocation,
 				Hostname:         hostname,
-        HostnameLocation: hostnameLocation,
-        Port:             port,
+				HostnameLocation: hostnameLocation,
+				Port:             port,
 				Debug:            debug,
 			})
 		}

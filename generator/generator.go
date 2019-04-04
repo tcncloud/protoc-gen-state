@@ -117,8 +117,8 @@ func Generate(filepaths []string, protos []*gp.FileDescriptorProto) ([]*File, er
 	if hostname == "" && hostnameLocation == "" {
 		return nil, fmt.Errorf("Provide either the hostname or the hostname location in redux so the plugin knows where to send api calls.")
 	} else if hostname != "" && hostnameLocation != "" {
-    return nil, fmt.Errorf("Both hostname and hostnameLocation provided. Provide either the hostname OR the hostname location.")
-  }
+		return nil, fmt.Errorf("Both hostname and hostnameLocation provided. Provide either the hostname OR the hostname location.")
+	}
 
 	if protocTsPath[len(protocTsPath)-1] != '/' {
 		// add a slash to the end of the config option if it doesnt exist
