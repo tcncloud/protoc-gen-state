@@ -98,18 +98,16 @@ export const genericRetryStrategy = ({
       }
 
       // Throw error if maximum number of retries have been met or error is a message we don't wish to retry
-      if (
-        retryAttempt > maxRetryAttempts || !shouldRetryGivenError(error.message)
-      ) {
+      if (retryAttempt > maxRetryAttempts || !shouldRetryGivenError(error.message)) {
         throw(error);
       }
 
       // exponential backoff, starts at scalingDuration then increases exponentially with each retry
-      let delay: number = (((Math.pow(2, i) + 1)) / 2) * scalingDuration;
+      let delay: number = ((Math.pow(2, i) + 1) / 2) * scalingDuration;
 
       if (debug) { console.log('Attempt ' + retryAttempt+ ': retrying in ' + delay + 'ms'); }
 			
-      return timer(retryAttempt * scalingDuration);
+      return timer(delay);
     }),
     finalize(() => { if (debug) {console.log('We are done!');} })
   );
