@@ -82,12 +82,10 @@ function injectGrpcDependency(api: any): any {
 export const genericRetryStrategy = ({
   maxRetryAttempts = 5,
   scalingDuration = 100,
-  timeout = 15000,
   debug = false,
 }: {
   maxRetryAttempts?: number,
   scalingDuration?: number,
-	timeout?: number,
   debug?: boolean
 } = {}) => (attempts: Observable<any>) => {
   return attempts.pipe(
@@ -111,7 +109,6 @@ export const genericRetryStrategy = ({
 			
       return timer(delay);
     }),
-		tap(p => { console.log('tapped out', p); }),
     finalize(() => { if (debug) {console.log('We are done!');} })
   );
 };
@@ -131,8 +128,8 @@ export const {{$e.Name}}Epic = (action$: ActionsObservable<ProtocActionsType>, s
 	})),
 	flatMap((request) => {
 {{if $e.Repeat}} {{template "grpcStream" $e}} {{ else }} {{template "grpcUnary" $e}} {{end}}.pipe(
-	tap(() => { clearTimeout(theTimeout) }),
-	retryWhen(genericRetryStrategy({maxRetryAttempts: {{$e.Retries}}, debug: {{$e.Debug}}, timeout: {{$e.Timeout}} })),{{if $e.Updater}}
+  tap(() => { clearTimeout(theTimeout) }),
+	retryWhen(genericRetryStrategy({maxRetryAttempts: {{$e.Retries}}, debug: {{$e.Debug}} })),{{if $e.Updater}}
       map(obj => ({ ...obj } as { prev: {{$e.ProtoOutputType}}.AsObject, updated: {{$e.ProtoOutputType}}.AsObject } )),
       map(lib => {
         request.resolve(lib.prev, lib.updated);
@@ -154,8 +151,10 @@ export const {{$e.Name}}Epic = (action$: ActionsObservable<ProtocActionsType>, s
 )}
 {{end}}
 {{define "grpcUnary"}}   return defer(() => {
-		theTimeout = setTimeout(() => { closeObject.close() }, {{.Timeout}});
+		let rejectFunc = () => {};
+    theTimeout = setTimeout(() => { closeObject.close(); rejectFunc(new Error('timeout')); }, {{.Timeout}});
 		return new Promise((resolve, reject) => { {{if .Debug}}console.log('calling {{.FullMethodName}} with payload: ', request.message); {{ end }}
+      rejectFunc = reject;
       let host = createHostString('{{.Hostname}}', '{{.HostnameLocation}}', '{{.Port}}', state$)
       {{template "authToken" .}}
 			closeObject = api.unary({{.FullMethodName}}, {
@@ -177,8 +176,10 @@ export const {{$e.Name}}Epic = (action$: ActionsObservable<ProtocActionsType>, s
 		})}){{end}}
 {{define "grpcStream"}}  let host = createHostString('{{.Hostname}}', '{{.HostnameLocation}}', '{{.Port}}', state$)
     return defer(() => {
-			theTimeout = setTimeout(() => { closeObject.close() }, {{.Timeout}});
+      let rejectFunc = () => {};
+      theTimeout = setTimeout(() => { closeObject.close(); rejectFunc(new Error('timeout')); }, {{.Timeout}});
 			return new Promise((resolve, reject) => {
+        rejectFunc = reject;
         {{if .Debug}}console.log('calling {{.FullMethodName}} with payload: ', request.message);{{end}}
 				let arr: {{.ProtoOutputType}}.AsObject[] = [];
 				const client = api.client({{.FullMethodName}}, {
