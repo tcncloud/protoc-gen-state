@@ -4,7 +4,7 @@ const EpicTemplate = `/* THIS FILE IS GENERATED FROM THE TOOL PROTOC-GEN-STATE  
 /* ANYTHING YOU EDIT WILL BE OVERWRITTEN IN FUTURE BUILDS */
 
 import { of, defer, timer, Observable } from 'rxjs';
-import { repeat, takeUntil, filter, map, flatMap, debounceTime, catchError, timeout, retryWhen, finalize } from 'rxjs/operators';
+import { repeat, takeUntil, tap, filter, map, flatMap, debounceTime, catchError, timeout, retryWhen, finalize } from 'rxjs/operators';
 
 import { combineEpics, ActionsObservable, StateObservable } from 'redux-observable';
 import { isActionOf, ActionType } from 'typesafe-actions';
@@ -48,6 +48,20 @@ function createAuthBearer(state$: StateObservable<any>, authLocation: string): s
     throw new Error('PROTOC-GEN-STATE: the value of auth_token_location <' + token + '> in Redux is empty')
   }
   return token
+}
+
+async function timeoutPromise<T>(ms, promise, callback): Promise<T> {
+    return new Promise<T>(async (resolve, reject) => {
+        setTimeout(() => {
+						callback();
+            reject(new Error("timeout"))
+        }, ms)
+				try {
+					resolve(await promise)
+				} catch (err) {
+					reject(err)
+				}
+    })
 }
 
 function createHostString(hostname: string, hostnameLocation: string, port: string, state$: StateObservable<any>): string {
@@ -116,7 +130,7 @@ export const genericRetryStrategy = ({
 {{range $i, $e := .}}
 export const {{$e.Name}}Epic = (action$: ActionsObservable<ProtocActionsType>, state$: StateObservable<any>, api: any) =>  {
   api = injectGrpcDependency(api)
-  return action$.pipe(
+	return action$.pipe(
 	filter(isActionOf(protocActions.{{$e.Name}}Request)),
 	debounceTime({{$e.Debounce}}),
 	map(({ payload, meta: { resolve = noop, reject = noop } }) => ({
@@ -126,8 +140,7 @@ export const {{$e.Name}}Epic = (action$: ActionsObservable<ProtocActionsType>, s
 	})),
 	flatMap((request) => {
 {{if $e.Repeat}} {{template "grpcStream" $e}} {{ else }} {{template "grpcUnary" $e}} {{end}}.pipe(
-      retryWhen(genericRetryStrategy({maxRetryAttempts: {{$e.Retries}}, debug: {{$e.Debug}} })),
-      timeout({{$e.Timeout}}),{{if $e.Updater}}
+	retryWhen(genericRetryStrategy({maxRetryAttempts: {{$e.Retries}}, debug: {{$e.Debug}} })),{{if $e.Updater}}
       map(obj => ({ ...obj } as { prev: {{$e.ProtoOutputType}}.AsObject, updated: {{$e.ProtoOutputType}}.AsObject } )),
       map(lib => {
         request.resolve(lib.prev, lib.updated);
@@ -149,10 +162,12 @@ export const {{$e.Name}}Epic = (action$: ActionsObservable<ProtocActionsType>, s
 )}
 {{end}}
 {{define "grpcUnary"}}   return defer(() => {
-		return new Promise((resolve, reject) => { {{if .Debug}}console.log('calling {{.FullMethodName}} with payload: ', request.message); {{ end }}
+		let closeObject = { close: () => {} };
+		return timeoutPromise({{.Timeout}}, new Promise((resolve, reject) => { 
+			{{if .Debug}}console.log('calling {{.FullMethodName}} with payload: ', request.message); {{ end }}
       let host = createHostString('{{.Hostname}}', '{{.HostnameLocation}}', '{{.Port}}', state$)
       {{template "authToken" .}}
-			api.unary({{.FullMethodName}}, {
+			closeObject = api.unary({{.FullMethodName}}, {
 				request: request.message,
 				host: host,
 				{{template "authFollowUp" .}}
@@ -168,10 +183,12 @@ export const {{$e.Name}}Epic = (action$: ActionsObservable<ProtocActionsType>, s
 					}
 				}
 			});
-		})}){{end}}
+		}), closeObject.close)
+	}){{end}}
 {{define "grpcStream"}}  let host = createHostString('{{.Hostname}}', '{{.HostnameLocation}}', '{{.Port}}', state$)
     return defer(() => {
-			return new Promise((resolve, reject) => {
+			let closeFunc = () => {};
+			return timeoutPromise({{.Timeout}}, new Promise((resolve, reject) => {
         {{if .Debug}}console.log('calling {{.FullMethodName}} with payload: ', request.message);{{end}}
 				let arr: {{.ProtoOutputType}}.AsObject[] = [];
 				const client = api.client({{.FullMethodName}}, {
@@ -191,7 +208,8 @@ export const {{$e.Name}}Epic = (action$: ActionsObservable<ProtocActionsType>, s
 				});
 				client.start({{template "authToken" .}});
 				client.send(request.message);
-			})}){{end}}
+				closeFunc = () => client.close();
+			}), closeFunc)}){{end}}
 
 export const protocEpics = combineEpics({{range $i, $e := .}}
 	{{$e.Name}}Epic,{{end}}

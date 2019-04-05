@@ -8,7 +8,7 @@ GENERATED='./generated'
 
 rm -rf node_modules/
 rm -rf $GENERATED
-rm -rf state/options.pb.go
+# rm -rf state/options.pb.go
 rm -rf protoc-gen-state
 
 

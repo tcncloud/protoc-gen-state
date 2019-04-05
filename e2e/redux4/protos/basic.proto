@@ -9,8 +9,8 @@ import "e2e/redux4/protos/readinglist/readinglist.proto";
 option (state_file_options) = {
   debounce: 510,
   debug: false,
-  default_retries: 0,
-  default_timeout: 3000,
+  default_retries: 10,
+  default_timeout: 10000,
   // hostname: "",
   hostname_location: "config.host",
   port: 9090,
