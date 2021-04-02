@@ -1,4 +1,5 @@
-# VERY ALPHA CODE !!!!
+# This project was abandoned!
+
 ## protoc-gen-state
 
 [![CircleCI](https://circleci.com/gh/tcncloud/protoc-gen-state.svg?style=svg)](https://circleci.com/gh/tcncloud/protoc-gen-state)
